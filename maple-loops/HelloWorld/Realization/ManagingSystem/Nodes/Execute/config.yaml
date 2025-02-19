@@ -50,6 +50,12 @@ eventOut:
   properties:
     - property:
         type: "event"
+        name: "start_p"
+        class: "-"
+        topic: "/rv/start_p"
+        QoS: 10
+    - property:
+        type: "event"
         name: "/spin_config"
         class: "-"
         topic: "/spin_config"
@@ -60,7 +66,8 @@ mqtt_broker: "localhost"
 mqtt_port: 1883
 
 mqtt_subscribe_topics:
-  - "new_plan"
+  - "/new_plan"
+  - "/isLegit"
 
 mqtt_publish_topics:
   - "/spin_config"

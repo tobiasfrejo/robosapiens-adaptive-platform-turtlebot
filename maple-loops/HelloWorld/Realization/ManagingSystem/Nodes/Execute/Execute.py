@@ -33,6 +33,7 @@ class Execute(Node):
 
     # -----------------------------AUTO-GEN SKELETON FOR executer-----------------------------
     def executer(self,msg):
+        self.publish_event('start_e')
         isLegit = self.knowledge.read("isLegit",queueSize=1)
         directions = self.knowledge.read("directions",queueSize=1)
         _Direction = Direction()

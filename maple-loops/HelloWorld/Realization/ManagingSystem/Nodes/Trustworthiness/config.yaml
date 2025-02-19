@@ -29,9 +29,57 @@ eventIn:
   properties:
     - property:
         type: "event"
+        name: "start_m"
+        class: "-"
+        topic: "/rv/start_m"
+        QoS: 10
+    - property:
+        type: "event"
+        name: "start_a"
+        class: "-"
+        topic: "/rv/start_a"
+        QoS: 10
+    - property:
+        type: "event"
+        name: "start_p"
+        class: "-"
+        topic: "/rv/start_p"
+        QoS: 10
+    - property:
+        type: "event"
+        name: "start_l"
+        class: "-"
+        topic: "/rv/start_l"
+        QoS: 10
+    - property:
+        type: "event"
+        name: "start_e"
+        class: "-"
+        topic: "/rv/start_e"
+        QoS: 10
+    - property:
+        type: "event"
+        name: "/Scan"
+        class: "-"
+        topic: "/Scan"
+        QoS: 10
+    - property:
+        type: "event"
+        name: "new_data"
+        class: "-"
+        topic: "/new_data"
+        QoS: 10
+    - property:
+        type: "event"
         name: "anomaly"
         class: "-"
         topic: "/anomaly"
+        QoS: 10
+    - property:
+        type: "event"
+        name: "no_anomaly"
+        class: "-"
+        topic: "/no_anomaly"
         QoS: 10
     - property:
         type: "event"
@@ -67,16 +115,28 @@ eventOut:
         class: "-"
         topic: "/stage"
         QoS: 10
+    - property:
+        type: "stage"
+        name: "stage2"
+        class: "-"
+        topic: "/stage2"
+        QoS: 10
 
 
 mqtt_broker: "localhost"
 mqtt_port: 1883
 
 mqtt_subscribe_topics:
-  - "anomaly"
+  - "/Scan"
+  - "/new_data"
+  - "/anomaly"
+  - "/new_plan"
+  - "/isLegit"
+  - "/spin_config"
+  - "/maple"
 
 mqtt_publish_topics:
-  - "new_plan"
+  - "/stage"
 
 redis_host: "localhost"
 redis_port: 6379

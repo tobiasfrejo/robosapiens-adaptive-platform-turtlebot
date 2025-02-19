@@ -26,6 +26,12 @@ eventIn:
 eventOut:
   properties:
     - property:
+        type: "event"
+        name: "start_l"
+        class: "-"
+        topic: "/rv/start_l"
+        QoS: 10
+    - property:
         type: "legitimate"
         name: "isLegit"
         class: "-"
@@ -37,10 +43,10 @@ mqtt_broker: "localhost"
 mqtt_port: 1883
 
 mqtt_subscribe_topics:
-  - "/Scan"
+  - "/new_plan"
 
 mqtt_publish_topics:
-  - "monitor/event"
+  - "/isLegit"
 
 redis_host: "localhost"
 redis_port: 6379

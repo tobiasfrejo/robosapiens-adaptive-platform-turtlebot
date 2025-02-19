@@ -33,15 +33,15 @@ eventIn:
         class: "-"
         topic: "/anomaly"
         QoS: 10
-    - property:
-        type: "event"
-        name: "anomaly"
-        class: "-"
-        topic: "/anomaly"
-        QoS: 10
 
 eventOut:
   properties:
+    - property:
+        type: "event"
+        name: "start_p"
+        class: "-"
+        topic: "/rv/start_p"
+        QoS: 10
     - property:
         type: "plan"
         name: "new_plan"
@@ -54,10 +54,10 @@ mqtt_broker: "localhost"
 mqtt_port: 1883
 
 mqtt_subscribe_topics:
-  - "anomaly"
+  - "/anomaly"
 
 mqtt_publish_topics:
-  - "new_plan"
+  - "/new_plan"
 
 redis_host: "localhost"
 redis_port: 6379
