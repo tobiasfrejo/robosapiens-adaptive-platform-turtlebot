@@ -69,6 +69,7 @@ class Analysis(Node):
 
     # -----------------------------AUTO-GEN SKELETON FOR analyse_scan_data-----------------------------
     def analyse_scan_data(self,msg):
+        self.publish_event(event_key='start_a')
         laser_scan = self.knowledge.read("laser_scan",queueSize=1)
 
         #<!-- cc_code_analyse_scan_data START--!>
@@ -119,6 +120,8 @@ class Analysis(Node):
         if anomaly_status_old != self.anomaly:
             if (self.anomaly == True):
                 self.publish_event(event_key='anomaly')
+            else:
+                self.publish_event(event_key='no_anomaly')
 
 
         #<!-- cc_code_analyse_scan_data END--!>

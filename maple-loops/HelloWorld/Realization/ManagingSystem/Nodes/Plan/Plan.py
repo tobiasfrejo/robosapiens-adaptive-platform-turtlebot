@@ -118,6 +118,7 @@ class Plan(Node):
 
     # -----------------------------AUTO-GEN SKELETON FOR planner-----------------------------
     def planner(self,msg):
+        self.publish_event(event_key='start_p')
         _NewPlanMessage = NewPlanMessage()
         _Direction = Direction()
 

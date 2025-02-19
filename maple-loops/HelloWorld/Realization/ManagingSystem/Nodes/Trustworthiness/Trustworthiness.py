@@ -56,6 +56,15 @@ class Trustworthiness(Node):
         self.register_event_callback(event_key='maple', callback=self.trust_check)
         # self.register_event_callback(event_key='anomaly', callback=self.planner)        # LINK <inport> anomaly
 
+        for s in ['m', 'a', 'p', 'l', 'e']:
+            self.register_event_callback('start_'+s, lambda: self.publish_event('stage2', json.dumps({'Str': 'start_'+s})))
+        self.register_event_callback('new_data', lambda: self.publish_event('stage2', json.dumps({'Str': 'end_m'})))
+        self.register_event_callback('no_anomaly', lambda: self.publish_event('stage2', json.dumps({'Str': 'end_a'})))
+        self.register_event_callback('anomaly', lambda: self.publish_event('stage2', json.dumps({'Str': 'end_a'})))
+        self.register_event_callback('new_plan', lambda: self.publish_event('stage2', json.dumps({'Str': 'end_p'})))
+        self.register_event_callback('isLegit', lambda: self.publish_event('stage2', json.dumps({'Str': 'end_l'})))
+        self.register_event_callback('/spin_config', lambda: self.publish_event('stage2', json.dumps({'Str': 'end_e'})))
+
 def main(args=None):
 
     node = Trustworthiness(config='config.yaml')

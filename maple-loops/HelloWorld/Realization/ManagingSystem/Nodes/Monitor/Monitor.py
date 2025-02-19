@@ -31,6 +31,7 @@ class Monitor(Node):
 
     # -----------------------------AUTO-GEN SKELETON FOR monitor_data-----------------------------
     def monitor_data(self,msg):
+        self.publish_event(event_key='start_m')
         _LaserScan = LaserScan()
 
         #<!-- cc_code_monitor_data START--!>

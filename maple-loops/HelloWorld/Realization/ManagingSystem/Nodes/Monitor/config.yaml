@@ -32,6 +32,12 @@ eventOut:
   properties:
     - property:
         type: "event"
+        name: "start_m"
+        class: "-"
+        topic: "/rv/start_m"
+        QoS: 10
+    - property:
+        type: "event"
         name: "new_data"
         class: "-"
         topic: "/new_data"
@@ -45,7 +51,7 @@ mqtt_subscribe_topics:
   - "/Scan"
 
 mqtt_publish_topics:
-  - "new_data"
+  - "/new_data"
 
 redis_host: "localhost"
 redis_port: 6379
