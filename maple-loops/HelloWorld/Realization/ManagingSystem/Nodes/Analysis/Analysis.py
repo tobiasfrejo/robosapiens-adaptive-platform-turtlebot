@@ -117,11 +117,12 @@ class Analysis(Node):
         else:
             self.anomaly = True
             self.logger.info(f" Anomaly: {self.anomaly}")
+
         if anomaly_status_old != self.anomaly:
             if (self.anomaly == True):
                 self.publish_event(event_key='anomaly')
-            else:
-                self.publish_event(event_key='no_anomaly')
+        else:
+            self.publish_event(event_key='no_anomaly')
 
 
         #<!-- cc_code_analyse_scan_data END--!>
