@@ -89,7 +89,7 @@ pyzmq==22.3.0
 redis==5.2.0
 requests==2.32.3
 retrying==1.3.4
-robosapiensio==0.3.24
+git+https://github.com/tobiasfrejo/rpio.git
 Send2Trash==1.8.1b0
 six==1.16.0
 sniffio==1.2.0
