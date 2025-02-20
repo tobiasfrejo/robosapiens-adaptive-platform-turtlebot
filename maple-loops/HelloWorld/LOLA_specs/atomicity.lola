@@ -6,10 +6,10 @@ out l: Bool
 out e: Bool
 out atomic : Bool
 out stageout : Str
-m = (stage == "start_m") && (stage[1] == "end_m") || (stage[-1] == "start_m") && (stage == "end_m")
-a = (stage == "start_a") && (stage[1] == "end_a") || (stage[-1] == "start_a") && (stage == "end_a")
-p = (stage == "start_p") && (stage[1] == "end_p") || (stage[-1] == "start_p") && (stage == "end_p") 
-l = (stage == "start_l") && (stage[1] == "end_l") || (stage[-1] == "start_l") && (stage == "end_l")
-e = (stage == "start_e") && (stage[1] == "end_e") || (stage[-1] == "start_e") && (stage == "end_e") 
-atmoic = m || a || p || l || e 
+m = ((stage2 == "start_m") && (stage2[1, "end_m"] == "end_m")) || ((stage2[-1, ""] == "start_m") && (stage2 == "end_m")) 
+a = ((stage2 == "start_a") && (stage2[1, "end_a"] == "end_a")) || ((stage2[-1, ""] == "start_a") && (stage2 == "end_a")) 
+p = ((stage2 == "start_p") && (stage2[1, "end_p"] == "end_p")) || ((stage2[-1, ""] == "start_p") && (stage2 == "end_p")) 
+l = ((stage2 == "start_l") && (stage2[1, "end_l"] == "end_l")) || ((stage2[-1, ""] == "start_l") && (stage2 == "end_l")) 
+e = ((stage2 == "start_e") && (stage2[1, "end_e"] == "end_e")) || ((stage2[-1, ""] == "start_e") && (stage2 == "end_e")) 
+atomic = (m || a || p || l || e) && atomic[-1, true]
 stageout = stage2

@@ -68,6 +68,8 @@ class Trustworthiness(Node):
         self.register_event_callback('isLegit',      lambda _: self.publish_event('stage2', json.dumps({'Str': 'end_l'  })))
         self.register_event_callback('/spin_config', lambda _: self.publish_event('stage2', json.dumps({'Str': 'end_e'  })))
 
+        self.register_event_callback('test_a',   lambda s: self.publish_event('test_a', json.dumps({'Str': str(s)})))
+
 def main(args=None):
 
     node = Trustworthiness(config='config.yaml')

@@ -50,9 +50,9 @@ eventOut:
   properties:
     - property:
         type: "event"
-        name: "start_p"
+        name: "start_e"
         class: "-"
-        topic: "/rv/start_p"
+        topic: "/rv/start_e"
         QoS: 10
     - property:
         type: "event"

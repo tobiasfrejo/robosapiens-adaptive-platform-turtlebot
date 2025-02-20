@@ -50,7 +50,7 @@ class Execute(Node):
         self.publish_event(event_key='/spin_config',message=json.dumps(directions))    # LINK <outport> spin_config
 
     def register_callbacks(self):
-        self.register_event_callback(event_key='new_plan', callback=self.executer)        # LINK <inport> new_plan
+        # self.register_event_callback(event_key='new_plan', callback=self.executer)        # LINK <inport> new_plan
         self.register_event_callback(event_key='isLegit', callback=self.executer)        # LINK <inport> isLegit
 
 def main(args=None):

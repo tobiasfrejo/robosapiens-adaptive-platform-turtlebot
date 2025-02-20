@@ -105,6 +105,12 @@ eventIn:
         class: "-"
         topic: "/maple"
         QoS: 10
+    - property:
+        type: "event"
+        name: "k_laser_scan"
+        class: "-"
+        topic: "k_laser_scan"
+        QoS: 10
 
 
 eventOut:
@@ -113,13 +119,25 @@ eventOut:
         type: "stage"
         name: "stage"
         class: "-"
-        topic: "/stage"
+        topic: "stage"
         QoS: 10
     - property:
         type: "stage"
         name: "stage2"
         class: "-"
-        topic: "/stage2"
+        topic: "stage2"
+        QoS: 10
+    - property:
+        type: "event"
+        name: "laser_scan"
+        class: "-"
+        topic: "k_laser_scan"
+        QoS: 10
+    - property:
+        type: "event"
+        name: "test_a"
+        class: "-"
+        topic: "k_a"
         QoS: 10
 
 
