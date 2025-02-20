@@ -3,8 +3,7 @@
 	"dockerComposeFile": "../../docker/docker-compose.yaml",
 	"service": "rapdevnogpu",
 	"runServices": [
-		"rapdevnogpu",
-		"rosmqttbridge"
+		"rapdevnogpu"
 	],
 	"workspaceFolder": "/ws",
 	"shutdownAction": "stopCompose",

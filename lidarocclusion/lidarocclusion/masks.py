@@ -15,14 +15,14 @@ from abc import ABCMeta
 import math
 import operator
 from functools import partial, reduce
-from collections.abc import Sequence
-from collections import deque
-import itertools
 
 import numpy as np
 import copy
 
 import portion
+import matplotlib
+matplotlib.use('agg')
+from matplotlib import pyplot as plt
 
 class LidarMask(Generic[D]):
     '''Signal of type [0, 2pi] -> D representing a Lidar occlusion mask.'''
@@ -354,8 +354,6 @@ class BoolLidarMask(LidarMask[bool]):
         return ProbLidarMask(self.map_poly(lambda x: 1.0 if x else 0.0))
     
     def pie_plot(self, **kwargs):
-        from matplotlib import pyplot as plt
-        
         slices = self.int_dict_sorted 
 
         fig = plt.figure(figsize=(2, 2))
@@ -370,12 +368,10 @@ class BoolLidarMask(LidarMask[bool]):
         return fig
     
     def plot(self, **kwargs):
-        from matplotlib import pyplot as plt
-
         x = self.real_angles
         y = (~self).prob_mask._values
 
-        fig = plt.figure(figsize=(6, 1))
+        fig = plt.figure(figsize=(18, 2))
         plt.fill_between(x, y, color='black', **kwargs)
         plt.xlim(0, 2*math.pi)
         plt.xticks([i*math.pi / 4 for i in range(9)],
@@ -440,8 +436,6 @@ class ProbLidarMask(LidarMask[float]):
         return 0.0
 
     def pie_plot(self, **kwargs):
-        from matplotlib import pyplot as plt
-        
         slices = self.int_dict_sorted 
 
         fig = plt.figure(figsize=(2, 2))
@@ -455,8 +449,6 @@ class ProbLidarMask(LidarMask[float]):
         return fig
     
     def plot(self, **kwargs):
-        from matplotlib import pyplot as plt
-
         x = self.real_angles
         y = self._values
 

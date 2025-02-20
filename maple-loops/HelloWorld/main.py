@@ -1,3 +1,4 @@
+import lidarocclusion
 from Realization.ManagingSystem.Nodes.Legitimate.Legitimate import Legitimate
 from Realization.ManagingSystem.Nodes.Monitor.Monitor import Monitor
 from Realization.ManagingSystem.Nodes.Analysis.Analysis import Analysis

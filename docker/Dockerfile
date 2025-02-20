@@ -40,8 +40,8 @@ RUN groupadd fuse \
 RUN echo Defaults secure_path = /opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin > /etc/sudoers.d/secure_path \
     && chmod 0440 /etc/sudoers.d/secure_path
 
-COPY setup.bash /opt/setup.bash
-COPY entrypoint.sh /opt/entrypoint.sh
+COPY docker/setup.bash /opt/setup.bash
+COPY docker/entrypoint.sh /opt/entrypoint.sh
 
 ENTRYPOINT ["/opt/entrypoint.sh"]
 RUN echo "source /opt/entrypoint.sh" >> /root/.profile

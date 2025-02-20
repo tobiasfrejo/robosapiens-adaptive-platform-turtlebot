@@ -11,8 +11,8 @@ from .messages import *
 import time
 #<!-- cc_include START--!>
 from fractions import Fraction
-from .lidarocclusion.masks import BoolLidarMask
-from .lidarocclusion.sliding_lidar_masks import sliding_lidar_mask, sliding_prob_lidar_mask
+from lidarocclusion.masks import BoolLidarMask
+from lidarocclusion.sliding_lidar_masks import sliding_lidar_mask, sliding_prob_lidar_mask
 from typing import List, Tuple, Dict
 import traceback
 import json

@@ -1,13 +1,9 @@
 {
 	"name": "RoboSapiens Adaptive Platform -- Full Gazebo TB3 (MESA)",
 	"dockerComposeFile": "../../docker/docker-compose.yaml",
-	"service": "rapdevmesa",
+	"service": "devfullmesatb3",
 	"runServices": [
-		"rapdevmesa",
-		"rosmqttbridge",
-		"simdeploymesatb3",
-		"redis",
-		"emqx"
+		"devfullmesatb3"
 	],
 	"workspaceFolder": "/ws",
 	"shutdownAction": "stopCompose",

@@ -1,14 +1,8 @@
 {
 	"name": "RoboSapiens Adaptive Platform -- Full TB4 Gazebo (NVIDIA GPU)",
 	"dockerComposeFile": "../../docker/docker-compose.yaml",
-	"service": "rapdevnvidia",
-	"runServices": [
-		"rapdevnvidia",
-		"rosmqttbridge",
-		"simdeploynvidiatb4",
-		"redis",
-		"emqx"
-	],
+	"service": "devfullnvidiatb4",
+	"runServices": ["devfullnvidiatb4"],
 	"workspaceFolder": "/ws",
 	"shutdownAction": "stopCompose",
 	"mounts": [

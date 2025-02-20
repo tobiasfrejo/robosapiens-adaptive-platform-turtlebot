@@ -12,9 +12,9 @@ from .messages import *
 import time
 #<!-- cc_include START--!>
 from fractions import Fraction
-from .lidarocclusion.masks import BoolLidarMask, ProbLidarMask
-from .lidarocclusion.sliding_lidar_masks import sliding_lidar_mask, sliding_prob_lidar_mask
-from .lidarocclusion.masks import BoolLidarMask
+from lidarocclusion.masks import BoolLidarMask, ProbLidarMask
+from lidarocclusion.sliding_lidar_masks import sliding_lidar_mask, sliding_prob_lidar_mask
+from lidarocclusion.masks import BoolLidarMask
 from typing import List, Tuple, Dict
 import traceback
 import numpy as np
@@ -84,7 +84,8 @@ class Analysis(Node):
         prob_lidar_mask = prob_lidar_mask.rotate(-Fraction(1, 2))
         # Save the mask for showing in dashboard
         prob_lidar_mask.plot()
-        plt.savefig("prob_lidar_mask.png")
+        self.logger.info(f"Saving prob_lidar_mask")
+        plt.savefig("prob_lidar_mask.png", dpi=300)
         plt.close()
 
         lidar_mask = (prob_lidar_mask >= OCCLUSION_THRESHOLD)
