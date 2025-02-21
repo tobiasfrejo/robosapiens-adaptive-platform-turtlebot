@@ -108,7 +108,8 @@ class Analysis(Node):
         self.logger.info(f" - Lidar mask: {lidar_mask}")
         serialized_lidar_mask = pickle.dumps(lidar_mask)
 
-        self.knowledge.write("lidar_mask", serialized_lidar_mask)
+        # self.knowledge.write("lidar_mask", serialized_lidar_mask)
+        knowledge_rv.write(self, 'lidar_mask', serialized_lidar_mask)
 
         # Set the monitor status to mark an anomaly if the there is any
 

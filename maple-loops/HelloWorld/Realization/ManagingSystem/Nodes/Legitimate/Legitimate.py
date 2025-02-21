@@ -7,6 +7,7 @@
 # * permission of Bert Van Acker
 # **********************************************************************************
 from rpio.clientLibraries.rpclpy.node import Node
+from rv_tools.knowledge import knowledge_rv
 from .messages import *
 import time
 #<!-- cc_include START--!>
@@ -31,8 +32,10 @@ class Legitimate(Node):
     # -----------------------------AUTO-GEN SKELETON FOR executer-----------------------------
     def legitimate(self,msg):
         self.publish_event(event_key='start_l')
-        isLegit = self.knowledge.read("isLegit",queueSize=1)
-        directions = self.knowledge.read("directions",queueSize=1)
+        # isLegit = self.knowledge.read("isLegit",queueSize=1)
+        isLegit = knowledge_rv.read(self, "isLegit",queueSize=1)
+        # directions = self.knowledge.read("directions",queueSize=1)
+        directions = knowledge_rv.read(self, "directions",queueSize=1)
         _Direction = Direction()
 
         #<!-- cc_code_executer START--!>

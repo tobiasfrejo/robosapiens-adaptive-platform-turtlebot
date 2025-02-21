@@ -7,6 +7,7 @@
 # * permission of Bert Van Acker
 # **********************************************************************************
 from rpio.clientLibraries.rpclpy.node import Node
+from rv_tools.knowledge import knowledge_rv
 from .messages import *
 import time
 #<!-- cc_include START--!>
@@ -136,7 +137,8 @@ class Plan(Node):
         # lidar_mask = pickle.load(self.knowledge.read("lidar_mask"))
 
         #this part of code must be placed in analyse but I cannot retrieve lidar_mask for now
-        lidar_data = self.knowledge.read("laser_scan")
+        # lidar_data = self.knowledge.read("laser_scan")
+        lidar_data = knowledge_rv.read(self, 'laser_scan')
         self._scans.append(lidar_data)
         prob_lidar_mask = next(self._sliding_prob_lidar_masks)
         prob_lidar_mask = prob_lidar_mask.rotate(-Fraction(1, 2))
@@ -154,7 +156,8 @@ class Plan(Node):
 
             occlusion_angles = calculate_lidar_occlusion_rotation_angles(lidar_mask)
             directions = occlusion_angles_to_rotations(occlusion_angles)
-            self.knowledge.write("directions", json.dumps(directions))
+            # self.knowledge.write("directions", json.dumps(directions))
+            knowledge_rv.write(self, 'directions', json.dumps(directions))
             self.logger.info(f"- Plan action written to knowledge :{directions}")
             new_plan = True
         except:
@@ -169,7 +172,8 @@ class Plan(Node):
                 self.logger.info("Planning")
                 time.sleep(0.1)
             self.publish_event("new_plan")
-            self.knowledge.write("directions", json.dumps({'commands': directions, 'period': 8}))
+            # self.knowledge.write("directions", json.dumps({'commands': directions, 'period': 8}))
+            knowledge_rv.write(self, "directions", json.dumps({'commands': directions, 'period': 8}))
             self.logger.info(f"Stored planned action: {directions}")
         #<!-- cc_code_planner END--!>
 
