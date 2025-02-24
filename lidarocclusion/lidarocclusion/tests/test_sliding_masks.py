@@ -3,8 +3,8 @@ import math
 import pytest
 import itertools
 
-from masks import (BoolLidarMask, ProbLidarMask)
-from sliding_lidar_masks import (sliding_lidar_mask, sliding_prob_lidar_mask)
+from ..masks import (BoolLidarMask, ProbLidarMask)
+from ..sliding_lidar_masks import (sliding_lidar_mask, sliding_prob_lidar_mask)
 
 @pytest.fixture
 def input_masks():

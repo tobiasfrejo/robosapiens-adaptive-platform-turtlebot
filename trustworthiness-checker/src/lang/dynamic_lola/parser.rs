@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-use winnow::ascii::line_ending;
 use winnow::ascii::multispace0;
 use winnow::combinator::*;
 use winnow::token::literal;
@@ -9,7 +7,6 @@ use winnow::Parser;
 use super::super::core::parser::*;
 use super::ast::*;
 use crate::core::StreamType;
-use crate::core::Value;
 use crate::core::VarName;
 
 // This is the top-level parser for LOLA expressions
@@ -448,6 +445,7 @@ pub fn lola_specification(s: &mut &str) -> PResult<LOLASpecification> {
 
 #[cfg(test)]
 mod tests {
+    use crate::core::Value;
     use std::collections::BTreeMap;
 
     use winnow::error::{ContextError, ErrMode};

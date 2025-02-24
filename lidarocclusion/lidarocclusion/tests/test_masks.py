@@ -1,5 +1,5 @@
 import pytest
-from masks import BoolLidarMask, ProbLidarMask, LidarMask
+from ..masks import BoolLidarMask, ProbLidarMask, LidarMask
 
 class TestLidarMask:
     I1 = [((0, 1), 0.7), ((2, 3), 0.7)]
@@ -21,3 +21,8 @@ class TestLidarMask:
     def test_arithmetic(self):
         assert (ProbLidarMask(self.I1) + ProbLidarMask(self.I2))\
             == ProbLidarMask([((0,1), 1.1), ((2,3), 1.4)])
+
+    def test_serialize_deserialize(self):
+        assert BoolLidarMask.from_json(
+            BoolLidarMask(self.B1).to_json()
+        ) == BoolLidarMask(self.B1)
