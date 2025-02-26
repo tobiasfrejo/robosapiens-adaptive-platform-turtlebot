@@ -130,7 +130,7 @@ class Plan(Node):
 
         lidar_mask = BoolLidarMask.from_json(lidar_data)
         # Record the LiDAR mask we last did planning from in the knowledge base
-        knowledge_rv.write("planned_lidar_mask", lidar_data)
+        knowledge_rv.write(self, "planned_lidar_mask", lidar_data)
         #The upper code must be deleted later
 
         try:
