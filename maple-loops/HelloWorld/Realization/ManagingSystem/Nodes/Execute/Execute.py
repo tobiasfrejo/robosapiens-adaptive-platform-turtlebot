@@ -52,7 +52,6 @@ class Execute(Node):
         #<!-- cc_code_executer END--!>
 
     def register_callbacks(self):
-        # self.register_event_callback(event_key='new_plan', callback=self.executer)        # LINK <inport> new_plan
         self.register_event_callback(event_key='isLegit', callback=self.executer)        # LINK <inport> isLegit
 
 def main(args=None):

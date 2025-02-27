@@ -59,8 +59,8 @@ def calculate_lidar_occlusion_rotation_angles(lidar_mask: BoolLidarMask) -> List
     # Return the two rotations necessary for occlusions on either side
     # of the robot
     match occlusion_angles:
-        case [x]:
-            return [x, -x]
+        case [x, y] if x == y:
+            return []
         case [x, y] if 0 <= x <= y:
             return [y, -y]
         case [x, y] if x <= y <= 0:
@@ -139,9 +139,6 @@ class Plan(Node):
 
             occlusion_angles = calculate_lidar_occlusion_rotation_angles(lidar_mask)
             directions = occlusion_angles_to_rotations(occlusion_angles)
-            # self.knowledge.write("directions", json.dumps(directions))
-            knowledge_rv.write(self, 'directions', json.dumps(directions))
-            self.logger.info(f"- Plan action written to knowledge :{directions}")
             new_plan = True
         except:
             raise
