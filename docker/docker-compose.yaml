@@ -55,6 +55,19 @@ services:
               capabilities: [ gpu ]
   rosmqttbridge:
     build:
+      context: ../ros2mqttbridge/
+      args:
+        - ROS_DISTRO=humble
+      dockerfile: docker/DockerfileDeploy
+    image: base
+    environment:
+      - RUST_LOG=ros2mqttbridge::bridge=INFO
+    network_mode: host
+    volumes:
+      - /dev/shm:/dev/shm
+      - /var/run/docker.sock:/var/run/docker.sock
+  rosmqttbridgepython:
+    build:
       context: ..
       dockerfile: docker/Dockerfile.rosmqttbridge
       args:
@@ -88,9 +101,9 @@ services:
       dockerfile: docker/DockerfileDeploy
     network_mode: host
     volumes:
-       - ../trustworthiness-specs:/mnt/host_models
+      - ../trustworthiness-specs:/mnt/host_models
   trustworthiness-checker-maple-seq:
-    extends: trustworthiness-checker 
+    extends: trustworthiness-checker
     command: /mnt/host_models/maple_seq.lola --input-mqtt-topics stage --output-mqtt-topics m a p l e maple
 
 volumes:

@@ -131,22 +131,13 @@ class Plan(Node):
         lidar_mask = BoolLidarMask.from_json(lidar_data)
         # Record the LiDAR mask we last did planning from in the knowledge base
         knowledge_rv.write(self, "planned_lidar_mask", lidar_data)
-        #The upper code must be deleted later
 
-        try:
-            self.logger.info(
-                f"Plan lidar mask determined: {lidar_mask}")
+        self.logger.info(
+            f"Plan lidar mask determined: {lidar_mask}")
 
-            occlusion_angles = calculate_lidar_occlusion_rotation_angles(lidar_mask)
-            directions = occlusion_angles_to_rotations(occlusion_angles)
-            new_plan = True
-        except:
-            raise
-            self.logger.info("traceback case")
-            occlusion_angles = []
-            directions = []
-            self.logger.info("traceback: " + traceback.format_exc())
-            new_plan = False
+        occlusion_angles = calculate_lidar_occlusion_rotation_angles(lidar_mask)
+        directions = occlusion_angles_to_rotations(occlusion_angles)
+        new_plan = True
 
         if new_plan:
             for i in range(10):
