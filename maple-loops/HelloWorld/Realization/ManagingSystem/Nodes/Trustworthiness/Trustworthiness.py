@@ -33,40 +33,66 @@ class Trustworthiness(Node):
         #<!-- cc_init END--!>
 
     # -----------------------------AUTO-GEN SKELETON FOR planner-----------------------------
-    def t_a(self,msg):
+    def t_ms(self, msg):
+        self.publish_event('stage2', json.dumps({'Str': 'start_m'}))
+    def t_me(self, msg):
         self.publish_event("stage", json.dumps({'Str':'m'}))
-        time.sleep(0.1)
-        self.publish_event("stage", json.dumps({'Str': 'a'}))
+        self.publish_event('stage2', json.dumps({'Str': 'end_m'  }))
 
-    def t_p(self, msg):
+    def t_as(self, msg):
+        self.publish_event('stage2', json.dumps({'Str': 'start_a'}))
+    def t_ae(self, msg):
+        #self.publish_event("stage", json.dumps({'Str': 'a'}))
+        self.publish_event('stage2', json.dumps({'Str': 'end_a'  }))
+
+    def t_aok(self, msg):
+        self.publish_event("stage", json.dumps({'Str': 'aok'}))
+    def t_anom(self, msg):
+        self.publish_event("stage", json.dumps({'Str': 'anom'}))
+
+    def t_ps(self, msg):
+        self.publish_event('stage2', json.dumps({'Str': 'start_p'}))
+    def t_pe(self, msg):
         self.publish_event("stage", json.dumps({'Str': 'p'}))
-    def t_l(self, msg):
+        self.publish_event('stage2', json.dumps({'Str': 'end_p'  }))
+
+    def t_ls(self, msg):
+        self.publish_event('stage2', json.dumps({'Str': 'start_l'}))
+    def t_le(self, msg):
         self.publish_event("stage", json.dumps({'Str': 'l'}))
-    def t_e(self, msg):
+        self.publish_event('stage2', json.dumps({'Str': 'end_l'  }))
+
+    def t_es(self, msg):
+        self.publish_event('stage2', json.dumps({'Str': 'start_e'}))
+    def t_ee(self, msg):
         self.publish_event("stage", json.dumps({'Str': 'e'}))
+        self.publish_event('stage2', json.dumps({'Str': 'end_e'  }))
+
 
     def trust_check(self, msg):
         self.logger.info(msg)
 
     def register_callbacks(self):
-        self.register_event_callback(event_key='anomaly', callback=self.t_a)     # LINK <eventTrigger> anomaly
-        self.register_event_callback(event_key='new_plan', callback=self.t_p)
-        self.register_event_callback(event_key='isLegit', callback=self.t_l)
-        self.register_event_callback(event_key='/spin_config', callback=self.t_e)
+        # self.register_event_callback(event_key='anomaly', callback=self.t_a)     # LINK <eventTrigger> anomaly
+        # self.register_event_callback(event_key='new_plan', callback=self.t_p)
+        # self.register_event_callback(event_key='isLegit', callback=self.t_l)
+        # self.register_event_callback(event_key='/spin_config', callback=self.t_e)
         self.register_event_callback(event_key='maple', callback=self.trust_check)
         # self.register_event_callback(event_key='anomaly', callback=self.planner)        # LINK <inport> anomaly
 
-        self.register_event_callback('start_m',      lambda _: self.publish_event('stage2', json.dumps({'Str': 'start_m'})))
-        self.register_event_callback('start_a',      lambda _: self.publish_event('stage2', json.dumps({'Str': 'start_a'})))
-        self.register_event_callback('start_p',      lambda _: self.publish_event('stage2', json.dumps({'Str': 'start_p'})))
-        self.register_event_callback('start_l',      lambda _: self.publish_event('stage2', json.dumps({'Str': 'start_l'})))
-        self.register_event_callback('start_e',      lambda _: self.publish_event('stage2', json.dumps({'Str': 'start_e'})))
-        self.register_event_callback('new_data',     lambda _: self.publish_event('stage2', json.dumps({'Str': 'end_m'  })))
-        self.register_event_callback('no_anomaly',   lambda _: self.publish_event('stage2', json.dumps({'Str': 'end_a'  })))
-        self.register_event_callback('anomaly',      lambda _: self.publish_event('stage2', json.dumps({'Str': 'end_a'  })))
-        self.register_event_callback('new_plan',     lambda _: self.publish_event('stage2', json.dumps({'Str': 'end_p'  })))
-        self.register_event_callback('isLegit',      lambda _: self.publish_event('stage2', json.dumps({'Str': 'end_l'  })))
-        self.register_event_callback('/spin_config', lambda _: self.publish_event('stage2', json.dumps({'Str': 'end_e'  })))
+        self.register_event_callback('start_m',      self.t_ms)
+        self.register_event_callback('start_a',      self.t_as)
+        self.register_event_callback('start_p',      self.t_ps)
+        self.register_event_callback('start_l',      self.t_ls)
+        self.register_event_callback('start_e',      self.t_es)
+        self.register_event_callback('new_data',     self.t_me)
+        self.register_event_callback('no_anomaly',   self.t_ae)
+        self.register_event_callback('no_anomaly',   self.t_aok)
+        self.register_event_callback('anomaly',      self.t_ae)
+        self.register_event_callback('anomaly',      self.t_anom)
+        self.register_event_callback('new_plan',     self.t_pe)
+        self.register_event_callback('isLegit',      self.t_le)
+        self.register_event_callback('/spin_config', self.t_ee)
 
         self.register_event_callback('test_a',   lambda s: self.publish_event('test_a', json.dumps({'Str': str(s)})))
 
