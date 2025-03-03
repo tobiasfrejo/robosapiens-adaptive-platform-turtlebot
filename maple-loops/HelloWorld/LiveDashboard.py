@@ -71,7 +71,7 @@ app.layout = html.Div([
         n_intervals=0
     ),
     html.H1("Probabilistic Lidar Mask:", style={"textAlign": "center"}),
-    html.Img(id="dynamic-image", style={"height": "100px", "width": "600px", "textAlign": "center"}),
+    html.Img(id="dynamic-image", style={"height": "180px", "textAlign": "center"}),
     dcc.Interval(id="image-interval", interval=1000, n_intervals=0)  # Update every second
 ])
 

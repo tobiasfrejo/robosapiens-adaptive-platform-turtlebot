@@ -2,7 +2,7 @@
 use std::time::Duration;
 use std::{future::Future, vec};
 
-use futures::{stream, StreamExt};
+use futures::{StreamExt, stream};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, instrument};
 use trustworthiness_checker::io::mqtt::client::{
@@ -107,20 +107,23 @@ mod tests {
         input_streams1, spec_simple_add_decomposed_1, spec_simple_add_decomposed_2,
     };
     use testcontainers_modules::testcontainers::{
-        runners::{self, AsyncRunner},
         ContainerAsync,
+        runners::{self, AsyncRunner},
     };
     use tokio::time::sleep;
     use tracing::info_span;
     use trustworthiness_checker::{
-        lola_specification, io::testing::manual_output_handler::ManualOutputHandler,
+        Monitor, Value, VarName,
         io::mqtt::{MQTTInputProvider, MQTTOutputHandler},
-        runtime::asynchronous::AsyncMonitorRunner, Monitor, Value, VarName,
-        semantics::UntimedLolaSemantics
+        io::testing::manual_output_handler::ManualOutputHandler,
+        lola_specification,
+        runtime::asynchronous::AsyncMonitorRunner,
+        semantics::UntimedLolaSemantics,
     };
 
     use super::*;
 
+    #[cfg_attr(not(feature = "testcontainers"), ignore)]
     #[test(tokio::test)]
     async fn test_add_monitor_mqtt_output() {
         let model = lola_specification
@@ -165,6 +168,7 @@ mod tests {
         assert_eq!(outputs, expected_outputs);
     }
 
+    #[cfg_attr(not(feature = "testcontainers"), ignore)]
     #[test(tokio::test)]
     async fn test_add_monitor_mqtt_input() {
         let model = lola_specification
@@ -241,6 +245,7 @@ mod tests {
         assert_eq!(outputs, expected_outputs);
     }
 
+    #[cfg_attr(not(feature = "testcontainers"), ignore)]
     #[test(tokio::test)]
     async fn manually_decomposed_monitor_test() {
         let model1 = lola_specification

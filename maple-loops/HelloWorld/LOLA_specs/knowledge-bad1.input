@@ -1,0 +1,3 @@
+0: kLaserScan = "write"
+1: kLaserScan = "write"
+2: kLaserScan = "read"

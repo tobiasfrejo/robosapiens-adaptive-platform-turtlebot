@@ -7,18 +7,17 @@
 # * permission of Bert Van Acker
 # **********************************************************************************
 from rpio.clientLibraries.rpclpy.node import Node
+from rv_tools.knowledge import knowledge_rv
 from .messages import *
 import time
 #<!-- cc_include START--!>
 from fractions import Fraction
-from .lidarocclusion.masks import BoolLidarMask
-from .lidarocclusion.sliding_lidar_masks import sliding_lidar_mask, sliding_prob_lidar_mask
+from lidarocclusion.masks import BoolLidarMask
+from lidarocclusion.sliding_lidar_masks import sliding_lidar_mask, sliding_prob_lidar_mask
 from typing import List, Tuple, Dict
 import traceback
 import json
 import numpy as np
-import pickle
-import portion
 #<!-- cc_include END--!>
 
 #<!-- cc_code START--!>
@@ -60,8 +59,8 @@ def calculate_lidar_occlusion_rotation_angles(lidar_mask: BoolLidarMask) -> List
     # Return the two rotations necessary for occlusions on either side
     # of the robot
     match occlusion_angles:
-        case [x]:
-            return [x, -x]
+        case [x, y] if x == y:
+            return []
         case [x, y] if 0 <= x <= y:
             return [y, -y]
         case [x, y] if x <= y <= 0:
@@ -97,23 +96,6 @@ class Plan(Node):
         self.logger.info("Plan instantiated")
 
         #<!-- cc_init START--!>
-        self._scans = []
-
-        def scans():
-            while True:
-                for scan in self._scans:
-                    yield scan
-
-                self._scans = []
-
-        def raw_lidar_masks():
-            for scan in scans():
-                yield lidar_mask_from_scan(scan)
-
-        self._sliding_prob_lidar_masks = sliding_prob_lidar_mask(
-            raw_lidar_masks(),
-            window_size=SLIDING_WINDOW_SIZE,
-        )
         #<!-- cc_init END--!>
 
     # -----------------------------AUTO-GEN SKELETON FOR planner-----------------------------
@@ -136,40 +118,34 @@ class Plan(Node):
         # lidar_mask = pickle.load(self.knowledge.read("lidar_mask"))
 
         #this part of code must be placed in analyse but I cannot retrieve lidar_mask for now
-        lidar_data = self.knowledge.read("laser_scan")
-        self._scans.append(lidar_data)
-        prob_lidar_mask = next(self._sliding_prob_lidar_masks)
-        prob_lidar_mask = prob_lidar_mask.rotate(-Fraction(1, 2))
-        lidar_mask = (prob_lidar_mask >= OCCLUSION_THRESHOLD)
-        # Weaken lidar masks to threshold
-        lidar_mask = lidar_mask.weaken(OCCLUSION_SENSITIVITY)
-        lidar_mask = lidar_mask.weaken(-OCCLUSION_SENSITIVITY)
-        lidar_mask = lidar_mask.strengthen(OCCLUSION_SENSITIVITY)
-        lidar_mask = lidar_mask.strengthen(-OCCLUSION_SENSITIVITY)
-        #The upper code must be deleted later
+        # TODO: the knowledge manager attempts to deserialize this incorrectly;
+        # we need support for custom deserialization, so for now we manually
+        # retrieve the key from Redis
+        # lidar_data = json.dumps(self.knowledge.read("laser_scan"))
+        lidar_data = self.knowledge.redis_client.get('lidar_mask')
+        if lidar_data is None:
+            raise Exception("No lidar mask available in knowledge mask")
+        else:
+            lidar_data = lidar_data.decode('utf-8')
 
-        try:
-            self.logger.info(
-                f"Plan lidar mask determined: {lidar_mask}")
+        lidar_mask = BoolLidarMask.from_json(lidar_data)
+        # Record the LiDAR mask we last did planning from in the knowledge base
+        knowledge_rv.write(self, "planned_lidar_mask", lidar_data)
 
-            occlusion_angles = calculate_lidar_occlusion_rotation_angles(lidar_mask)
-            directions = occlusion_angles_to_rotations(occlusion_angles)
-            self.knowledge.write("directions", json.dumps(directions))
-            self.logger.info(f"- Plan action written to knowledge :{directions}")
-            new_plan = True
-        except:
-            self.logger.info("traceback case")
-            occlusion_angles = []
-            directions = []
-            self.logger.info("traceback: " + traceback.format_exc())
-            new_plan = False
+        self.logger.info(
+            f"Plan lidar mask determined: {lidar_mask}")
+
+        occlusion_angles = calculate_lidar_occlusion_rotation_angles(lidar_mask)
+        directions = occlusion_angles_to_rotations(occlusion_angles)
+        new_plan = True
 
         if new_plan:
             for i in range(10):
                 self.logger.info("Planning")
                 time.sleep(0.1)
             self.publish_event("new_plan")
-            self.knowledge.write("directions", json.dumps({'commands': directions, 'period': 8}))
+            # self.knowledge.write("directions", json.dumps({'commands': directions, 'period': 8}))
+            knowledge_rv.write(self, "directions", json.dumps({'commands': directions, 'period': 8}))
             self.logger.info(f"Stored planned action: {directions}")
         #<!-- cc_code_planner END--!>
 

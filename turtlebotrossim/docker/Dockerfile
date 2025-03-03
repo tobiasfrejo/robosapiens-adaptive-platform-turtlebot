@@ -90,7 +90,7 @@ RUN source /opt/entrypoint.sh\
     && rosdep install -i --from-path spin_interfaces --rosdistro humble\
     && colcon build --packages-select spin_interfaces
 USER root
-RUN echo "source /opt/scan_relay_ws/install/setup.bash" >> "/opt/setup.bash"
+RUN printf "\nsource /opt/scan_relay_ws/install/setup.bash" >> "/opt/setup.bash"
 USER ${USERNAME}
 RUN source /opt/entrypoint.sh\
     && rosdep install -i --from-path demo_bringup --rosdistro humble\

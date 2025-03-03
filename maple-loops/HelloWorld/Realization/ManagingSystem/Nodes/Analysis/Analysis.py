@@ -7,13 +7,14 @@
 # * permission of Bert Van Acker
 # **********************************************************************************
 from rpio.clientLibraries.rpclpy.node import Node
+from rv_tools.knowledge import knowledge_rv
 from .messages import *
 import time
 #<!-- cc_include START--!>
 from fractions import Fraction
-from .lidarocclusion.masks import BoolLidarMask, ProbLidarMask
-from .lidarocclusion.sliding_lidar_masks import sliding_lidar_mask, sliding_prob_lidar_mask
-from .lidarocclusion.masks import BoolLidarMask
+from lidarocclusion.masks import BoolLidarMask, ProbLidarMask
+from lidarocclusion.sliding_lidar_masks import sliding_lidar_mask, sliding_prob_lidar_mask
+from lidarocclusion.masks import BoolLidarMask
 from typing import List, Tuple, Dict
 import traceback
 import numpy as np
@@ -28,6 +29,9 @@ OCCLUSION_THRESHOLD = 0.3
 SLIDING_WINDOW_SIZE = 3
 # Lidar mask sensitivity (ignore small occlusions below this angle)
 OCCLUSION_SENSITIVITY = Fraction(1, 48)
+# Lidar mask change sensitivity
+# Retrigger planning whenever the lidar mask changes by more than this amount
+REPLANNING_SENSITIVITY = Fraction(1, 48)
 
 # user defined!
 def lidar_mask_from_scan(scan) -> BoolLidarMask:
@@ -35,8 +39,8 @@ def lidar_mask_from_scan(scan) -> BoolLidarMask:
     return BoolLidarMask(
         (scan_ranges != np.inf) & (scan_ranges != -np.inf),
         base_angle=Fraction(2, len(scan.get("ranges"))),
-        # base_angle=scan.angleIncrement/180,
-    )#<!-- cc_code END--!>
+    )
+#<!-- cc_code END--!>
 
 class Analysis(Node):
 
@@ -65,24 +69,29 @@ class Analysis(Node):
             raw_lidar_masks(),
             window_size=SLIDING_WINDOW_SIZE,
         )
+
+        # Ensure flag is reset on startup in case execution has stopped/crashed in the middle of anomaly handling 
+        knowledge_rv.write(self, 'handling_anomaly', 0)
         #<!-- cc_init END--!>
 
     # -----------------------------AUTO-GEN SKELETON FOR analyse_scan_data-----------------------------
     def analyse_scan_data(self,msg):
         self.publish_event(event_key='start_a')
-        laser_scan = self.knowledge.read("laser_scan",queueSize=1)
+        # laser_scan = self.knowledge.read("laser_scan",queueSize=1)
+        laser_scan = knowledge_rv.read(self, "laser_scan")
 
         #<!-- cc_code_analyse_scan_data START--!>
 
         self.lidar_data = laser_scan
-        self.logger.info(f"REtrieved laser_scan: {self.lidar_data}")
+        self.logger.info(f"Retrieved laser_scan: {self.lidar_data}")
 
         self._scans.append(self.lidar_data)
         prob_lidar_mask = next(self._sliding_prob_lidar_masks)
         prob_lidar_mask = prob_lidar_mask.rotate(-Fraction(1, 2))
         # Save the mask for showing in dashboard
         prob_lidar_mask.plot()
-        plt.savefig("prob_lidar_mask.png")
+        self.logger.info(f"Saving prob_lidar_mask")
+        plt.savefig("prob_lidar_mask.png", dpi=300)
         plt.close()
 
         lidar_mask = (prob_lidar_mask >= OCCLUSION_THRESHOLD)
@@ -103,30 +112,40 @@ class Analysis(Node):
 
         # Add the next sliding boolean lidar mask to the knowledge base
         self.logger.info(f" - Lidar mask: {lidar_mask}")
-        serialized_lidar_mask = pickle.dumps(lidar_mask)
+        serialized_lidar_mask = lidar_mask.to_json()
 
-        self.knowledge.write("lidar_mask", serialized_lidar_mask)
+        # self.knowledge.write("lidar_mask", serialized_lidar_mask)
+        knowledge_rv.write(self, 'lidar_mask', serialized_lidar_mask)
+
+        handling_anomaly = knowledge_rv.read(self, "handling_anomaly")
+
+        # We should not try and handle two anomalies at once!
+        if handling_anomaly:
+            self.publish_event(event_key='no_anomaly') # another key?
+            self.logger.info("Terminating Analysis early as we are already handling an anomaly")
+            return
+
+        planned_lidar_mask_data = self.knowledge.redis_client.get('planned_lidar_mask')
+        if planned_lidar_mask_data is None:
+            self.logger.info("No planned lidar mask in knowledge")
+            planned_lidar_mask = BoolLidarMask([],
+                Fraction(2, len(laser_scan.get("ranges"))))
+        else:
+            planned_lidar_mask_data = planned_lidar_mask_data.decode('utf-8')
+            planned_lidar_mask = BoolLidarMask.from_json(planned_lidar_mask_data)
 
         # Set the monitor status to mark an anomaly if the there is any
-
         # occlusion outside of the ignored region
-        anomaly_status_old = self.anomaly
-        if lidar_mask_reduced._values.all():
-            self.anomaly = False
-            self.logger.info(f" Anomaly: {self.anomaly}")
+        self.logger.info(f"planned_lidar_mask = {planned_lidar_mask}")
+        if lidar_mask.dist(planned_lidar_mask) > REPLANNING_SENSITIVITY:
+            knowledge_rv.write(self, "handling_anomaly", 1)
+            self.publish_event(event_key='anomaly')
+            self.logger.info(f"Anomaly: True")
         else:
-            self.anomaly = True
-            self.logger.info(f" Anomaly: {self.anomaly}")
-        if anomaly_status_old != self.anomaly:
-            if (self.anomaly == True):
-                self.publish_event(event_key='anomaly')
-            else:
-                self.publish_event(event_key='no_anomaly')
-
+            self.publish_event(event_key='no_anomaly')
+            self.logger.info(f"Anomaly: False")
 
         #<!-- cc_code_analyse_scan_data END--!>
-
-        # self.publish_event(event_key='anomaly')    # LINK <outport> anomaly
 
     def register_callbacks(self):
         self.register_event_callback(event_key='new_data', callback=self.analyse_scan_data)     # LINK <eventTrigger> new_data

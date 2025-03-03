@@ -1,15 +1,15 @@
 use crate::core::Value;
 use crate::core::{StreamContext, StreamData};
 use crate::lang::dynamic_lola::parser::lola_expression;
+use crate::semantics::UntimedLolaSemantics;
 use crate::semantics::untimed_untyped_lola::combinators::{lift1, lift2, lift3};
 use crate::{MonitoringSemantics, OutputStream};
 use futures::{
-    stream::{self, BoxStream},
     StreamExt,
+    stream::{self, BoxStream},
 };
 use std::fmt::Debug;
 use winnow::Parser;
-use crate::semantics::UntimedLolaSemantics;
 
 pub fn to_typed_stream<T: TryFrom<Value, Error = ()> + Debug>(
     stream: OutputStream<Value>,
@@ -152,6 +152,14 @@ mod tests {
     #[allow(unused_imports)]
     use super::*;
     use test_log::test;
+
+    #[test(tokio::test)]
+    async fn test_not() {
+        let x: OutputStream<bool> = Box::pin(stream::iter(vec![true, false].into_iter()));
+        let z: Vec<bool> = vec![false, true];
+        let res: Vec<bool> = not(x).collect().await;
+        assert_eq!(res, z);
+    }
 
     #[test(tokio::test)]
     async fn test_plus() {

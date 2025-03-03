@@ -9,6 +9,7 @@
 import json
 
 from rpio.clientLibraries.rpclpy.node import Node
+from rv_tools.knowledge import knowledge_rv
 from .messages import *
 import time
 #<!-- cc_include START--!>
@@ -34,23 +35,23 @@ class Execute(Node):
     # -----------------------------AUTO-GEN SKELETON FOR executer-----------------------------
     def executer(self,msg):
         self.publish_event('start_e')
-        isLegit = self.knowledge.read("isLegit",queueSize=1)
-        directions = self.knowledge.read("directions",queueSize=1)
+        # isLegit = self.knowledge.read("isLegit",queueSize=1)
+        isLegit = knowledge_rv.read(self, "isLegit",queueSize=1)
+        # directions = self.knowledge.read("directions",queueSize=1)
+        directions = knowledge_rv.read(self, "directions",queueSize=1)
         _Direction = Direction()
 
         #<!-- cc_code_executer START--!>
 
-        # user code here for executer
-
-
-        #<!-- cc_code_executer END--!>
         for i in range(3):
             self.logger.info("Executing")
             time.sleep(0.1)
+        self.logger.info(f"Executed with directions = {directions}");
         self.publish_event(event_key='/spin_config',message=json.dumps(directions))    # LINK <outport> spin_config
+        knowledge_rv.write(self, "handling_anomaly", 0)
+        #<!-- cc_code_executer END--!>
 
     def register_callbacks(self):
-        self.register_event_callback(event_key='new_plan', callback=self.executer)        # LINK <inport> new_plan
         self.register_event_callback(event_key='isLegit', callback=self.executer)        # LINK <inport> isLegit
 
 def main(args=None):

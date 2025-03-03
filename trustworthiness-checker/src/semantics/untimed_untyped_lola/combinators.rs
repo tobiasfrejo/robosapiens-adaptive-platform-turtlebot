@@ -1,17 +1,14 @@
 use crate::core::StreamData;
 use crate::core::Value;
-use crate::{
-    MonitoringSemantics, OutputStream, StreamContext,
-    VarName,
-};
 use crate::lang::dynamic_lola::parser::lola_expression;
 use crate::semantics::untimed_untyped_lola::UntimedLolaSemantics;
+use crate::{MonitoringSemantics, OutputStream, StreamContext, VarName};
 use async_stream::stream;
 use core::panic;
 use futures::{
+    StreamExt,
     future::join_all,
     stream::{self, BoxStream},
-    StreamExt,
 };
 use std::ops::Deref;
 use tokio::join;
@@ -95,7 +92,7 @@ pub fn or(x: OutputStream<Value>, y: OutputStream<Value>) -> OutputStream<Value>
 }
 
 pub fn not(x: OutputStream<Value>) -> OutputStream<Value> {
-    lift1(|x| Value::Bool(x == Value::Bool(true)), x)
+    lift1(|x| Value::Bool(x == Value::Bool(false)), x)
 }
 
 pub fn eq(x: OutputStream<Value>, y: OutputStream<Value>) -> OutputStream<Value> {
@@ -522,6 +519,14 @@ mod tests {
             }
             return;
         }
+    }
+
+    #[tokio::test]
+    async fn test_not() {
+        let x: OutputStream<Value> = Box::pin(stream::iter(vec![Value::Bool(true), false.into()]));
+        let res: Vec<Value> = not(x).collect().await;
+        let exp: Vec<Value> = vec![Value::Bool(false), Value::Bool(true)];
+        assert_eq!(res, exp)
     }
 
     #[tokio::test]

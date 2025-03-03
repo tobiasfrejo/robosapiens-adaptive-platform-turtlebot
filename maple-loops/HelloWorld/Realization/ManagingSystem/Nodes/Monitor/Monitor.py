@@ -9,6 +9,9 @@
 from rpio.clientLibraries.rpclpy.node import Node
 from .messages import *
 import time
+
+from rv_tools.knowledge import knowledge_rv
+
 #<!-- cc_include START--!>
 # user includes here
 #<!-- cc_include END--!>
@@ -44,7 +47,8 @@ class Monitor(Node):
         #<!-- cc_code_monitor_data END--!>
 
         # _success = self.knowledge.write(cls=_LaserScan)
-        self.knowledge.write("laser_scan",msg)
+        # self.knowledge.write("laser_scan",msg)
+        knowledge_rv.write(self, "laser_scan", msg)
         self.publish_event(event_key='new_data')    # LINK <outport> new_data
 
     def register_callbacks(self):

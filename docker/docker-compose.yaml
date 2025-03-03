@@ -19,7 +19,8 @@ services:
   rapdev:
     command: sleep infinity
     build:
-      context: .
+      context: ..
+      dockerfile: docker/Dockerfile
       args:
         - UID=${UID:-1000}
         - GID=${UID:-1000}
@@ -27,6 +28,8 @@ services:
     user: ${USERNAME:-devuser}
     depends_on:
       - emqx
+      - redis
+      - rosmqttbridge
     network_mode: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
@@ -52,6 +55,19 @@ services:
               capabilities: [ gpu ]
   rosmqttbridge:
     build:
+      context: ../ros2mqttbridge/
+      args:
+        - ROS_DISTRO=humble
+      dockerfile: docker/DockerfileDeploy
+    image: base
+    environment:
+      - RUST_LOG=ros2mqttbridge::bridge=INFO
+    network_mode: host
+    volumes:
+      - /dev/shm:/dev/shm
+      - /var/run/docker.sock:/var/run/docker.sock
+  rosmqttbridgepython:
+    build:
       context: ..
       dockerfile: docker/Dockerfile.rosmqttbridge
       args:
@@ -61,15 +77,34 @@ services:
     network_mode: host
     volumes:
       - /dev/shm:/dev/shm
-  devfullnogpu:
+  devfullnogputb3:
     extends: rapdevnogpu
-    depends_on: [ simnogpu, rosmqttbridge, emqx ]
-  devfulldevmesa:
+    depends_on: [ simdeploynogputb3, rosmqttbridge, redis, emqx ]
+  devfullmesatb3:
     extends: rapdevmesa
-    depends_on: [ simmesa, rosmqttbridge, emqx ]
-  devfullnvidia:
+    depends_on: [ simdeploymesatb3, rosmqttbridge, redis, emqx ]
+  devfullnvidiatb3:
     extends: rapdevnvidia
-    depends_on: [ simnvidia, rosmqttbridge, emqx ]
+    depends_on: [ simdeploynvidiatb3, rosmqttbridge, redis, emqx ]
+  devfullnogputb4:
+    extends: rapdevnogpu
+    depends_on: [ simdeploynogputb4, rosmqttbridge, redis, emqx ]
+  devfulldevmesatb4:
+    extends: rapdevmesa
+    depends_on: [ simdeploymesatb4, rosmqttbridge, redis, emqx ]
+  devfullnvidiatb4:
+    extends: rapdevnvidia
+    depends_on: [ simdeploynvidiatb4, rosmqttbridge, redis, emqx ]
+  trustworthiness-checker:
+    build:
+      context: ../trustworthiness-checker
+      dockerfile: docker/DockerfileDeploy
+    network_mode: host
+    volumes:
+      - ../trustworthiness-specs:/mnt/host_models
+  trustworthiness-checker-maple-seq:
+    extends: trustworthiness-checker
+    command: /mnt/host_models/maple_seq.lola --input-mqtt-topics stage --output-mqtt-topics m a p l e maple
 
 volumes:
   vol-emqx-data:

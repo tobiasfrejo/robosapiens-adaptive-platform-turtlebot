@@ -1,16 +1,15 @@
-in stage2 : Str
-out m : Bool
-out a : Bool
-out p : Bool
-out l : Bool
-out e : Bool
+in atomicstage : Str
+out m: Bool
+out a: Bool
+out p: Bool
+out l: Bool
+out e: Bool
 out atomic : Bool
 out stageout : Str
-m = ((stage2 == "start_m") && (stage2[1] == "end_m")) || ((stage2[-1] == "start_m") && (stage2 == "end_m"))
-a = ((stage2 == "start_a") && (stage2[1] == "end_a")) || ((stage2[-1] == "start_a") && (stage2 == "end_a"))
-p = ((stage2 == "start_p") && (stage2[1] == "end_p")) || ((stage2[-1] == "start_p") && (stage2 == "end_p")) 
-l = ((stage2 == "start_l") && (stage2[1] == "end_l")) || ((stage2[-1] == "start_l") && (stage2 == "end_l"))
-e = ((stage2 == "start_e") && (stage2[1] == "end_e")) || ((stage2[-1] == "start_e") && (stage2 == "end_e")) 
-atomic = m || a || p || l || e 
-global_atomic = atomic && atomic[-1,true]
-stageout = stage2
+m = ((atomicstage == "start_m") && (atomicstage[1, "end_m"] == "end_m")) || ((atomicstage[-1, ""] == "start_m") && (atomicstage == "end_m")) 
+a = ((atomicstage == "start_a") && (atomicstage[1, "end_a"] == "end_a")) || ((atomicstage[-1, ""] == "start_a") && (atomicstage == "end_a")) 
+p = ((atomicstage == "start_p") && (atomicstage[1, "end_p"] == "end_p")) || ((atomicstage[-1, ""] == "start_p") && (atomicstage == "end_p")) 
+l = ((atomicstage == "start_l") && (atomicstage[1, "end_l"] == "end_l")) || ((atomicstage[-1, ""] == "start_l") && (atomicstage == "end_l")) 
+e = ((atomicstage == "start_e") && (atomicstage[1, "end_e"] == "end_e")) || ((atomicstage[-1, ""] == "start_e") && (atomicstage == "end_e")) 
+atomic = (m || a || p || l || e) && atomic[-1, true]
+stageout = atomicstage

@@ -1,14 +1,8 @@
 {
 	"name": "RoboSapiens Adaptive Platform -- Full Gazebo TB4 (No GPU)",
 	"dockerComposeFile": "../../docker/docker-compose.yaml",
-	"service": "rapdevnogpu",
-	"runServices": [
-		"rapdevnogpu",
-		"rosmqttbridge",
-		"simdeploynogputb4",
-		"redis",
-		"emqx"
-	],
+	"service": "devfullnogputb4",
+	"runServices": ["devfullnogputb4"],
 	"workspaceFolder": "/ws",
 	"shutdownAction": "stopCompose",
 	"mounts": [

@@ -1,0 +1,4 @@
+in a: Int
+in b: Int
+out c: Int
+c = a + b

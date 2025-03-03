@@ -6,10 +6,10 @@ use r2r;
 use tokio::select;
 use tokio_util::sync::CancellationToken;
 
-use crate::ros_topic_stream_mapping::{ROSMsgType, ROSStreamMapping, VariableMappingData};
+use super::ros_topic_stream_mapping::{ROSMsgType, ROSStreamMapping, VariableMappingData};
 
 use crate::stream_utils::drop_guard_stream;
-use crate::{core::VarName, InputProvider, OutputStream, Value};
+use crate::{InputProvider, OutputStream, Value, core::VarName};
 
 pub struct VarData {
     pub mapping_data: VariableMappingData,

@@ -1,6 +1,3 @@
-[submodule "turtlebotrossim/scan_relay_ws/navigation2"]
-	path = turtlebotrossim/scan_relay_ws/navigation2
-	url = git@github.com:ros-navigation/navigation2.git
 [submodule "turtlebotrossim/scan_relay_ws/3rdparties/frozen"]
 	path = turtlebotrossim/scan_relay_ws/3rdparties/frozen
 	url = git@github.com:serge-sans-paille/frozen.git
