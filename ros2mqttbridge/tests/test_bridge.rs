@@ -11,6 +11,7 @@ use r2r::qos::HistoryPolicy as QosHistoryPolicy;
 use r2r::qos::ReliabilityPolicy as QosReliabilityPolicy;
 use r2r::spin_interfaces::msg::SpinCommand as MSpinCommand;
 use r2r::spin_interfaces::msg::SpinPeriodicCommands as MSpinCommands;
+use ros2mqttbridge::SPIN_TOPIC;
 use ros2mqttbridge::bridge;
 use test_log::test;
 use testcontainers::core::IntoContainerPort;
@@ -49,7 +50,7 @@ async fn test_mqtt_to_ros() {
     let mut node =
         r2r::Node::create(ros_context, "test_bridge_integration", test_ros_namespace).unwrap();
     let mut spin_sub = node
-        .subscribe::<MSpinCommands>("/spin_config", r2r::QosProfile::default())
+        .subscribe::<MSpinCommands>(SPIN_TOPIC.ros_name, r2r::QosProfile::default())
         .unwrap();
 
     let spinner = tokio::spawn(async move {

@@ -16,7 +16,6 @@ use tokio::sync::oneshot;
 use tracing::info;
 // Removed incorrect import of std::fmt::Result.
 use serde::de::{self, Deserializer};
-use std::sync::LazyLock;
 use std::time::Duration;
 use tracing::debug;
 use tracing::error;
@@ -25,28 +24,26 @@ use tracing::warn;
 use uuid::Uuid;
 
 const MQTT_QOS: i32 = 1;
+pub const SCAN_TOPIC: Topic = Topic {
+    ros_name: "/scan_safe",
+    mqtt_name: "/Scan",
+};
+pub const SPIN_TOPIC: Topic = Topic {
+    ros_name: "/spin_config",
+    mqtt_name: "/spin_config",
+};
 
-static TOPICS: LazyLock<Vec<Topic>> = LazyLock::new(|| {
-    vec![
-        Topic {
-            ros_name: "/scan_safe",
-            mqtt_name: "/Scan",
-        },
-        Topic {
-            ros_name: "/spin_config",
-            mqtt_name: "/spin_config",
-        },
-    ]
-});
+pub const TOPICS: [Topic; 2] = [SCAN_TOPIC, SPIN_TOPIC];
 
 #[derive(Clone)]
-struct Topic {
-    ros_name: &'static str,
-    mqtt_name: &'static str,
+pub struct Topic {
+    pub ros_name: &'static str,
+    pub mqtt_name: &'static str,
 }
 impl Copy for Topic {}
 
 impl Topic {
+    #[allow(dead_code)]
     fn ros_topic(topic: &str) -> Option<Topic> {
         TOPICS.iter().cloned().find(|&x| x.ros_name == topic)
     }
@@ -134,7 +131,7 @@ impl TryFrom<Message> for MQTT2ROSData {
     type Error = MQTT2ROSError;
 
     fn try_from(msg: Message) -> Result<Self, Self::Error> {
-        if msg.topic() == "/spin_config" {
+        if msg.topic() == SPIN_TOPIC.mqtt_name {
             match serde_json5::from_str::<MQTT2ROSData>(&msg.payload_str()) {
                 Ok(msg) => Ok(msg),
                 Err(e) => Err(MQTT2ROSError::DeserializationError(e)),
@@ -259,12 +256,12 @@ async fn ros_node_actor(
     };
 
     debug!("Subscribing to scan safe");
-    let sub =
-        node.subscribe::<r2r::sensor_msgs::msg::LaserScan>("/scan_safe", sensor_qos.clone())?;
+    let sub = node
+        .subscribe::<r2r::sensor_msgs::msg::LaserScan>(SCAN_TOPIC.ros_name, sensor_qos.clone())?;
     debug!("Subscribed to scan safe");
 
     let publisher =
-        node.create_publisher::<MSpinCommands>("/spin_config", QosProfile::default())?;
+        node.create_publisher::<MSpinCommands>(SPIN_TOPIC.ros_name, QosProfile::default())?;
 
     let fut = async move {
         loop {
@@ -287,7 +284,7 @@ async fn ros_to_mqtt(
         debug!("Received ROS message");
         // let _span = tracing::info_span!("Sending ROS message to MQTT", ?msg).entered();
 
-        let topic = Topic::ros_topic("/scan_safe").expect("ROS topic not found in mapping");
+        let topic = SCAN_TOPIC;
 
         let serialized_msg = match serde_json5::to_string(&msg) {
             Ok(msg) => msg,
@@ -357,7 +354,7 @@ pub async fn bridge(
     debug!("Starting bridge");
     let (ros_stream, ros_publisher, ros_fut) = ros_node_actor(ros_namespace).await.unwrap();
     let (mqtt_stream, mqtt_sender, mqtt_fut) =
-        mqtt_client_actor(mqtt_hostname, vec!["/spin_config"]).await?;
+        mqtt_client_actor(mqtt_hostname, vec![SPIN_TOPIC.mqtt_name]).await?;
     let ros_to_mqtt_fut = ros_to_mqtt(ros_stream, mqtt_sender);
     let mqtt_to_ros_fut = mqtt_to_ros(mqtt_stream, ros_publisher);
     // let blocking_ros_fut = tokio::task::spawn_blocking(|| ros_fut);
@@ -379,7 +376,7 @@ mod tests {
     #[test]
     fn test_convert_valid_spin_commands() {
         let msg = r#"{"commands":[],"period":0.0}"#;
-        let mqtt_msg = mqtt::Message::new("/spin_config", msg.to_string(), MQTT_QOS);
+        let mqtt_msg = mqtt::Message::new(SPIN_TOPIC.mqtt_name, msg.to_string(), MQTT_QOS);
         let result = MQTT2ROSData::try_from(mqtt_msg);
         assert!(result.is_ok());
     }
@@ -387,7 +384,7 @@ mod tests {
     #[test]
     fn test_invalid_spin_commands() {
         let msg = r#"{"blah": false}"#;
-        let mqtt_msg = mqtt::Message::new("/spin_config", msg.to_string(), MQTT_QOS);
+        let mqtt_msg = mqtt::Message::new(SPIN_TOPIC.mqtt_name, msg.to_string(), MQTT_QOS);
         let result = MQTT2ROSData::try_from(mqtt_msg);
         if let Ok(res) = result.clone() {
             info!("{:?}", res);
@@ -398,7 +395,7 @@ mod tests {
     #[test]
     fn test_invalid_spin_commands_extra_fields() {
         let msg = r#"{"commands":[],"period":0.0, "blah": false}"#;
-        let mqtt_msg = mqtt::Message::new("/spin_config", msg.to_string(), MQTT_QOS);
+        let mqtt_msg = mqtt::Message::new(SPIN_TOPIC.mqtt_name, msg.to_string(), MQTT_QOS);
         let result = MQTT2ROSData::try_from(mqtt_msg);
         if let Ok(res) = result.clone() {
             info!("{:?}", res);
