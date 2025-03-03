@@ -34,16 +34,16 @@ class Trustworthiness(Node):
 
     # -----------------------------AUTO-GEN SKELETON FOR planner-----------------------------
     def t_ms(self, msg):
-        self.publish_event('stage2', json.dumps({'Str': 'start_m'}))
+        self.publish_event('atomicstage', json.dumps({'Str': 'start_m'}))
     def t_me(self, msg):
         self.publish_event("stage", json.dumps({'Str':'m'}))
-        self.publish_event('stage2', json.dumps({'Str': 'end_m'  }))
+        self.publish_event('atomicstage', json.dumps({'Str': 'end_m'  }))
 
     def t_as(self, msg):
-        self.publish_event('stage2', json.dumps({'Str': 'start_a'}))
+        self.publish_event('atomicstage', json.dumps({'Str': 'start_a'}))
     def t_ae(self, msg):
         #self.publish_event("stage", json.dumps({'Str': 'a'}))
-        self.publish_event('stage2', json.dumps({'Str': 'end_a'  }))
+        self.publish_event('atomicstage', json.dumps({'Str': 'end_a'  }))
 
     def t_aok(self, msg):
         self.publish_event("stage", json.dumps({'Str': 'aok'}))
@@ -51,22 +51,22 @@ class Trustworthiness(Node):
         self.publish_event("stage", json.dumps({'Str': 'anom'}))
 
     def t_ps(self, msg):
-        self.publish_event('stage2', json.dumps({'Str': 'start_p'}))
+        self.publish_event('atomicstage', json.dumps({'Str': 'start_p'}))
     def t_pe(self, msg):
         self.publish_event("stage", json.dumps({'Str': 'p'}))
-        self.publish_event('stage2', json.dumps({'Str': 'end_p'  }))
+        self.publish_event('atomicstage', json.dumps({'Str': 'end_p'  }))
 
     def t_ls(self, msg):
-        self.publish_event('stage2', json.dumps({'Str': 'start_l'}))
+        self.publish_event('atomicstage', json.dumps({'Str': 'start_l'}))
     def t_le(self, msg):
         self.publish_event("stage", json.dumps({'Str': 'l'}))
-        self.publish_event('stage2', json.dumps({'Str': 'end_l'  }))
+        self.publish_event('atomicstage', json.dumps({'Str': 'end_l'  }))
 
     def t_es(self, msg):
-        self.publish_event('stage2', json.dumps({'Str': 'start_e'}))
+        self.publish_event('atomicstage', json.dumps({'Str': 'start_e'}))
     def t_ee(self, msg):
         self.publish_event("stage", json.dumps({'Str': 'e'}))
-        self.publish_event('stage2', json.dumps({'Str': 'end_e'  }))
+        self.publish_event('atomicstage', json.dumps({'Str': 'end_e'  }))
 
 
     def trust_check(self, msg):

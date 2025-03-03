@@ -123,9 +123,9 @@ eventOut:
         QoS: 10
     - property:
         type: "stage"
-        name: "stage2"
+        name: "atomicstage"
         class: "-"
-        topic: "stage2"
+        topic: "atomicstage"
         QoS: 10
     - property:
         type: "event"
