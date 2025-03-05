@@ -8,6 +8,8 @@
 # **********************************************************************************
 from rpio.clientLibraries.rpclpy.node import Node
 from rv_tools.knowledge import knowledge_rv
+from rv_tools.constants import *
+from rv_tools.timing_workaround import trustworthiness_output, trustworthiness_outputs
 from .messages import *
 import time
 #<!-- cc_include START--!>
@@ -73,7 +75,9 @@ class Analysis(Node):
 
     # -----------------------------AUTO-GEN SKELETON FOR analyse_scan_data-----------------------------
     def analyse_scan_data(self,msg):
-        self.publish_event(event_key='start_a')
+        # self.publish_event(event_key='start_a')
+        trustworthiness_output(self, ATOMICITY, 'start_a')
+
         laser_scan = self.knowledge.read("laser_scan",queueSize=1)
         # laser_scan = knowledge_rv.read(self, "laser_scan")
 
@@ -118,7 +122,8 @@ class Analysis(Node):
         # We should not try and handle two anomalies at once!
         if handling_anomaly:
             self.logger.info("Terminating Analysis early as we are already handling an anomaly")
-            self.publish_event(event_key='no_anomaly')
+            # self.publish_event(event_key='no_anomaly')
+            trustworthiness_outputs(self, {ATOMICITY: 'end_a', MAPLE: 'aok'})
             return
 
         planned_lidar_mask_data = self.knowledge.redis_client.get('planned_lidar_mask')
@@ -135,11 +140,13 @@ class Analysis(Node):
         self.logger.info(f"planned_lidar_mask = {planned_lidar_mask}")
         if lidar_mask.dist(planned_lidar_mask) > REPLANNING_SENSITIVITY:
             self.knowledge.write("handling_anomaly", 1)
+            trustworthiness_outputs(self, {ATOMICITY: 'end_a', MAPLE: 'anom'})
             self.publish_event(event_key='anomaly')
             self.logger.info(f"Anomaly: True")
         else:
             self.logger.info(f"Anomaly: False")
-            self.publish_event(event_key='no_anomaly')
+            # self.publish_event(event_key='no_anomaly')
+            trustworthiness_outputs(self, {ATOMICITY: 'end_a', MAPLE: 'aok'})
 
         #<!-- cc_code_analyse_scan_data END--!>
 

@@ -11,6 +11,8 @@ import json
 from rpio.clientLibraries.rpclpy.node import Node
 from .messages import *
 import time
+from rv_tools.constants import *
+from rv_tools.timing_workaround import trustworthiness_output, trustworthiness_outputs
 #<!-- cc_include START--!>
 # user includes here
 #<!-- cc_include END--!>
@@ -33,7 +35,8 @@ class Execute(Node):
 
     # -----------------------------AUTO-GEN SKELETON FOR executer-----------------------------
     def executer(self,msg):
-        self.publish_event('start_e')
+        # self.publish_event('start_e')
+        trustworthiness_output(self, ATOMICITY, 'start_e')
         isLegit = self.knowledge.read("isLegit",queueSize=1)
         directions = self.knowledge.read("directions",queueSize=1)
         _Direction = Direction()
@@ -44,7 +47,9 @@ class Execute(Node):
             self.logger.info("Executing")
             time.sleep(0.1)
         self.logger.info(f"Executed with directions = {directions}");
+        trustworthiness_outputs(self, {ATOMICITY: 'end_e', MAPLE: 'e'})
         self.publish_event(event_key='/spin_config',message=json.dumps(directions))    # LINK <outport> spin_config
+        
         self.knowledge.write("handling_anomaly", 0)
         #<!-- cc_code_executer END--!>
 

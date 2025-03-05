@@ -9,6 +9,8 @@
 from rpio.clientLibraries.rpclpy.node import Node
 from .messages import *
 import time
+from rv_tools.constants import *
+from rv_tools.timing_workaround import trustworthiness_output, trustworthiness_outputs
 #<!-- cc_include START--!>
 import json
 #<!-- cc_include END--!>
@@ -31,6 +33,7 @@ class Legitimate(Node):
     # -----------------------------AUTO-GEN SKELETON FOR executer-----------------------------
     def legitimate(self,msg):
         self.publish_event(event_key='start_l')
+        trustworthiness_output(self, ATOMICITY, 'start_l')
         isLegit = self.knowledge.read("isLegit",queueSize=1)
         directions = self.knowledge.read("directions",queueSize=1)
         _Direction = Direction()
@@ -44,6 +47,7 @@ class Legitimate(Node):
         for i in range(5):
             self.logger.info("Legitimating")
             time.sleep(0.1)
+        trustworthiness_outputs(self, {ATOMICITY: 'end_l', MAPLE: 'l'})
         self.publish_event(event_key='isLegit')    # LINK <outport> spin_config
 
     def register_callbacks(self):

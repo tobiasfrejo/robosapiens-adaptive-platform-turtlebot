@@ -11,6 +11,8 @@ from .messages import *
 import time
 
 from rv_tools.knowledge import knowledge_rv
+from rv_tools.constants import *
+from rv_tools.timing_workaround import trustworthiness_output, trustworthiness_outputs
 
 #<!-- cc_include START--!>
 # user includes here
@@ -34,7 +36,8 @@ class Monitor(Node):
 
     # -----------------------------AUTO-GEN SKELETON FOR monitor_data-----------------------------
     def monitor_data(self,msg):
-        self.publish_event(event_key='start_m')
+        # self.publish_event(event_key='start_m')
+        trustworthiness_output(self, ATOMICITY, 'start_m')
         _LaserScan = LaserScan()
 
         #<!-- cc_code_monitor_data START--!>
@@ -49,6 +52,7 @@ class Monitor(Node):
         # _success = self.knowledge.write(cls=_LaserScan)
         self.knowledge.write("laser_scan",msg)
         # knowledge_rv.write(self, "laser_scan", msg)
+        trustworthiness_outputs(self, {ATOMICITY: 'end_m', MAPLE: 'm'})
         self.publish_event(event_key='new_data')    # LINK <outport> new_data
 
     def register_callbacks(self):
