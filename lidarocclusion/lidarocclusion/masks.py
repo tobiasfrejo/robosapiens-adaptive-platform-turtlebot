@@ -23,6 +23,7 @@ import portion
 import matplotlib
 matplotlib.use('agg')
 from matplotlib import pyplot as plt
+import json
 
 class LidarMask(Generic[D]):
     '''Signal of type [0, 2pi] -> D representing a Lidar occlusion mask.'''
@@ -58,7 +59,6 @@ class LidarMask(Generic[D]):
                 else:
                     # Assume that the input is homogeneous
                     match contents[0]:
-                        # Interval dict spec of form
                         # [(Interval_1, k_1), ..., (Interval_n, k_n)]
                         case ((_, _), _):
                             def min_or_default(xs : Iterable[D]) -> Optional[D]:
@@ -331,7 +331,7 @@ class LidarMask(Generic[D]):
                      else [self.rotate(-i) for i in range(1,-n+1)])
             
         return reduce(f, rotations, self)
-    
+
 
 class BoolLidarMask(LidarMask[bool]):
     '''Boolean LIDAR data mask'''
@@ -427,6 +427,31 @@ class BoolLidarMask(LidarMask[bool]):
     
     def weaken(self, param: Fraction | int):
         return self.reduce_rotate(operator.or_, param)
+
+    def to_json(self) -> str:
+        return json.dumps({
+            'base_angle': self._base_angle.as_integer_ratio(),
+            'values': self._values.tolist(),
+        })
+
+    @classmethod
+    def from_json(cls: "type[BoolLidarMask]", s: str) -> "BoolLidarMask":
+        data = json.loads(s)
+        base_angle = Fraction(*data['base_angle']) 
+        values = np.array(data['values'])
+        
+        return cls(
+            values,
+            base_angle
+        )
+
+    def dist(self, other: 'BoolLidarMask') -> Fraction:
+        difference = self.zip_with(
+            other,
+            operator.xor
+        )
+
+        return self.base_angle * np.count_nonzero(difference._values)
 
 
 class ProbLidarMask(LidarMask[float]):
