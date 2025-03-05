@@ -74,8 +74,8 @@ class Analysis(Node):
     # -----------------------------AUTO-GEN SKELETON FOR analyse_scan_data-----------------------------
     def analyse_scan_data(self,msg):
         self.publish_event(event_key='start_a')
-        # laser_scan = self.knowledge.read("laser_scan",queueSize=1)
-        laser_scan = knowledge_rv.read(self, "laser_scan")
+        laser_scan = self.knowledge.read("laser_scan",queueSize=1)
+        # laser_scan = knowledge_rv.read(self, "laser_scan")
 
         #<!-- cc_code_analyse_scan_data START--!>
 
