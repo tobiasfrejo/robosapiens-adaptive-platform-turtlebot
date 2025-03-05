@@ -1,17 +1,21 @@
 import json
+import re
 
 from rpio.clientLibraries.rpclpy.node import Node, KnowledgeManager, CommunicationManager
 
 def _ensure_publish_key_exist(node, key):
     # You should not have to declare these in the config. Or should you??
 
-    event_key = 'k_' + key
+    event_key = _trustworthiness_checker_safe_key('k_' + key)
     # TODO: can we do this cleaner?
     if event_key not in node.communication_manager.mqtt_publish_topics_map:
         node.communication_manager.mqtt_publish_topics_map[event_key] = event_key
     return event_key
 
-def write(node:Node, key, value = True):
+def _trustworthiness_checker_safe_key(key:str):
+    return re.sub(r'[^a-zA-Z]', '', re.sub(r'_([a-z])', lambda match: match.group(1).upper(), key))
+
+def write(node:Node, key:str, value = True):
     event_key = _ensure_publish_key_exist(node, key)
     node.knowledge.write(key, value)
     node.publish_event(event_key, message=json.dumps({"Str": "write"}))
