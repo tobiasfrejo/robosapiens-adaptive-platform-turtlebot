@@ -49,7 +49,7 @@ class Legitimate(Node):
         #<!-- cc_code_executer END--!>
         for i in range(5):
             self.logger.info("Legitimating")
-            time.sleep(0.1)
+            time.sleep(0.01)
         trustworthiness_outputs(self, {ATOMICITY: 'end_l', MAPLE: 'l'})
         self.publish_event(event_key='isLegit')    # LINK <outport> spin_config
 

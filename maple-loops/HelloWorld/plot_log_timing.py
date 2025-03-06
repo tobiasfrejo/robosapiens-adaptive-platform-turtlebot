@@ -1,3 +1,5 @@
+#!/bin/env python3
+
 import sys
 import re
 import datetime as dt
@@ -95,6 +97,13 @@ with open(infile, 'r') as f:
 
         observed_nodes.add(node)
 
+def sort_maple(x):
+    first_letter = x[0]
+    return "MAPLE".find(first_letter)
+
+observed_nodes = list(observed_nodes)
+observed_nodes.sort(key=sort_maple, reverse=True)
+
 open_bars = {}
 
 data = []
@@ -122,7 +131,7 @@ for ts,n,typ in events:
             ts += timedelta(milliseconds=5)
         ev = (start, ts, n, ts_actual)
         data.append(ev)
-        print(ev)
+        # print(ev)
 
 # Based on https://stackoverflow.com/a/51506028
 
@@ -147,10 +156,12 @@ for d in data:
 
 bars = PolyCollection(verts, zorder=3)
 
+fig_len = (events[-1][0]-events[0][0]).total_seconds()*5
 
-fig, ax = plt.subplots(figsize=[20,5], dpi=600)
+fig, ax = plt.subplots(figsize=[fig_len,5], dpi=200)
 for label in labels:
-    ax.text(*label, zorder=5, color='black', backgroundcolor='white', fontsize=16, va='center', ha='center')
+    ax.text(*label, zorder=5, color='black', backgroundcolor='white', fontsize=10, va='center', ha='center')
+ax.vlines([x[0] for x in unit_events], -1, 6, colors='black')
 ax.grid(zorder=0)
 ax.add_collection(bars)
 ax.autoscale()

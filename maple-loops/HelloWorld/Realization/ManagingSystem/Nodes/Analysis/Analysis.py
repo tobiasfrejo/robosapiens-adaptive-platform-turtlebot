@@ -128,7 +128,7 @@ class Analysis(Node):
             self.publish_event(event_key='no_anomaly') # another key?
             self.logger.info("Terminating Analysis early as we are already handling an anomaly")
             # self.publish_event(event_key='no_anomaly')
-            trustworthiness_outputs(self, {ATOMICITY: 'end_a', MAPLE: 'aok'})
+            trustworthiness_outputs(self, {ATOMICITY: 'end_aok', MAPLE: 'aok'})
             return
 
         planned_lidar_mask_data = self.knowledge.redis_client.get('planned_lidar_mask')
@@ -145,14 +145,14 @@ class Analysis(Node):
         self.logger.info(f"planned_lidar_mask = {planned_lidar_mask}")
         if lidar_mask.dist(planned_lidar_mask) > REPLANNING_SENSITIVITY:
             knowledge_rv.write(self, "handling_anomaly", 1)
-            trustworthiness_outputs(self, {ATOMICITY: 'end_a', MAPLE: 'anom'})
-            # self.publish_event(event_key='anomaly')
+            trustworthiness_outputs(self, {ATOMICITY: 'end_anom', MAPLE: 'anom'})
+            self.publish_event(event_key='anomaly')
             self.logger.info(f"Anomaly: True")
         else:
             self.publish_event(event_key='no_anomaly')
             self.logger.info(f"Anomaly: False")
             # self.publish_event(event_key='no_anomaly')
-            trustworthiness_outputs(self, {ATOMICITY: 'end_a', MAPLE: 'aok'})
+            trustworthiness_outputs(self, {ATOMICITY: 'end_aok', MAPLE: 'aok'})
 
         #<!-- cc_code_analyse_scan_data END--!>
 
