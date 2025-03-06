@@ -9,6 +9,7 @@
 import json
 
 from rpio.clientLibraries.rpclpy.node import Node
+from rv_tools.knowledge import knowledge_rv
 from .messages import *
 import time
 from rv_tools.constants import *
@@ -37,8 +38,8 @@ class Execute(Node):
     def executer(self,msg):
         # self.publish_event('start_e')
         trustworthiness_output(self, ATOMICITY, 'start_e')
-        isLegit = self.knowledge.read("isLegit",queueSize=1)
-        directions = self.knowledge.read("directions",queueSize=1)
+        isLegit = knowledge_rv.read(self, "isLegit",queueSize=1)
+        directions = knowledge_rv.read(self, "directions",queueSize=1)
         _Direction = Direction()
 
         #<!-- cc_code_executer START--!>
@@ -49,12 +50,10 @@ class Execute(Node):
         self.logger.info(f"Executed with directions = {directions}");
         trustworthiness_outputs(self, {ATOMICITY: 'end_e', MAPLE: 'e'})
         self.publish_event(event_key='/spin_config',message=json.dumps(directions))    # LINK <outport> spin_config
-        
-        self.knowledge.write("handling_anomaly", 0)
+        knowledge_rv.write(self, "handling_anomaly", 0)
         #<!-- cc_code_executer END--!>
 
     def register_callbacks(self):
-        # self.register_event_callback(event_key='new_plan', callback=self.executer)        # LINK <inport> new_plan
         self.register_event_callback(event_key='isLegit', callback=self.executer)        # LINK <inport> isLegit
 
 def main(args=None):

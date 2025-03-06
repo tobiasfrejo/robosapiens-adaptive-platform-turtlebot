@@ -1,9 +1,9 @@
 in stage : Str
-out m: Bool
-out a: Bool
-out p: Bool
-out l: Bool
-out e: Bool
+out m : Bool
+out a : Bool
+out p : Bool
+out l : Bool
+out e : Bool
 out maple : Bool
 out stageout : Str
 m = (stage == "m") && (e[-1, true] || a[-1, false]) 

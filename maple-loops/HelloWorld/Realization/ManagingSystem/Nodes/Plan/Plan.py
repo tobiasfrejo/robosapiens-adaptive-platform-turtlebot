@@ -7,6 +7,7 @@
 # * permission of Bert Van Acker
 # **********************************************************************************
 from rpio.clientLibraries.rpclpy.node import Node
+from rv_tools.knowledge import knowledge_rv
 from .messages import *
 import time
 #<!-- cc_include START--!>
@@ -60,8 +61,8 @@ def calculate_lidar_occlusion_rotation_angles(lidar_mask: BoolLidarMask) -> List
     # Return the two rotations necessary for occlusions on either side
     # of the robot
     match occlusion_angles:
-        case [x]:
-            return [x, -x]
+        case [x, y] if x == y:
+            return []
         case [x, y] if 0 <= x <= y:
             return [y, -y]
         case [x, y] if x <= y <= 0:
@@ -132,25 +133,14 @@ class Plan(Node):
 
         lidar_mask = BoolLidarMask.from_json(lidar_data)
         # Record the LiDAR mask we last did planning from in the knowledge base
-        self.knowledge.write("planned_lidar_mask", lidar_data)
-        #The upper code must be deleted later
+        knowledge_rv.write(self, "planned_lidar_mask", lidar_data)
 
-        try:
-            self.logger.info(
-                f"Plan lidar mask determined: {lidar_mask}")
+        self.logger.info(
+            f"Plan lidar mask determined: {lidar_mask}")
 
-            occlusion_angles = calculate_lidar_occlusion_rotation_angles(lidar_mask)
-            directions = occlusion_angles_to_rotations(occlusion_angles)
-            self.knowledge.write("directions", json.dumps(directions))
-            self.logger.info(f"- Plan action written to knowledge :{directions}")
-            new_plan = True
-        except:
-            raise
-            self.logger.info("traceback case")
-            occlusion_angles = []
-            directions = []
-            self.logger.info("traceback: " + traceback.format_exc())
-            new_plan = False
+        occlusion_angles = calculate_lidar_occlusion_rotation_angles(lidar_mask)
+        directions = occlusion_angles_to_rotations(occlusion_angles)
+        new_plan = True
 
         if new_plan:
             for i in range(10):
@@ -158,7 +148,8 @@ class Plan(Node):
                 time.sleep(0.1)
             trustworthiness_outputs(self, {ATOMICITY: 'end_m', MAPLE: 'm'})
             self.publish_event("new_plan")
-            self.knowledge.write("directions", json.dumps({'commands': directions, 'period': 8}))
+            # self.knowledge.write("directions", json.dumps({'commands': directions, 'period': 8}))
+            knowledge_rv.write(self, "directions", json.dumps({'commands': directions, 'period': 8}))
             self.logger.info(f"Stored planned action: {directions}")
         #<!-- cc_code_planner END--!>
 

@@ -71,6 +71,9 @@ class Analysis(Node):
             raw_lidar_masks(),
             window_size=SLIDING_WINDOW_SIZE,
         )
+
+        # Ensure flag is reset on startup in case execution has stopped/crashed in the middle of anomaly handling 
+        knowledge_rv.write(self, 'handling_anomaly', 0)
         #<!-- cc_init END--!>
 
     # -----------------------------AUTO-GEN SKELETON FOR analyse_scan_data-----------------------------
@@ -115,12 +118,14 @@ class Analysis(Node):
         self.logger.info(f" - Lidar mask: {lidar_mask}")
         serialized_lidar_mask = lidar_mask.to_json()
 
-        self.knowledge.write("lidar_mask", serialized_lidar_mask)
+        # self.knowledge.write("lidar_mask", serialized_lidar_mask)
+        knowledge_rv.write(self, 'lidar_mask', serialized_lidar_mask)
 
-        handling_anomaly = self.knowledge.read("handling_anomaly")
+        handling_anomaly = knowledge_rv.read(self, "handling_anomaly")
 
         # We should not try and handle two anomalies at once!
         if handling_anomaly:
+            self.publish_event(event_key='no_anomaly') # another key?
             self.logger.info("Terminating Analysis early as we are already handling an anomaly")
             # self.publish_event(event_key='no_anomaly')
             trustworthiness_outputs(self, {ATOMICITY: 'end_a', MAPLE: 'aok'})
@@ -139,11 +144,12 @@ class Analysis(Node):
         # occlusion outside of the ignored region
         self.logger.info(f"planned_lidar_mask = {planned_lidar_mask}")
         if lidar_mask.dist(planned_lidar_mask) > REPLANNING_SENSITIVITY:
-            self.knowledge.write("handling_anomaly", 1)
+            knowledge_rv.write(self, "handling_anomaly", 1)
             trustworthiness_outputs(self, {ATOMICITY: 'end_a', MAPLE: 'anom'})
-            self.publish_event(event_key='anomaly')
+            # self.publish_event(event_key='anomaly')
             self.logger.info(f"Anomaly: True")
         else:
+            self.publish_event(event_key='no_anomaly')
             self.logger.info(f"Anomaly: False")
             # self.publish_event(event_key='no_anomaly')
             trustworthiness_outputs(self, {ATOMICITY: 'end_a', MAPLE: 'aok'})

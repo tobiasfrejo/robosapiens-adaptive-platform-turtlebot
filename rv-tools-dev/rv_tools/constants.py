@@ -1,2 +1,2 @@
 MAPLE = 'stage'
-ATOMICITY = 'stage2'
+ATOMICITY = 'atomicstage'
