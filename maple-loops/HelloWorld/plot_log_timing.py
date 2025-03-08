@@ -88,7 +88,7 @@ with open(infile, 'r') as f:
                 events.append((timestamp, node, ''))
             case (_, msg) if re.match(r'.*{"Str": "start_[maple]"}', msg):
                 events.append((timestamp, node, 'start'))
-            case (_, msg) if re.match(r'.*{"Str": "end_[maple]"}', msg):
+            case (_, msg) if re.match(r'.*{"Str": "end_[maple](ok|nom)?"}', msg):
                 events.append((timestamp, node, 'end'))
             case _:
                 # print('No match for message:')
@@ -161,7 +161,7 @@ fig_len = (events[-1][0]-events[0][0]).total_seconds()*5
 fig, ax = plt.subplots(figsize=[fig_len,5], dpi=200)
 for label in labels:
     ax.text(*label, zorder=5, color='black', backgroundcolor='white', fontsize=10, va='center', ha='center')
-ax.vlines([x[0] for x in unit_events], -1, 6, colors='black')
+ax.vlines([x[0] for x in unit_events], -.5, 1.5, colors='black')
 ax.grid(zorder=0)
 ax.add_collection(bars)
 ax.autoscale()
