@@ -1,0 +1,25 @@
+in atomicstage: Str
+out s: Str
+out latestMA: Str
+out latestPLE: Str
+out m : Bool
+out a1 : Bool
+out a2 : Bool
+out p : Bool
+out l : Bool
+out e : Bool
+out default : Bool
+out atomic : Bool
+out zGloballyAtomic : Bool
+s = atomicstage
+latestMA = if (s == "start_m" || s == "start_a" || s == "end_m" || s == "end_aok" || s == "end_anom") then (s) else (latestMA[-1, "end_aok"])
+latestPLE = if (s == "end_anom" || s == "start_l" || s == "start_p" || s == "start_e" || s == "end_l" || s == "end_p" || s == "end_e" ) then (s) else (latestPLE[-1, "end_e"])
+m = (s == "start_m" && (latestMA[-1,"end_aok"] == "end_m" || latestMA[-1,"end_aok"] == "end_aok" || latestMA[-1,"end_aok"] == "end_anom")) || (s == "end_m" && latestMA[-1, "end_aok"] == "start_m") || (latestMA == latestMA[-1, "end_aok"])
+a1 = (s == "start_a" && (latestMA[-1,"end_aok"] == "end_m" || latestMA[-1,"end_aok"] == "end_aok" || latestMA[-1,"end_aok"] == "end_anom")) || ((s == "end_anom" || s == "end_aok") && latestMA[-1,"end_aok"] == "start_a") || (latestMA == latestMA[-1, "end_aok"])
+a2 = s == "end_anom" && latestPLE[-1, "end_e"] == "end_e"
+p = (s == "start_p" && (latestPLE[-1, "end_e"] == "end_anom" || latestPLE[-1, "end_e"] == "end_p" || latestPLE[-1, "end_e"] == "end_l" || latestPLE[-1, "end_e"] == "end_e")) || (s == "end_p" && latestPLE[-1, "end_e"] == "start_p") || (latestPLE == latestPLE[-1, "end_e"])
+l = (s == "start_l" && (latestPLE[-1, "end_e"] == "end_anom" || latestPLE[-1, "end_e"] == "end_p" || latestPLE[-1, "end_e"] == "end_l" || latestPLE[-1, "end_e"] == "end_e")) || (s == "end_l" && latestPLE[-1, "end_e"] == "start_l") || (latestPLE == latestPLE[-1, "end_e"])
+e = (s == "start_e" && (latestPLE[-1, "end_e"] == "end_anom" || latestPLE[-1, "end_e"] == "end_p" || latestPLE[-1, "end_e"] == "end_l" || latestPLE[-1, "end_e"] == "end_e")) || (s == "end_e" && latestPLE[-1, "end_e"] == "start_e") || (latestPLE == latestPLE[-1, "end_e"])
+default = latestPLE == "end_e"
+atomic = (m || a1) && (a2 || p || l || e || default)
+zGloballyAtomic = zGloballyAtomic[-1, true] && atomic
