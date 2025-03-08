@@ -3,18 +3,17 @@ use std::time::Duration;
 use std::{future::Future, vec};
 
 use futures::{StreamExt, stream};
+use paho_mqtt as mqtt;
+use std::pin::Pin;
+use std::task;
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, instrument};
 use trustworthiness_checker::io::mqtt::client::{
     provide_mqtt_client, provide_mqtt_client_with_subscription,
 };
-use winnow::Parser;
-mod lola_fixtures;
-use lola_fixtures::spec_simple_add_monitor;
-use paho_mqtt as mqtt;
-use std::pin::Pin;
-use std::task;
+use trustworthiness_checker::lola_fixtures::spec_simple_add_monitor;
 use trustworthiness_checker::{OutputStream, Value};
+use winnow::Parser;
 
 use async_once_cell::Lazy;
 use testcontainers_modules::testcontainers::core::WaitFor;
@@ -103,9 +102,6 @@ mod tests {
     use std::{collections::BTreeMap, pin::Pin};
     use test_log::test;
 
-    use lola_fixtures::{
-        input_streams1, spec_simple_add_decomposed_1, spec_simple_add_decomposed_2,
-    };
     use testcontainers_modules::testcontainers::{
         ContainerAsync,
         runners::{self, AsyncRunner},
@@ -114,11 +110,22 @@ mod tests {
     use tracing::info_span;
     use trustworthiness_checker::{
         Monitor, Value, VarName,
-        io::mqtt::{MQTTInputProvider, MQTTOutputHandler},
-        io::testing::manual_output_handler::ManualOutputHandler,
+        dependencies::traits::{DependencyKind, create_dependency_manager},
+        io::{
+            mqtt::{MQTTInputProvider, MQTTOutputHandler},
+            testing::manual_output_handler::ManualOutputHandler,
+        },
         lola_specification,
         runtime::asynchronous::AsyncMonitorRunner,
         semantics::UntimedLolaSemantics,
+    };
+    use trustworthiness_checker::{
+        distributed::locality_receiver::LocalityReceiver,
+        io::mqtt::MQTTLocalityReceiver,
+        lola_fixtures::{
+            input_streams1, spec_simple_add_decomposed_1, spec_simple_add_decomposed_2,
+        },
+        semantics::distributed::localisation::LocalitySpec,
     };
 
     use super::*;
@@ -158,9 +165,10 @@ mod tests {
         let mut output_handler =
             Box::new(MQTTOutputHandler::new(mqtt_host.as_str(), mqtt_topics).unwrap());
         let async_monitor = AsyncMonitorRunner::<_, _, UntimedLolaSemantics, _>::new(
-            spec,
+            spec.clone(),
             &mut input_streams,
             output_handler,
+            create_dependency_manager(DependencyKind::Empty, Box::new(spec)),
         );
         tokio::spawn(async_monitor.run());
         // Test the outputs
@@ -210,9 +218,10 @@ mod tests {
         let mut output_handler = ManualOutputHandler::new(vec!["z".into()]);
         let outputs = output_handler.get_output();
         let mut runner = AsyncMonitorRunner::<_, _, UntimedLolaSemantics, _>::new(
-            model,
+            model.clone(),
             &mut input_provider,
             Box::new(output_handler),
+            create_dependency_manager(DependencyKind::Empty, Box::new(model)),
         );
 
         tokio::spawn(runner.run());
@@ -247,106 +256,42 @@ mod tests {
 
     #[cfg_attr(not(feature = "testcontainers"), ignore)]
     #[test(tokio::test)]
-    async fn manually_decomposed_monitor_test() {
-        let model1 = lola_specification
-            .parse(spec_simple_add_decomposed_1())
-            .expect("Model could not be parsed");
-        let model2 = lola_specification
-            .parse(spec_simple_add_decomposed_2())
-            .expect("Model could not be parsed");
-
-        let xs = vec![Value::Int(1), Value::Int(2)];
-        let ys = vec![Value::Int(3), Value::Int(4)];
-        let zs = vec![Value::Int(4), Value::Int(6)];
-
-        let var_in_topics_1 = [
-            ("x".into(), "mqtt_input_dec_x".to_string()),
-            ("y".into(), "mqtt_input_dec_y".to_string()),
-        ];
-        let var_out_topics_1 = [("w".into(), "mqtt_input_dec_w".to_string())];
-        let var_in_topics_2 = [
-            ("w".into(), "mqtt_input_dec_w".to_string()),
-            ("z".into(), "mqtt_input_dec_z".to_string()),
-        ];
-        let var_out_topics_2 = [("v".into(), "mqtt_output_dec_v".to_string())];
-
+    async fn test_mqtt_locality_receiver() {
+        println!("Starting test");
         let emqx_server = MQTT_TEST_CONTAINER.get_unpin().await;
+        println!("Got EMQX server");
         let mqtt_port = emqx_server
             .get_host_port_ipv4(1883)
             .await
             .expect("Failed to get host port for EMQX server");
-        let mqtt_host = format!("tcp://localhost:{}", mqtt_port);
+        let mqtt_uri = format!("tcp://localhost:{}", mqtt_port);
 
-        let mut input_provider_1 = MQTTInputProvider::new(
-            mqtt_host.as_str(),
-            var_in_topics_1.iter().cloned().collect(),
-        )
-        .expect("Failed to create input provider 1");
-        input_provider_1
-            .started
-            .wait_for(|x| info_span!("Waited for input provider 1 started").in_scope(|| *x))
-            .await;
-        let mut input_provider_2 = MQTTInputProvider::new(
-            mqtt_host.as_str(),
-            var_in_topics_2.iter().cloned().collect(),
-        )
-        .expect("Failed to create input provider 2");
-        input_provider_2
-            .started
-            .wait_for(|x| info_span!("Waited for input provider 2 started").in_scope(|| *x))
-            .await;
+        let receiver = MQTTLocalityReceiver::new(mqtt_uri.clone(), "test_node".to_string());
 
-        let mut output_handler_1 =
-            MQTTOutputHandler::new(mqtt_host.as_str(), var_out_topics_1.into_iter().collect())
-                .expect("Failed to create output handler 1");
-        let mut output_handler_2 =
-            MQTTOutputHandler::new(mqtt_host.as_str(), var_out_topics_2.into_iter().collect())
-                .expect("Failed to create output handler 2");
+        println!("Created receiver");
 
-        let mut runner_1 = AsyncMonitorRunner::<_, _, UntimedLolaSemantics, _>::new(
-            model1,
-            &mut input_provider_1,
-            Box::new(output_handler_1),
-        );
+        let handle = tokio::spawn(async move {
+            // Wait for the receiver to be ready
+            tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
+            let mqtt_client = provide_mqtt_client(mqtt_uri)
+                .await
+                .expect("Failed to create MQTT client");
+            let topic = "start_monitors_at_test_node".to_string();
+            let message = serde_json::to_string(&vec!["x", "y"]).unwrap();
+            let message = mqtt::Message::new(topic, message, 1);
+            mqtt_client.publish(message).await.unwrap();
+            println!("Published message");
+        });
 
-        let mut runner_2 = AsyncMonitorRunner::<_, _, UntimedLolaSemantics, _>::new(
-            model2,
-            &mut input_provider_2,
-            Box::new(output_handler_2),
-        );
+        println!("Awaiting locality spec");
 
-        tokio::spawn(runner_1.run());
-        tokio::spawn(runner_2.run());
+        let locality_spec = receiver.receive().await.unwrap();
+        println!("Received locality spec");
 
-        tokio::spawn(dummy_publisher(
-            "x_dec_publisher".to_string(),
-            "mqtt_input_dec_x".to_string(),
-            xs,
-            mqtt_port,
-        ));
-        tokio::spawn(dummy_publisher(
-            "y_dec_publisher".to_string(),
-            "mqtt_input_dec_y".to_string(),
-            ys,
-            mqtt_port,
-        ));
-        tokio::spawn(dummy_publisher(
-            "z_dec_publisher".to_string(),
-            "mqtt_input_dec_z".to_string(),
-            zs,
-            mqtt_port,
-        ));
+        let local_vars = locality_spec.local_vars();
 
-        let outputs_z = get_outputs(
-            "mqtt_output_dec_v".to_string(),
-            "v_subscriber".to_string(),
-            mqtt_port,
-        )
-        .await;
+        assert_eq!(local_vars, vec!["x".into(), "y".into()]);
 
-        assert_eq!(
-            outputs_z.take(2).collect::<Vec<_>>().await,
-            vec![Value::Int(8), Value::Int(12)]
-        );
+        handle.abort();
     }
 }

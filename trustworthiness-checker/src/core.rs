@@ -8,6 +8,9 @@ use std::{
 use async_trait::async_trait;
 use futures::stream::BoxStream;
 use serde::{Deserialize, Serialize};
+
+use crate::dependencies::traits::DependencyManager;
+
 // use serde_json::{Deserializer, Sserializer};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -130,7 +133,7 @@ pub enum StreamType {
 // Could also do this with async steams
 // trait InputStream = Iterator<Item = StreamData>;
 
-#[derive(Clone, PartialEq, Eq, Debug, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, Debug, PartialOrd, Ord, Serialize, Deserialize, Hash)]
 pub struct VarName(pub String);
 
 impl From<&str> for VarName {
@@ -171,9 +174,22 @@ impl<V> InputProvider<V> for BTreeMap<VarName, OutputStream<V>> {
 pub trait StreamContext<Val: StreamData>: Send + 'static {
     fn var(&self, x: &VarName) -> Option<OutputStream<Val>>;
 
-    fn subcontext(&self, history_length: usize) -> Box<dyn StreamContext<Val>>;
+    fn subcontext(&self, history_length: usize) -> Box<dyn TimedStreamContext<Val>>;
+}
 
-    fn advance(&self);
+#[async_trait]
+pub trait TimedStreamContext<Val: StreamData>: StreamContext<Val> + Send + 'static {
+    fn advance_clock(&self);
+
+    async fn clock(&self) -> usize;
+
+    async fn wait_till(&self, time: usize);
+
+    fn start_clock(&mut self);
+
+    // This allows TimedStreamContext to be used as a StreamContext
+    // This is necessary due to https://github.com/rust-lang/rust/issues/65991
+    fn upcast(&self) -> &dyn StreamContext<Val>;
 }
 
 pub trait MonitoringSemantics<Expr, Val, CVal = Val>: Clone + Sync + Send + 'static {
@@ -216,7 +232,12 @@ pub trait OutputHandler<V: StreamData>: Send {
  */
 #[async_trait]
 pub trait Monitor<M, V: StreamData>: Send {
-    fn new(model: M, input: &mut dyn InputProvider<V>, output: Box<dyn OutputHandler<V>>) -> Self;
+    fn new(
+        model: M,
+        input: &mut dyn InputProvider<V>,
+        output: Box<dyn OutputHandler<V>>,
+        dependencies: DependencyManager,
+    ) -> Self;
 
     fn spec(&self) -> &M;
 

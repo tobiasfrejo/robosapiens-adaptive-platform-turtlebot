@@ -4,22 +4,24 @@ use crate::core::OutputHandler;
 use crate::core::Specification;
 use crate::core::Value;
 use crate::core::VarName;
+use crate::dependencies::traits::DependencyManager;
 use crate::is_enum_variant;
 use crate::lang::dynamic_lola::ast::LOLASpecification;
 use crate::lang::dynamic_lola::ast::SExpr;
-use crate::runtime::constraints::solver::model_constraints;
 use crate::runtime::constraints::solver::ConstraintStore;
 use crate::runtime::constraints::solver::ConvertToAbsolute;
 use crate::runtime::constraints::solver::SExprStream;
 use crate::runtime::constraints::solver::Simplifiable;
 use crate::runtime::constraints::solver::SimplifyResult;
+use crate::runtime::constraints::solver::model_constraints;
 use async_stream::stream;
 use async_trait::async_trait;
-use futures::stream::BoxStream;
 use futures::StreamExt;
+use futures::stream::BoxStream;
 use std::collections::BTreeMap;
 use tokio::sync::broadcast;
-use tracing::{debug, info};
+use tracing::debug;
+use tracing::info;
 
 #[derive(Default)]
 pub struct ValStreamCollection(pub BTreeMap<VarName, BoxStream<'static, Value>>);
@@ -43,83 +45,20 @@ impl ValStreamCollection {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct ConstraintBasedRuntime {
     store: ConstraintStore,
     time: usize,
-}
-impl SExpr<VarName> {
-    // Traverses the sexpr and returns a map of its dependencies to other variables
-    fn dependencies(&self) -> BTreeMap<VarName, usize> {
-        fn dependencies_impl(
-            sexpr: &SExpr<VarName>,
-            steps: usize,
-            map: &mut BTreeMap<VarName, usize>,
-        ) {
-            match sexpr {
-                SExpr::Var(name) => {
-                    map.entry(name.clone())
-                        .and_modify(|existing_depth| *existing_depth = (*existing_depth).max(steps))
-                        .or_insert(steps);
-                }
-                SExpr::SIndex(sexpr, idx, _) => {
-                    dependencies_impl(sexpr, steps + idx.unsigned_abs(), map);
-                }
-                SExpr::If(iff, then, els) => {
-                    dependencies_impl(iff, steps, map);
-                    dependencies_impl(then, steps, map);
-                    dependencies_impl(els, steps, map);
-                }
-                SExpr::Val(_) => {}
-                SExpr::List(vec) => {
-                    vec.iter()
-                        .for_each(|sexpr| dependencies_impl(sexpr, steps, map));
-                }
-                SExpr::Eval(sexpr)
-                | SExpr::Not(sexpr)
-                | SExpr::LHead(sexpr)
-                | SExpr::LTail(sexpr)
-                | SExpr::Defer(sexpr) => dependencies_impl(sexpr, steps, map),
-                SExpr::BinOp(sexpr1, sexpr2, _)
-                | SExpr::Update(sexpr1, sexpr2)
-                | SExpr::LIndex(sexpr1, sexpr2)
-                | SExpr::LAppend(sexpr1, sexpr2)
-                | SExpr::LConcat(sexpr1, sexpr2) => {
-                    dependencies_impl(sexpr1, steps, map);
-                    dependencies_impl(sexpr2, steps, map);
-                }
-            }
-        }
-
-        let mut map = BTreeMap::new();
-        dependencies_impl(self, 0, &mut map);
-        map
-    }
+    dependencies: DependencyManager,
 }
 
 impl ConstraintBasedRuntime {
-    fn generate_dependencies(&mut self) -> BTreeMap<VarName, usize> {
-        // Merge map prioritizing the smallest value during conflicts
-        // (smallest value in this case means expressions going further back in history)
-        fn merge_min(map1: &mut BTreeMap<VarName, usize>, map2: BTreeMap<VarName, usize>) {
-            for (key, value) in map2 {
-                map1.entry(key)
-                    .and_modify(|existing| *existing = (*existing).max(value))
-                    .or_insert(value);
-            }
+    fn new(dependencies: DependencyManager) -> Self {
+        Self {
+            store: ConstraintStore::default(),
+            time: 0,
+            dependencies,
         }
-
-        let mut dependencies: BTreeMap<VarName, usize> = BTreeMap::new();
-        for (name, expr) in &self.store.output_exprs {
-            let mut expr_deps = expr.dependencies();
-            // Make sure it is not deleted immediately after being resolved,
-            // by adding a dependency on itself to the longest dependency
-            let max_dep = expr_deps.values().max().cloned().unwrap_or(0);
-            expr_deps.insert(name.clone(), max_dep);
-            // Merge with global dependencies
-            merge_min(&mut dependencies, expr_deps);
-        }
-        dependencies
     }
 
     fn receive_inputs(&mut self, inputs: &BTreeMap<VarName, Value>) {
@@ -198,8 +137,9 @@ impl ConstraintBasedRuntime {
         }
     }
 
+    // Remove unused input values and resolved outputs
     fn cleanup(&mut self) {
-        // Remove unused input values and resolved outputs
+        let longest_times = self.dependencies.longest_time_dependencies();
         for collection in [
             &mut self.store.input_streams,
             &mut self.store.outputs_resolved,
@@ -207,14 +147,14 @@ impl ConstraintBasedRuntime {
             // Go through each saved value and remove it if it is older than the current time,
             // keeping the longest dependency in mind
             for (name, values) in collection {
-                let longest_dep = self
-                    .store
-                    .output_dependencies
-                    .get(name)
-                    .cloned()
-                    .unwrap_or(0);
+                let longest_dep = longest_times.get(name).cloned().unwrap_or(0);
                 // Modify the collection in place
-                values.retain(|(time, _)| *time + longest_dep >= self.time);
+                values.retain(|(time, _)| {
+                    longest_dep
+                        .checked_add(*time)
+                        // Overflow means that data for this var should always be kept - hence the true
+                        .map_or(true, |t| t >= self.time)
+                });
             }
         }
     }
@@ -223,8 +163,9 @@ impl ConstraintBasedRuntime {
         info!("Runtime step at time: {}", self.time);
         self.receive_inputs(inputs);
         self.resolve_possible();
+        debug!("Store before clean: {:#?}", self.store);
         self.cleanup();
-        debug!("Store after clean: {:?}", self.store);
+        debug!("Store after clean: {:#?}", self.store);
         self.time += 1;
     }
 }
@@ -267,6 +208,7 @@ pub struct ConstraintBasedMonitor {
     model: LOLASpecification,
     output_handler: Box<dyn OutputHandler<Value>>,
     has_inputs: bool,
+    dependencies: DependencyManager,
 }
 
 #[async_trait]
@@ -275,6 +217,7 @@ impl Monitor<LOLASpecification, Value> for ConstraintBasedMonitor {
         model: LOLASpecification,
         input: &mut dyn InputProvider<Value>,
         output: Box<dyn OutputHandler<Value>>,
+        dependencies: DependencyManager,
     ) -> Self {
         let input_streams = model
             .input_vars()
@@ -294,6 +237,7 @@ impl Monitor<LOLASpecification, Value> for ConstraintBasedMonitor {
             model,
             output_handler: output,
             has_inputs,
+            dependencies,
         }
     }
 
@@ -319,9 +263,8 @@ impl Monitor<LOLASpecification, Value> for ConstraintBasedMonitor {
 impl ConstraintBasedMonitor {
     fn stream_output_constraints(&mut self) -> BoxStream<'static, ConstraintStore> {
         let input_receiver = self.input_producer.subscribe();
-        let mut runtime_initial = ConstraintBasedRuntime::default();
+        let mut runtime_initial = ConstraintBasedRuntime::new(self.dependencies.clone());
         runtime_initial.store = model_constraints(self.model.clone());
-        runtime_initial.store.output_dependencies = runtime_initial.generate_dependencies();
         let has_inputs = self.has_inputs.clone();
         Box::pin(stream!(
             let mut runtime = runtime_initial;
