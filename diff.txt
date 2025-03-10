@@ -1,0 +1,178 @@
+diff --git a/trustworthiness-checker/src/lang/dynamic_lola/parser.rs b/trustworthiness-checker/src/lang/dynamic_lola/parser.rs
+index 6f69af5..070acf6 100644
+--- a/trustworthiness-checker/src/lang/dynamic_lola/parser.rs
++++ b/trustworthiness-checker/src/lang/dynamic_lola/parser.rs
+@@ -65,15 +65,15 @@ fn ifelse(s: &mut &str) -> Result<SExpr<VarName>> {
+     seq!((
+         _: whitespace,
+         _: "if",
+-        _: whitespace,
++        _: multispace0,
+         sexpr,
+-        _: whitespace,
++        _: multispace0,
+         _: "then",
+-        _: whitespace,
++        _: multispace0,
+         sexpr,
+-        _: whitespace,
++        _: multispace0,
+         _: "else",
+-        _: whitespace,
++        _: multispace0,
+         sexpr,
+         _: whitespace,
+     ))
+
+
+diff --git a/trustworthiness-checker/src/runtime/constraints/runtime.rs b/trustworthiness-checker/src/runtime/constraints/runtime.rs
+index b9a67bd..51b12ca 100644
+--- a/trustworthiness-checker/src/runtime/constraints/runtime.rs
++++ b/trustworthiness-checker/src/runtime/constraints/runtime.rs
+@@ -51,6 +51,54 @@ pub struct ConstraintBasedRuntime {
+     time: usize,
+     dependencies: DependencyManager,
+ }
++impl SExpr<VarName> {
++    // Traverses the sexpr and returns a map of its dependencies to other variables
++    fn dependencies(&self) -> BTreeMap<VarName, usize> {
++        fn dependencies_impl(
++            sexpr: &SExpr<VarName>,
++            steps: usize,
++            map: &mut BTreeMap<VarName, usize>,
++        ) {
++            match sexpr {
++                SExpr::Var(name) => {
++                    map.entry(name.clone())
++                        .and_modify(|existing_depth| *existing_depth = (*existing_depth).max(steps))
++                        .or_insert(steps);
++                }
++                SExpr::SIndex(sexpr, idx, _) => {
++                    dependencies_impl(sexpr, steps + idx.unsigned_abs(), map);
++                }
++                SExpr::If(iff, then, els) => {
++                    dependencies_impl(iff, steps, map);
++                    dependencies_impl(then, steps, map);
++                    dependencies_impl(els, steps, map);
++                }
++                SExpr::Val(_) => {}
++                SExpr::List(vec) => {
++                    vec.iter()
++                        .for_each(|sexpr| dependencies_impl(sexpr, steps, map));
++                }
++                SExpr::Eval(sexpr)
++                | SExpr::Not(sexpr)
++                | SExpr::LHead(sexpr)
++                | SExpr::LTail(sexpr)
++                | SExpr::Defer(sexpr) => dependencies_impl(sexpr, steps, map),
++                SExpr::BinOp(sexpr1, sexpr2, _)
++                | SExpr::Update(sexpr1, sexpr2)
++                | SExpr::LIndex(sexpr1, sexpr2)
++                | SExpr::LAppend(sexpr1, sexpr2)
++                | SExpr::LConcat(sexpr1, sexpr2) => {
++                    dependencies_impl(sexpr1, steps, map);
++                    dependencies_impl(sexpr2, steps, map);
++                }
++            }
++        }
++
++        let mut map = BTreeMap::new();
++        dependencies_impl(self, 0, &mut map);
++        map
++    }
++}
+ 
+ impl ConstraintBasedRuntime {
+     fn new(dependencies: DependencyManager) -> Self {
+@@ -265,6 +313,7 @@ impl ConstraintBasedMonitor {
+         let input_receiver = self.input_producer.subscribe();
+         let mut runtime_initial = ConstraintBasedRuntime::new(self.dependencies.clone());
+         runtime_initial.store = model_constraints(self.model.clone());
++        runtime_initial.store.output_dependencies = runtime_initial.generate_dependencies();
+         let has_inputs = self.has_inputs.clone();
+         Box::pin(stream!(
+             let mut runtime = runtime_initial;
+
+
+diff --git a/trustworthiness-checker/src/runtime/constraints/solver.rs b/trustworthiness-checker/src/runtime/constraints/solver.rs
+index 123baed..fcf8486 100644
+--- a/trustworthiness-checker/src/runtime/constraints/solver.rs
++++ b/trustworthiness-checker/src/runtime/constraints/solver.rs
+@@ -14,6 +14,7 @@ pub type SExprStream = SyncStream<SExpr<IndexedVarName>>;
+ pub struct ConstraintStore {
+     pub input_streams: ValStream,
+     pub output_exprs: BTreeMap<VarName, SExpr<VarName>>,
++    pub output_dependencies: BTreeMap<VarName, usize>,
+     pub outputs_resolved: ValStream,
+     pub outputs_unresolved: SExprStream,
+ }
+@@ -33,6 +34,7 @@ impl Default for ConstraintStore {
+         ConstraintStore {
+             input_streams: BTreeMap::new(),
+             output_exprs: BTreeMap::new(),
++            output_dependencies: BTreeMap::new(),
+             outputs_resolved: BTreeMap::new(),
+             outputs_unresolved: BTreeMap::new(),
+         }
+
+
+diff --git a/trustworthiness-checker/tests/constraint_based_lola.rs b/trustworthiness-checker/tests/constraint_based_lola.rs
+index 1cf114f..f1bc7c0 100644
+--- a/trustworthiness-checker/tests/constraint_based_lola.rs
++++ b/trustworthiness-checker/tests/constraint_based_lola.rs
+@@ -385,6 +385,55 @@ mod tests {
+         }
+     }
+ 
++    #[test(tokio::test)]
++    async fn test_index_past_mult_dependencies() {
++        // Specifically tests past indexing that the cleaner does not delete dependencies too early
++        let mut input_streams = input_streams1();
++        let mut spec = "in x\nout z1\nout z2\nz2 = x[-2, 0]\nz1 = x[-1, 0]";
++        let spec = lola_specification(&mut spec).unwrap();
++        let mut output_handler = output_handler(spec.clone());
++        let outputs = output_handler.get_output();
++        let monitor = ConstraintBasedMonitor::new(spec, &mut input_streams, output_handler);
++        tokio::spawn(monitor.run());
++        let outputs: Vec<(usize, BTreeMap<VarName, Value>)> = outputs.enumerate().collect().await;
++        assert!(outputs.len() == 3);
++        assert_eq!(
++            outputs,
++            vec![
++                (
++                    // Both resolve to default
++                    0,
++                    vec![
++                        (VarName("z1".into()), Value::Int(0)),
++                        (VarName("z2".into()), Value::Int(0))
++                    ]
++                    .into_iter()
++                    .collect(),
++                ),
++                (
++                    // z1 resolves to prev, z2 resolves to default
++                    1,
++                    vec![
++                        (VarName("z1".into()), Value::Int(1)),
++                        (VarName("z2".into()), Value::Int(0))
++                    ]
++                    .into_iter()
++                    .collect(),
++                ),
++                (
++                    // z1 resolves to prev, z2 resolves to prev_prev
++                    2,
++                    vec![
++                        (VarName("z1".into()), Value::Int(3)),
++                        (VarName("z2".into()), Value::Int(1))
++                    ]
++                    .into_iter()
++                    .collect(),
++                ),
++            ]
++        );
++    }
++
+     #[test(tokio::test)]
+     async fn test_index_future() {
+         for kind in [
