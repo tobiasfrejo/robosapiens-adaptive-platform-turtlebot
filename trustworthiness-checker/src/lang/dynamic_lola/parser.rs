@@ -1,6 +1,5 @@
 use winnow::Parser;
 use winnow::Result;
-use winnow::ascii::multispace0;
 use winnow::combinator::*;
 use winnow::token::literal;
 
@@ -38,14 +37,15 @@ fn var(s: &mut &str) -> Result<SExpr<VarName>> {
         .parse_next(s)
 }
 
-fn lit(s: &mut &str) -> Result<SExpr<VarName>> {
+// Same as `val` but returns SExpr::Val
+fn sval(s: &mut &str) -> Result<SExpr<VarName>> {
     val.map(|v| SExpr::Val(v)).parse_next(s)
 }
 
 fn sindex(s: &mut &str) -> Result<SExpr<VarName>> {
     seq!(
         _: whitespace,
-        alt((lit, var, paren)),
+        alt((sval, var, paren)),
         _: whitespace,
         _: '[',
         _: whitespace,
@@ -126,6 +126,24 @@ fn eval(s: &mut &str) -> Result<SExpr<VarName>> {
         _: whitespace,
     ))
     .map(|(e,)| SExpr::Eval(Box::new(e)))
+    .parse_next(s)
+}
+
+fn default(s: &mut &str) -> Result<SExpr<VarName>> {
+    seq!((
+        _: whitespace,
+        _: literal("default"),
+        _: '(',
+        _: whitespace,
+        sexpr,
+        _: whitespace,
+        _: ',',
+        _: whitespace,
+        val,
+        _: whitespace,
+        _: ')',
+    ))
+    .map(|(lhs, rhs)| SExpr::Default(Box::new(lhs), rhs))
     .parse_next(s)
 }
 
@@ -236,8 +254,8 @@ fn atom(s: &mut &str) -> Result<SExpr<VarName>> {
     delimited(
         whitespace,
         alt((
-            sindex, lindex, lappend, lconcat, lhead, ltail, not, eval, lit, ifelse, defer, update,
-            sexpr_list, var, paren,
+            sindex, lindex, lappend, lconcat, lhead, ltail, not, eval, sval, ifelse, defer, update,
+            default, sexpr_list, var, paren,
         )),
         whitespace,
     )
@@ -378,7 +396,7 @@ fn input_decl(s: &mut &str) -> Result<(VarName, Option<StreamType>)> {
 }
 
 fn input_decls(s: &mut &str) -> Result<Vec<(VarName, Option<StreamType>)>> {
-    separated(0.., input_decl, linebreak).parse_next(s)
+    separated(0.., input_decl, lb_or_lc).parse_next(s)
 }
 
 fn output_decl(s: &mut &str) -> Result<(VarName, Option<StreamType>)> {
@@ -395,7 +413,7 @@ fn output_decl(s: &mut &str) -> Result<(VarName, Option<StreamType>)> {
 }
 
 fn output_decls(s: &mut &str) -> Result<Vec<(VarName, Option<StreamType>)>> {
-    separated(0.., output_decl, linebreak).parse_next(s)
+    separated(0.., output_decl, lb_or_lc).parse_next(s)
 }
 
 fn var_decl(s: &mut &str) -> Result<(VarName, SExpr<VarName>)> {
@@ -413,18 +431,18 @@ fn var_decl(s: &mut &str) -> Result<(VarName, SExpr<VarName>)> {
 }
 
 fn var_decls(s: &mut &str) -> Result<Vec<(VarName, SExpr<VarName>)>> {
-    separated(0.., var_decl, linebreak).parse_next(s)
+    separated(0.., var_decl, lb_or_lc).parse_next(s)
 }
 
 pub fn lola_specification(s: &mut &str) -> Result<LOLASpecification> {
     seq!((
-        _: multispace0,
+        _: loop_ms_or_lb_or_lc,
         input_decls,
-        _: alt((linebreak.void(), empty)),
+        _: loop_ms_or_lb_or_lc,
         output_decls,
-        _: alt((linebreak.void(), empty)),
+        _: loop_ms_or_lb_or_lc,
         var_decls,
-        _: multispace0,
+        _: loop_ms_or_lb_or_lc,
     ))
     .map(|(input_vars, output_vars, exprs)| LOLASpecification {
         input_vars: input_vars.iter().map(|(name, _)| name.clone()).collect(),
@@ -946,6 +964,23 @@ mod tests {
         assert_eq!(
             presult_to_string(&sexpr(&mut r#"update(x, y)"#)),
             r#"Ok(Update(Var(VarName("x")), Var(VarName("y"))))"#
+        )
+    }
+
+    #[test]
+    fn parse_default() {
+        assert_eq!(
+            presult_to_string(&sexpr(&mut r#"default(x, 0)"#)),
+            r#"Ok(Default(Var(VarName("x")), Int(0)))"#
+        )
+    }
+
+    #[test]
+    fn parse_default_sexpr() {
+        // Negative test - should not parse into Default expression
+        assert_ne!(
+            presult_to_string(&sexpr(&mut r#"default(x, y)"#)),
+            r#"Ok(Default(Var(VarName("x")), Var(VarName("y"))))"#
         )
     }
 
