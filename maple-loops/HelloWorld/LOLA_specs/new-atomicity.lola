@@ -12,17 +12,25 @@ out PLE : Bool
 out default : Bool
 out atomic : Bool
 out zGloballyAtomic : Bool
+out potentialAnomError: Bool
+out PLEAnomError : Bool
 s = atomicstage
 latestMA = if (s == "start_m" || s == "start_a" || s == "end_m" || s == "end_aok" || s == "end_anom") 
            then (s) 
-           else (latestMA[-1, "end_aok"])
+           else (latestMA[-1, ""])
 latestPLE = if (s == "end_anom" || s == "start_l" || s == "start_p" || s == "start_e" || s == "end_l" || s == "end_p" || s == "end_e" ) 
             then (s) 
             else (latestPLE[-1, "end_e"])
-m = (s == "start_m" && (latestMA[-1,"end_aok"] == "end_m" || latestMA[-1,"end_aok"] == "end_aok" || latestMA[-1,"end_aok"] == "end_anom")) || (s == "end_m" && latestMA[-1, "end_aok"] == "start_m") || (latestMA == latestMA[-1, "end_aok"])
-a1 = (s == "start_a" && (latestMA[-1,"end_aok"] == "end_m" || latestMA[-1,"end_aok"] == "end_aok" || latestMA[-1,"end_aok"] == "end_anom")) || ((s == "end_anom" || s == "end_aok") && latestMA[-1,"end_aok"] == "start_a") || (latestMA == latestMA[-1, "end_aok"])
+m = (s == "start_m" && (latestMA[-1,""] == "end_m" || latestMA[-1,""] == "end_aok" || latestMA[-1,""] == "end_anom" || latestMA[-1,""] == "")) || (s == "end_m" && latestMA[-1, ""] == "start_m") || (latestMA == latestMA[-1, ""])
+a1 = (s == "start_a" && (latestMA[-1,""] == "end_m" || latestMA[-1,""] == "end_aok" || latestMA[-1,""] == "end_anom" || latestMA[-1,""] == "")) || ((s == "end_anom" || s == "end_aok") && latestMA[-1,""] == "start_a") || (latestMA == latestMA[-1, ""])
 PLE = latestPLE[-1, "end_e"] == "end_anom" || latestPLE[-1, "end_e"] == "end_p" || latestPLE[-1, "end_e"] == "end_l" || latestPLE[-1, "end_e"] == "end_e"
-a2 = s == "end_anom" && PLE
+potentialAnomError = if (latestMA == "start_a" && (s == "end_p" || s == "end_l" || s == "end_e" || s == "start_p" || s == "start_l" || s == "start_e"))
+                     then true
+                     else if (latestMA == "end_aok" || latestMA == "end_anom")
+                     then false
+                     else potentialAnomError[-1, false]
+PLEAnomError = potentialAnomError[-1, false] && s == "end_anom"
+a2 = s == "end_anom" && PLE && !PLEAnomError
 p = (s == "start_p"  && PLE) || (s == "end_p" && latestPLE[-1, "end_e"] == "start_p") || (latestPLE == latestPLE[-1, "end_e"])
 l = (s == "start_l"  && PLE) || (s == "end_l" && latestPLE[-1, "end_e"] == "start_l") || (latestPLE == latestPLE[-1, "end_e"])
 e = (s == "start_e"  && PLE) || (s == "end_e" && latestPLE[-1, "end_e"] == "start_e") || (latestPLE == latestPLE[-1, "end_e"])
