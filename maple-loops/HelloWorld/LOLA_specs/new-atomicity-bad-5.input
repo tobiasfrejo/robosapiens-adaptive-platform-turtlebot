@@ -1,0 +1,6 @@
+0: atomicstage = "start_p"
+1: atomicstage = "start_l"
+2: atomicstage = "end_p"
+3: atomicstage = "end_l"
+4: atomicstage = "start_e"
+5: atomicstage = "end_e"
