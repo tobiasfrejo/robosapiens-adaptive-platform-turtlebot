@@ -1,0 +1,5 @@
+0: PhaseWrite = "start"
+1: PhaseWrite = "write"
+2: PhaseWrite = "write"
+3: PhaseWrite = "end"
+4: PhaseWrite = "start"
