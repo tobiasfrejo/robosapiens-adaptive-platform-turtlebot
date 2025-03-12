@@ -1,0 +1,3 @@
+in kPlannedLidarMask: Str
+out missed: Bool
+missed = (kLaserScan == "write" && kLaserScan[-1, ""]  == "write") || missed[-1, false]
