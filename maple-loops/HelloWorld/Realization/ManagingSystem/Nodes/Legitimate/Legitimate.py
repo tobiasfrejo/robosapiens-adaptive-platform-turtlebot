@@ -11,7 +11,7 @@ from rv_tools.knowledge import knowledge_rv
 from .messages import *
 import time
 from rv_tools.constants import *
-from rv_tools.timing_workaround import trustworthiness_output, trustworthiness_outputs
+from rv_tools.timing_workaround import trustworthiness_output2
 #<!-- cc_include START--!>
 import json
 #<!-- cc_include END--!>
@@ -34,7 +34,7 @@ class Legitimate(Node):
     # -----------------------------AUTO-GEN SKELETON FOR executer-----------------------------
     def legitimate(self,msg):
         # self.publish_event(event_key='start_l')
-        trustworthiness_output(self, ATOMICITY, 'start_l')
+        trustworthiness_output2(self, 'start')
         # isLegit = self.knowledge.read("isLegit",queueSize=1)
         isLegit = knowledge_rv.read(self, "isLegit",queueSize=1)
         # directions = self.knowledge.read("directions",queueSize=1)
@@ -45,12 +45,13 @@ class Legitimate(Node):
 
         # user code here for executer
 
+        knowledge_rv.write(self, 'isLegit', True)
 
         #<!-- cc_code_executer END--!>
         for i in range(5):
             self.logger.info("Legitimating")
             time.sleep(0.01)
-        trustworthiness_outputs(self, {ATOMICITY: 'end_l', MAPLE: 'l'})
+        trustworthiness_output2(self, 'end')
         self.publish_event(event_key='isLegit')    # LINK <outport> spin_config
 
     def register_callbacks(self):
