@@ -1,0 +1,16 @@
+in ExecutePhaseWrite
+out s
+out started
+out written
+out x
+out xGlobal
+// This will allow S-W-S-W-W-S-E
+s = PhaseWrite
+written =   if s == "write" 
+            then true
+            else if s == "end"
+            then false
+            else written[-1, false]
+started =   s == "start" || (started[-1, false] && !(s == "end"))
+x = s == "write" && !started || s == "end" && !written[-1, false]
+xGlobal = x || xGlobal[-1, false]
