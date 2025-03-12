@@ -139,6 +139,12 @@ eventOut:
         class: "-"
         topic: "k_a"
         QoS: 10
+    - property:
+        type: "event"
+        name: "scanTrigger"
+        class: "-"
+        topic: "scanTrigger"
+        QoS: scanTrigger
 
 
 mqtt_broker: "localhost"
