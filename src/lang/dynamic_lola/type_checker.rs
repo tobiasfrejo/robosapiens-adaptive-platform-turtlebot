@@ -154,7 +154,9 @@ pub struct TypedLOLASpecification {
     pub type_annotations: BTreeMap<VarName, StreamType>,
 }
 
-impl Specification<SExprTE> for TypedLOLASpecification {
+impl Specification for TypedLOLASpecification {
+    type Expr = SExprTE;
+
     fn input_vars(&self) -> Vec<VarName> {
         self.input_vars.clone()
     }
@@ -460,6 +462,7 @@ impl TypeCheckableHelper<SExprTE> for SExpr<VarName> {
             SExpr::LConcat(_, _) => todo!(),
             SExpr::LHead(_) => todo!(),
             SExpr::LTail(_) => todo!(),
+            SExpr::When(_) => todo!(),
         }
     }
 }

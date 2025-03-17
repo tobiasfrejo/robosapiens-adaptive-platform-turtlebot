@@ -1,15 +1,15 @@
 use std::{
     collections::BTreeMap,
     fmt::{Debug, Display},
-    future::Future,
-    pin::Pin,
+    rc::Rc,
 };
 
 use async_trait::async_trait;
-use futures::stream::BoxStream;
+use futures::future::LocalBoxFuture;
 use serde::{Deserialize, Serialize};
+use smol::LocalExecutor;
 
-use crate::dependencies::traits::DependencyManager;
+use crate::dep_manage::interface::DependencyManager;
 
 // use serde_json::{Deserializer, Sserializer};
 
@@ -157,51 +157,68 @@ impl Display for VarName {
 #[derive(Clone, PartialEq, Eq, Debug, PartialOrd, Ord)]
 pub struct IndexedVarName(pub String, pub usize);
 
-pub type OutputStream<T> = BoxStream<'static, T>;
+pub type OutputStream<T> = futures::stream::LocalBoxStream<'static, T>;
 
-pub trait InputProvider<V> {
-    fn input_stream(&mut self, var: &VarName) -> Option<OutputStream<V>>;
+pub trait InputProvider {
+    type Val;
+
+    fn input_stream(&mut self, var: &VarName) -> Option<OutputStream<Self::Val>>;
 }
 
-impl<V> InputProvider<V> for BTreeMap<VarName, OutputStream<V>> {
+impl<V> InputProvider for BTreeMap<VarName, OutputStream<V>> {
+    type Val = V;
+
     // We are consuming the input stream from the map when
     // we return it to ensure single ownership and static lifetime
-    fn input_stream(&mut self, var: &VarName) -> Option<OutputStream<V>> {
+    fn input_stream(&mut self, var: &VarName) -> Option<OutputStream<Self::Val>> {
         self.remove(var)
     }
 }
 
-pub trait StreamContext<Val: StreamData>: Send + 'static {
+pub trait StreamContext<Val: StreamData>: 'static {
     fn var(&self, x: &VarName) -> Option<OutputStream<Val>>;
 
-    fn subcontext(&self, history_length: usize) -> Box<dyn TimedStreamContext<Val>>;
+    fn subcontext(&self, history_length: usize) -> Box<dyn SyncStreamContext<Val>>;
 }
 
-#[async_trait]
-pub trait TimedStreamContext<Val: StreamData>: StreamContext<Val> + Send + 'static {
-    fn advance_clock(&self);
+#[async_trait(?Send)]
+pub trait SyncStreamContext<Val: StreamData>: StreamContext<Val> + 'static {
+    /// Advance the clock used by the context by one step, letting all
+    /// streams to progress (blocking)
+    async fn advance_clock(&mut self);
 
-    async fn clock(&self) -> usize;
+    /// Try to advance clock used by the context by one step, letting all
+    /// streams to progress (non-blocking, don't care if anything happens)
+    async fn lazy_advance_clock(&mut self);
 
-    async fn wait_till(&self, time: usize);
+    /// Set the clock to automatically advance, allowing all substreams
+    /// to progress freely (limited only by buffering)
+    async fn start_auto_clock(&mut self);
 
-    fn start_clock(&mut self);
+    /// Check if the clock is currently started
+    fn is_clock_started(&self) -> bool;
+
+    /// Get the current value of the clock (this may not guarantee
+    /// that all stream have reached this time)
+    fn clock(&self) -> usize;
 
     // This allows TimedStreamContext to be used as a StreamContext
     // This is necessary due to https://github.com/rust-lang/rust/issues/65991
     fn upcast(&self) -> &dyn StreamContext<Val>;
 }
 
-pub trait MonitoringSemantics<Expr, Val, CVal = Val>: Clone + Sync + Send + 'static {
+pub trait MonitoringSemantics<Expr, Val, CVal = Val>: Clone + 'static {
     fn to_async_stream(expr: Expr, ctx: &dyn StreamContext<CVal>) -> OutputStream<Val>;
 }
 
-pub trait Specification<Expr>: Sync + Send {
+pub trait Specification: Sync + Send {
+    type Expr;
+
     fn input_vars(&self) -> Vec<VarName>;
 
     fn output_vars(&self) -> Vec<VarName>;
 
-    fn var_expr(&self, var: &VarName) -> Option<Expr>;
+    fn var_expr(&self, var: &VarName) -> Option<Self::Expr>;
 }
 
 // This could alternatively implement Sink
@@ -210,15 +227,17 @@ pub trait Specification<Expr>: Sync + Send {
 // output file name, etc.) whilst provide_streams is called by the runtime to
 // finish the setup of the output handler by providing the streams to be output,
 // and finally run is called to start the output handler.
-#[async_trait]
-pub trait OutputHandler<V: StreamData>: Send {
+#[async_trait(?Send)]
+pub trait OutputHandler {
+    type Val: StreamData;
+
     // async fn handle_output(&mut self, var: &VarName, value: V);
     // This should only be called once by the runtime to provide the streams
-    fn provide_streams(&mut self, streams: BTreeMap<VarName, OutputStream<V>>);
+    fn provide_streams(&mut self, streams: BTreeMap<VarName, OutputStream<Self::Val>>);
 
     // Essentially this is of type
     // async fn run(&mut self);
-    fn run(&mut self) -> Pin<Box<dyn Future<Output = ()> + 'static + Send>>;
+    fn run(&mut self) -> LocalBoxFuture<'static, ()>;
     //  -> Pin<Box<dyn Future<Output = ()> + 'static + Send>>;
 }
 
@@ -230,12 +249,13 @@ pub trait OutputHandler<V: StreamData>: Send {
  * type of input provider to be provided and allows the output
  * to borrow from the input provider without worrying about lifetimes.
  */
-#[async_trait]
-pub trait Monitor<M, V: StreamData>: Send {
+#[async_trait(?Send)]
+pub trait Monitor<M, V: StreamData> {
     fn new(
+        executor: Rc<LocalExecutor<'static>>,
         model: M,
-        input: &mut dyn InputProvider<V>,
-        output: Box<dyn OutputHandler<V>>,
+        input: &mut dyn InputProvider<Val = V>,
+        output: Box<dyn OutputHandler<Val = V>>,
         dependencies: DependencyManager,
     ) -> Self;
 
