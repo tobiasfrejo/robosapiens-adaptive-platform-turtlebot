@@ -1,12 +1,14 @@
 use core::panic;
+use std::rc::Rc;
 
 // #![deny(warnings)]
 use clap::Parser;
+use smol::LocalExecutor;
 use tracing::{info, info_span};
 use tracing_subscriber::filter::EnvFilter;
 use tracing_subscriber::{fmt, prelude::*};
 use trustworthiness_checker::core::OutputHandler;
-use trustworthiness_checker::dependencies::traits::{DependencyKind, create_dependency_manager};
+use trustworthiness_checker::dep_manage::interface::{DependencyKind, create_dependency_manager};
 use trustworthiness_checker::distributed::distribution_graphs::LabelledConcDistributionGraph;
 use trustworthiness_checker::distributed::locality_receiver::LocalityReceiver;
 use trustworthiness_checker::io::mqtt::MQTTOutputHandler;
@@ -15,6 +17,8 @@ use trustworthiness_checker::semantics::distributed::localisation::{Localisable,
 use trustworthiness_checker::{self as tc, Monitor, io::file::parse_file};
 use trustworthiness_checker::{InputProvider, Value};
 
+use macro_rules_attribute::apply;
+use smol_macros::main as smol_main;
 use trustworthiness_checker::cli::args::{Cli, Language, Runtime, Semantics};
 use trustworthiness_checker::io::cli::StdoutOutputHandler;
 #[cfg(feature = "ros")]
@@ -24,8 +28,11 @@ use trustworthiness_checker::io::ros::{
 
 const MQTT_HOSTNAME: &str = "localhost";
 
-#[tokio::main(flavor = "current_thread")]
-async fn main() {
+#[global_allocator]
+static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
+#[apply(smol_main)]
+async fn main(executor: Rc<LocalExecutor<'static>>) {
     tracing_subscriber::registry()
         .with(fmt::layer())
         // Uncomment the following line to enable full span events which logs
@@ -34,8 +41,6 @@ async fn main() {
         .with(EnvFilter::from_default_env())
         .init();
 
-    // Could use tokio-console for debugging
-    // console_subscriber::init();
     let cli = Cli::parse();
 
     // let model = std::fs::read_to_string(cli.model).expect("Model file could not be read");
@@ -115,7 +120,7 @@ async fn main() {
         None => model,
     };
 
-    let mut input_streams: Box<dyn InputProvider<tc::Value>> = {
+    let mut input_streams: Box<dyn InputProvider<Val = tc::Value>> = {
         if let Some(input_file) = input_mode.input_file {
             let input_file_parser = match language {
                 Language::Lola => tc::lang::untimed_input::untimed_input_file,
@@ -134,7 +139,7 @@ async fn main() {
                 let input_mapping = ros_topic_stream_mapping::json_to_mapping(&input_mapping_str)
                     .expect("Input mapping file could not be parsed");
                 Box::new(
-                    ROSInputProvider::new(input_mapping)
+                    ROSInputProvider::new(executor.clone(), input_mapping)
                         .expect("ROS input provider could not be created"),
                 )
             }
@@ -148,7 +153,7 @@ async fn main() {
                 .map(|topic| (tc::VarName(topic.clone()), topic.clone()))
                 .collect();
             let mut mqtt_input_provider =
-                tc::io::mqtt::MQTTInputProvider::new(MQTT_HOSTNAME, var_topics)
+                tc::io::mqtt::MQTTInputProvider::new(executor.clone(), MQTT_HOSTNAME, var_topics)
                     .expect("MQTT input provider could not be created");
             mqtt_input_provider
                 .started
@@ -163,7 +168,7 @@ async fn main() {
                 .map(|var| (var.clone(), var.0.clone()))
                 .collect();
             let mut mqtt_input_provider =
-                tc::io::mqtt::MQTTInputProvider::new(MQTT_HOSTNAME, var_topics)
+                tc::io::mqtt::MQTTInputProvider::new(executor.clone(), MQTT_HOSTNAME, var_topics)
                     .expect("MQTT input provider could not be created");
             mqtt_input_provider
                 .started
@@ -176,13 +181,14 @@ async fn main() {
         }
     };
 
-    let output_handler: Box<dyn OutputHandler<Value>> = match cli.output_mode {
+    let output_handler: Box<dyn OutputHandler<Val = Value>> = match cli.output_mode {
         trustworthiness_checker::cli::args::OutputMode {
             output_stdout: true,
             output_mqtt_topics: None,
             mqtt_output: false,
             output_ros_topics: None,
         } => Box::new(StdoutOutputHandler::<tc::Value>::new(
+            executor.clone(),
             model.output_vars.clone(),
         )),
         trustworthiness_checker::cli::args::OutputMode {
@@ -199,7 +205,7 @@ async fn main() {
                 .map(|topic| (tc::VarName(topic.clone()), topic))
                 .collect();
             Box::new(
-                MQTTOutputHandler::new(MQTT_HOSTNAME, topics)
+                MQTTOutputHandler::new(executor.clone(), MQTT_HOSTNAME, topics)
                     .expect("MQTT output handler could not be created"),
             )
         }
@@ -215,7 +221,7 @@ async fn main() {
                 .map(|var| (var.clone(), var.0.clone()))
                 .collect();
             Box::new(
-                MQTTOutputHandler::new(MQTT_HOSTNAME, topics)
+                MQTTOutputHandler::new(executor.clone(), MQTT_HOSTNAME, topics)
                     .expect("MQTT output handler could not be created"),
             )
         }
@@ -227,6 +233,7 @@ async fn main() {
         } => unimplemented!("ROS output not implemented"),
         // Default to stdout
         _ => Box::new(StdoutOutputHandler::<tc::Value>::new(
+            executor.clone(),
             model.output_vars.clone(),
         )),
     };
@@ -240,12 +247,13 @@ async fn main() {
                 tc::semantics::UntimedLolaSemantics,
                 _,
             >::new(
+                executor.clone(),
                 model.clone(),
                 &mut *input_streams,
                 output_handler,
-                create_dependency_manager(DependencyKind::Empty, Box::new(model)),
+                create_dependency_manager(DependencyKind::Empty, model),
             ));
-            tokio::spawn(runner.run())
+            executor.spawn(runner.run())
         }
         (Runtime::Queuing, Semantics::Untimed) => {
             let runner = tc::runtime::queuing::QueuingMonitorRunner::<
@@ -254,12 +262,13 @@ async fn main() {
                 tc::semantics::UntimedLolaSemantics,
                 _,
             >::new(
+                executor.clone(),
                 model.clone(),
                 &mut *input_streams,
                 output_handler,
-                create_dependency_manager(DependencyKind::Empty, Box::new(model)),
+                create_dependency_manager(DependencyKind::Empty, model),
             );
-            tokio::spawn(runner.run())
+            executor.spawn(runner.run())
         }
         (Runtime::Async, Semantics::TypedUntimed) => {
             let typed_model = type_check(model.clone()).expect("Model failed to type check");
@@ -270,12 +279,13 @@ async fn main() {
                 tc::semantics::TypedUntimedLolaSemantics,
                 _,
             >::new(
+                executor.clone(),
                 typed_model,
                 &mut *input_streams,
                 output_handler,
-                create_dependency_manager(DependencyKind::Empty, Box::new(model)),
+                create_dependency_manager(DependencyKind::Empty, model),
             );
-            tokio::spawn(runner.run())
+            executor.spawn(runner.run())
         }
         (Runtime::Queuing, Semantics::TypedUntimed) => {
             let typed_model = type_check(model.clone()).expect("Model failed to type check");
@@ -286,24 +296,26 @@ async fn main() {
                 tc::semantics::TypedUntimedLolaSemantics,
                 _,
             >::new(
+                executor.clone(),
                 typed_model,
                 &mut *input_streams,
                 output_handler,
-                create_dependency_manager(DependencyKind::Empty, Box::new(model)),
+                create_dependency_manager(DependencyKind::Empty, model),
             );
-            tokio::spawn(runner.run())
+            executor.spawn(runner.run())
         }
         (Runtime::Constraints, Semantics::Untimed) => {
             let runner = tc::runtime::constraints::ConstraintBasedMonitor::new(
+                executor.clone(),
                 model.clone(),
                 &mut *input_streams,
                 output_handler,
-                create_dependency_manager(DependencyKind::DepGraph, Box::new(model)),
+                create_dependency_manager(DependencyKind::DepGraph, model),
             );
-            tokio::spawn(runner.run())
+            executor.spawn(runner.run())
         }
         _ => unimplemented!(),
     };
 
-    task.await.expect("Monitor failed to run");
+    task.await
 }
