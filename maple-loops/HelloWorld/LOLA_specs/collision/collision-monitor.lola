@@ -1,0 +1,10 @@
+in CollisionNormalX: Int
+in CollisionDetectX: Int
+in CollisionNormalYaw: Int
+in CollisionDetectYaw: Int
+out collisionDetected: Bool
+out dx: Int
+out normalx: Int
+collisionDetected = !(CollisionDetectX == CollisionNormalX && CollisionDetectYaw == CollisionNormalYaw)
+dx = CollisionDetectX - CollisionNormalX
+normalx = CollisionNormalX

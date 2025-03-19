@@ -1,0 +1,10 @@
+in CollisionNormalX: Int
+in CollisionDetectX: Int
+in CollisionNormalYaw: Int
+in CollisionDetectYaw: Int
+out xCollision: Bool
+out yawCollision: Bool
+out zCollisionDetected: Bool
+xCollision = CollisionDetectX == 0 && !(CollisionNormalX <= 0)
+yawCollision = CollisionDetectYaw == 0 && !(CollisionNormalYaw <= 0)
+zCollisionDetected = xCollision || yawCollision 
