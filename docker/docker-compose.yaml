@@ -83,6 +83,9 @@ services:
   devfullmesatb3:
     extends: rapdevmesa
     depends_on: [ simdeploymesatb3, rosmqttbridge, redis, emqx ]
+  devfullmesatb3monitor:
+    extends: rapdevmesa
+    depends_on: [ simdeploymesatb3monitor, rosmqttbridge, redis, emqx ]
   devfullnvidiatb3:
     extends: rapdevnvidia
     depends_on: [ simdeploynvidiatb3, rosmqttbridge, redis, emqx ]
@@ -105,6 +108,13 @@ services:
   trustworthiness-checker-maple-seq:
     extends: trustworthiness-checker
     command: /mnt/host_models/maple_seq.lola --input-mqtt-topics stage --output-mqtt-topics m a p l e maple
+  simdeploymesatb3monitor:
+    extends: 
+      file: ../turtlebotrossim/docker/docker-compose.yaml
+      service: simdeploymesatb3
+    volumes:
+      - ../collision_monitor_params.yaml:/opt/ros/humble/share/nav2_collision_monitor/params/collision_monitor_params.yaml:ro
+    command: ros2 launch demo_bringup sim_demo_tb3_monitor.launch.py
 
 volumes:
   vol-emqx-data:

@@ -1,0 +1,31 @@
+{
+	"name": "RoboSapiens Adaptive Platform -- Full Gazebo TB3 (MESA) with collision monitor",
+	"dockerComposeFile": "../../docker/docker-compose.yaml",
+	"service": "devfullmesatb3monitor",
+	"runServices": [
+		"devfullmesatb3monitor"
+	],
+	"workspaceFolder": "/ws",
+	"shutdownAction": "stopCompose",
+	"mounts": [
+		"source=${localWorkspaceFolder}/,target=/ws,type=bind,consistency=cached"
+	],
+	"postCreateCommand": "pip install -r requirements.txt && pip install -e /ws/rv-tools-dev",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash",
+				"terminal.integrated.profiles.linux": {
+					"bash": {
+						"path": "/bin/bash"
+					}
+				}
+			},
+			"extensions": [
+				"ms-toolsai.jupyter",
+				"ms-toolsai.vscode-jupyter-powertoys",
+				"ms-python.python"
+			]
+		}
+	}
+}
