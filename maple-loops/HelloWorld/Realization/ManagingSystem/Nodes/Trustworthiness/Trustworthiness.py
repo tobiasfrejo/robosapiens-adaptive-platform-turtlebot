@@ -72,6 +72,21 @@ class Trustworthiness(Node):
         self.publish_event("stage", json.dumps({'Str': 'e'}))
         self.publish_event('atomicstage', json.dumps({'Str': 'end_e'  }))
 
+    def t_vel_normal(self, msg):
+        x, yaw = self.collision_extract_x_yaw(msg)
+        self.publish_event("CollisionNormalX", json.dumps({'Int': x}))
+        self.publish_event("CollisionNormalYaw", json.dumps({'Int': yaw}))
+
+    def t_vel_collision(self, msg):
+        x, yaw = self.collision_extract_x_yaw(msg)
+        self.publish_event("CollisionDetectX", json.dumps({'Int': x}))
+        self.publish_event("CollisionDetectYaw", json.dumps({'Int': yaw}))
+
+    def collision_extract_x_yaw(self, msg):
+        obj = json.loads(msg)
+        x_as_int = int(obj.get('linear',{}).get('x', 0) * 10_000)
+        yaw_as_int = int(obj.get('angular',{}).get('z', 0) * 10_000)
+        return x_as_int, yaw_as_int
 
     def trust_check(self, msg):
         self.logger.info(msg)
@@ -100,6 +115,8 @@ class Trustworthiness(Node):
 
         self.register_event_callback('/Scan',    self.t_s)
         # self.register_event_callback('test_a',   lambda s: self.publish_event('test_a', json.dumps({'Str': str(s)})))
+        self.register_event_callback('NormalVelocity', self.t_vel_normal)
+        self.register_event_callback('CollisionDetect', self.t_vel_collision)
 
 def main(args=None):
 

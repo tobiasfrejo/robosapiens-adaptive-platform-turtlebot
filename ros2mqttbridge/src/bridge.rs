@@ -33,7 +33,16 @@ pub const SPIN_TOPIC: Topic = Topic {
     mqtt_name: "/spin_config",
 };
 
-pub const TOPICS: [Topic; 2] = [SCAN_TOPIC, SPIN_TOPIC];
+pub const COLLISION_TOPIC: Topic = Topic {
+    ros_name: "/cmd_vel_monitor",
+    mqtt_name: "CollisionDetect"
+};
+pub const VELOCITY_TOPIC: Topic = Topic {
+    ros_name: "/cmd_vel",
+    mqtt_name: "NormalVelocity"
+};
+
+pub const TOPICS: [Topic; 4] = [SCAN_TOPIC, SPIN_TOPIC, COLLISION_TOPIC, VELOCITY_TOPIC];
 
 #[derive(Clone)]
 pub struct Topic {
@@ -58,6 +67,7 @@ impl Topic {
 #[serde(untagged)]
 enum ROS2MQTTData {
     LaserScan(r2r::sensor_msgs::msg::LaserScan),
+    Twist(r2r::geometry_msgs::msg::Twist),
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -224,6 +234,8 @@ async fn ros_node_actor(
     (
         // Subscription stream
         BoxStream<'static, r2r::sensor_msgs::msg::LaserScan>,
+        BoxStream<'static, r2r::geometry_msgs::msg::Twist>,
+        BoxStream<'static, r2r::geometry_msgs::msg::Twist>,
         // Spin command publisher
         Publisher<MSpinCommands>,
         // Future marking the end of the actor
@@ -256,8 +268,12 @@ async fn ros_node_actor(
     };
 
     debug!("Subscribing to scan safe");
-    let sub = node
+    let sub_laser = node
         .subscribe::<r2r::sensor_msgs::msg::LaserScan>(SCAN_TOPIC.ros_name, sensor_qos.clone())?;
+    let sub_vel = node
+        .subscribe::<r2r::geometry_msgs::msg::Twist>(VELOCITY_TOPIC.ros_name, sensor_qos.clone())?;
+    let sub_mon = node
+        .subscribe::<r2r::geometry_msgs::msg::Twist>(COLLISION_TOPIC.ros_name, sensor_qos.clone())?;
     debug!("Subscribed to scan safe");
 
     let publisher =
@@ -271,13 +287,14 @@ async fn ros_node_actor(
         }
     };
 
-    Ok((Box::pin(sub), publisher, fut))
+    Ok((Box::pin(sub_laser), Box::pin(sub_vel), Box::pin(sub_mon), publisher, fut))
 }
 
+// Duplicate for additional ROS streams in separate loop
 #[instrument(level=tracing::Level::DEBUG, skip(ros_stream, mqtt_sender))]
-async fn ros_to_mqtt(
+async fn ros_to_mqtt_laser(
     mut ros_stream: BoxStream<'static, r2r::sensor_msgs::msg::LaserScan>,
-    mqtt_sender: tokio::sync::mpsc::Sender<(oneshot::Sender<Option<mqtt::Error>>, Message)>,
+    mqtt_sender: &tokio::sync::mpsc::Sender<(oneshot::Sender<Option<mqtt::Error>>, Message)>,
 ) {
     info!("Starting ROS to MQTT bridge");
     while let Some(msg) = ros_stream.next().await {
@@ -308,6 +325,124 @@ async fn ros_to_mqtt(
     }
 
     info!("Laser scan input stream ended; shutting down");
+}
+
+#[instrument(level=tracing::Level::DEBUG, skip(ros_stream, mqtt_sender))]
+async fn ros_to_mqtt_vel(
+    mut ros_stream: BoxStream<'static, r2r::geometry_msgs::msg::Twist>,
+    mqtt_sender: &tokio::sync::mpsc::Sender<(oneshot::Sender<Option<mqtt::Error>>, Message)>,
+) {
+    info!("Starting ROS to MQTT bridge");
+    while let Some(msg) = ros_stream.next().await {
+        debug!("Received ROS message");
+        // let _span = tracing::info_span!("Sending ROS message to MQTT", ?msg).entered();
+
+        let topic = VELOCITY_TOPIC;
+
+        let serialized_msg = match serde_json5::to_string(&msg) {
+            Ok(msg) => msg,
+            Err(e) => {
+                error!(?e, "Failed to JSON serialize message for MQTT");
+                continue;
+            }
+        };
+
+        let mqtt_msg = mqtt::Message::new(topic.mqtt_name, serialized_msg, MQTT_QOS);
+
+        let (tx, rx) = oneshot::channel();
+        mqtt_sender.send((tx, mqtt_msg)).await.unwrap();
+        info!("[ROS->MQTT] Forwarded Velocity message");
+        debug!("Velocity: {:?}", msg);
+
+        if let Some(e) = rx.await.unwrap() {
+            error!(?e, "Failed to publish velocity MQTT message");
+            // TODO: should this be a break
+        }
+
+        let mut x_topic = topic.mqtt_name.to_owned();
+        x_topic.push_str("LinearX"); 
+        let mqtt_msg = mqtt::Message::new(x_topic, msg.linear.x.to_string(), MQTT_QOS);
+        let (tx, rx) = oneshot::channel();
+        mqtt_sender.send((tx, mqtt_msg)).await.unwrap();
+        debug!("Velocity: {:?}", msg);
+
+        if let Some(e) = rx.await.unwrap() {
+            error!(?e, "Failed to publish velocity MQTT message LX");
+            // TODO: should this be a break
+        }
+
+        let mut z_topic = topic.mqtt_name.to_owned();
+        z_topic.push_str("AngularZ"); 
+        let mqtt_msg = mqtt::Message::new(z_topic, msg.angular.z.to_string(), MQTT_QOS);
+        let (tx, rx) = oneshot::channel();
+        mqtt_sender.send((tx, mqtt_msg)).await.unwrap();
+
+        if let Some(e) = rx.await.unwrap() {
+            error!(?e, "Failed to publish velocity MQTT message AZ");
+            // TODO: should this be a break
+        }
+    }
+
+    info!("Velocity input stream ended; shutting down");
+}
+
+#[instrument(level=tracing::Level::DEBUG, skip(ros_stream, mqtt_sender))]
+async fn ros_to_mqtt_mon(
+    mut ros_stream: BoxStream<'static, r2r::geometry_msgs::msg::Twist>,
+    mqtt_sender: &tokio::sync::mpsc::Sender<(oneshot::Sender<Option<mqtt::Error>>, Message)>,
+) {
+    info!("Starting ROS to MQTT bridge");
+    while let Some(msg) = ros_stream.next().await {
+        debug!("Received ROS message");
+        // let _span = tracing::info_span!("Sending ROS message to MQTT", ?msg).entered();
+
+        let topic = COLLISION_TOPIC;
+
+        let serialized_msg = match serde_json5::to_string(&msg) {
+            Ok(msg) => msg,
+            Err(e) => {
+                error!(?e, "Failed to JSON serialize message for MQTT");
+                continue;
+            }
+        };
+
+        let mqtt_msg = mqtt::Message::new(topic.mqtt_name, serialized_msg, MQTT_QOS);
+
+        let (tx, rx) = oneshot::channel();
+        mqtt_sender.send((tx, mqtt_msg)).await.unwrap();
+        info!("[ROS->MQTT] Forwarded Collision monitor's Velocity message");
+        debug!(" Collision monitor's Velocity: {:?}", msg);
+
+        if let Some(e) = rx.await.unwrap() {
+            error!(?e, "Failed to publish collision MQTT message");
+            // TODO: should this be a break
+        }
+
+        let mut x_topic = topic.mqtt_name.to_owned();
+        x_topic.push_str("LinearX"); 
+        let mqtt_msg = mqtt::Message::new(x_topic, msg.linear.x.to_string(), MQTT_QOS);
+        let (tx, rx) = oneshot::channel();
+        mqtt_sender.send((tx, mqtt_msg)).await.unwrap();
+        debug!("Velocity: {:?}", msg);
+
+        if let Some(e) = rx.await.unwrap() {
+            error!(?e, "Failed to publish collision MQTT message LX");
+            // TODO: should this be a break
+        }
+
+        let mut z_topic = topic.mqtt_name.to_owned();
+        z_topic.push_str("AngularZ"); 
+        let mqtt_msg = mqtt::Message::new(z_topic, msg.angular.z.to_string(), MQTT_QOS);
+        let (tx, rx) = oneshot::channel();
+        mqtt_sender.send((tx, mqtt_msg)).await.unwrap();
+
+        if let Some(e) = rx.await.unwrap() {
+            error!(?e, "Failed to publish collision MQTT message AZ");
+            // TODO: should this be a break
+        }
+    }
+
+    info!(" Collision monitor velocity input stream ended; shutting down");
 }
 
 #[instrument(level=tracing::Level::DEBUG, skip(mqtt_stream, ros_publisher))]
@@ -352,17 +487,24 @@ pub async fn bridge(
     ros_namespace: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     debug!("Starting bridge");
-    let (ros_stream, ros_publisher, ros_fut) = ros_node_actor(ros_namespace).await.unwrap();
+    let (ros_stream_laser, 
+        ros_stream_velocity,
+        ros_stream_monitor,
+        ros_publisher, ros_fut) = ros_node_actor(ros_namespace).await.unwrap();
     let (mqtt_stream, mqtt_sender, mqtt_fut) =
         mqtt_client_actor(mqtt_hostname, vec![SPIN_TOPIC.mqtt_name]).await?;
-    let ros_to_mqtt_fut = ros_to_mqtt(ros_stream, mqtt_sender);
+    let ros_to_mqtt_laser_fut = ros_to_mqtt_laser(ros_stream_laser, &mqtt_sender);
+    let ros_to_mqtt_vel_fut = ros_to_mqtt_vel(ros_stream_velocity, &mqtt_sender);
+    let ros_to_mqtt_mon_fut = ros_to_mqtt_mon(ros_stream_monitor, &mqtt_sender);
     let mqtt_to_ros_fut = mqtt_to_ros(mqtt_stream, ros_publisher);
     // let blocking_ros_fut = tokio::task::spawn_blocking(|| ros_fut);
 
     debug!("Entering select on futures");
 
     Ok(select! {
-        _ = ros_to_mqtt_fut => (),
+        _ = ros_to_mqtt_laser_fut => (),
+        _ = ros_to_mqtt_vel_fut => (),
+        _ = ros_to_mqtt_mon_fut => (),
         _ = mqtt_to_ros_fut => (),
         _ = ros_fut => (),
         _ = mqtt_fut => (),

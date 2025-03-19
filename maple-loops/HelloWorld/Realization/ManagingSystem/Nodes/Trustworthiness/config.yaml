@@ -111,6 +111,18 @@ eventIn:
         class: "-"
         topic: "k_laser_scan"
         QoS: 10
+    - property:
+        type: "event"
+        name: "CollisionDetect"
+        class: "-"
+        topic: "CollisionDetect"
+        QoS: 10
+    - property:
+        type: "event"
+        name: "NormalVelocity"
+        class: "-"
+        topic: "NormalVelocity"
+        QoS: 10
 
 
 eventOut:
@@ -145,6 +157,30 @@ eventOut:
         class: "-"
         topic: "scanTrigger"
         QoS: scanTrigger
+    - property:
+        type: "event"
+        name: "CollisionNormalX"
+        class: "-"
+        topic: "CollisionNormalX"
+        QoS: 10
+    - property:
+        type: "event"
+        name: "CollisionNormalYaw"
+        class: "-"
+        topic: "CollisionNormalYaw"
+        QoS: 10
+    - property:
+        type: "event"
+        name: "CollisionDetectX"
+        class: "-"
+        topic: "CollisionDetectX"
+        QoS: 10
+    - property:
+        type: "event"
+        name: "CollisionDetectYaw"
+        class: "-"
+        topic: "CollisionDetectYaw"
+        QoS: 10
 
 
 mqtt_broker: "localhost"
