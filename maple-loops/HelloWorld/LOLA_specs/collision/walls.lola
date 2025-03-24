@@ -1,0 +1,7 @@
+in Pos
+out PosX
+out PosY
+out inside
+PosX = List.get(Pos, 0)
+PosY = List.get(Pos, 1)
+inside = !((PosX * (0) + PosY * (20000) + (200000000)) <= 0) && !((PosX * (20000) + PosY * (0) + (200000000)) <= 0) && !((PosX * (0) + PosY * (-20000) + (200000000)) <= 0) && !((PosX * (-20000) + PosY * (0) + (200000000)) <= 0)
