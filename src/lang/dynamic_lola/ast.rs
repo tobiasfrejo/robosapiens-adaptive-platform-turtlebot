@@ -1,9 +1,19 @@
-use crate::core::{IndexedVarName, Specification, VarName};
+use crate::core::{Specification, VarName};
 use crate::core::{StreamType, Value};
 use std::{
     collections::BTreeMap,
     fmt::{Debug, Display},
 };
+
+// Numerical Binary Operations
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NumericalBinOp {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+}
 
 // Integer Binary Operations
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -12,6 +22,45 @@ pub enum IntBinOp {
     Sub,
     Mul,
     Div,
+    Mod,
+}
+
+impl TryFrom<NumericalBinOp> for IntBinOp {
+    type Error = ();
+
+    fn try_from(op: NumericalBinOp) -> Result<IntBinOp, ()> {
+        match op {
+            NumericalBinOp::Add => Ok(IntBinOp::Add),
+            NumericalBinOp::Sub => Ok(IntBinOp::Sub),
+            NumericalBinOp::Mul => Ok(IntBinOp::Mul),
+            NumericalBinOp::Div => Ok(IntBinOp::Div),
+            NumericalBinOp::Mod => Ok(IntBinOp::Mod),
+        }
+    }
+}
+
+// Floating point binary operations
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FloatBinOp {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+}
+
+impl TryFrom<NumericalBinOp> for FloatBinOp {
+    type Error = ();
+
+    fn try_from(op: NumericalBinOp) -> Result<FloatBinOp, ()> {
+        match op {
+            NumericalBinOp::Add => Ok(FloatBinOp::Add),
+            NumericalBinOp::Sub => Ok(FloatBinOp::Sub),
+            NumericalBinOp::Mul => Ok(FloatBinOp::Mul),
+            NumericalBinOp::Div => Ok(FloatBinOp::Div),
+            NumericalBinOp::Mod => Ok(FloatBinOp::Mod),
+        }
+    }
 }
 
 // Bool Binary Operations
@@ -37,7 +86,7 @@ pub enum CompBinOp {
 // Stream BinOp
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SBinOp {
-    IOp(IntBinOp),
+    NOp(NumericalBinOp),
     BOp(BoolBinOp),
     SOp(StrBinOp),
     COp(CompBinOp),
@@ -47,10 +96,10 @@ pub enum SBinOp {
 impl From<&str> for SBinOp {
     fn from(s: &str) -> Self {
         match s {
-            "+" => SBinOp::IOp(IntBinOp::Add),
-            "-" => SBinOp::IOp(IntBinOp::Sub),
-            "*" => SBinOp::IOp(IntBinOp::Mul),
-            "/" => SBinOp::IOp(IntBinOp::Div),
+            "+" => SBinOp::NOp(NumericalBinOp::Add),
+            "-" => SBinOp::NOp(NumericalBinOp::Sub),
+            "*" => SBinOp::NOp(NumericalBinOp::Mul),
+            "/" => SBinOp::NOp(NumericalBinOp::Div),
             "||" => SBinOp::BOp(BoolBinOp::Or),
             "&&" => SBinOp::BOp(BoolBinOp::And),
             "++" => SBinOp::SOp(StrBinOp::Concat),
@@ -61,7 +110,7 @@ impl From<&str> for SBinOp {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum SExpr<VarT: Debug> {
     // if-then-else
     If(Box<Self>, Box<Self>, Box<Self>),
@@ -87,6 +136,8 @@ pub enum SExpr<VarT: Debug> {
     Eval(Box<Self>),
     Defer(Box<Self>),
     Update(Box<Self>, Box<Self>),
+    Default(Box<Self>, Box<Self>),
+    When(Box<Self>), // Becomes true after the first time .0 is not Unknown
 
     // Unary expressions (refactor if more are added...)
     Not(Box<Self>),
@@ -126,6 +177,12 @@ impl SExpr<VarName> {
                 inputs.extend(e2.inputs());
                 inputs
             }
+            Default(e1, e2) => {
+                let mut inputs = e1.inputs();
+                inputs.extend(e2.inputs());
+                inputs
+            }
+            When(e) => e.inputs(),
             List(es) => {
                 let mut inputs = vec![];
                 for e in es {
@@ -154,7 +211,7 @@ impl SExpr<VarName> {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq)]
 pub struct LOLASpecification {
     pub input_vars: Vec<VarName>,
     pub output_vars: Vec<VarName>,
@@ -162,7 +219,47 @@ pub struct LOLASpecification {
     pub type_annotations: BTreeMap<VarName, StreamType>,
 }
 
-impl Specification<SExpr<VarName>> for LOLASpecification {
+impl Debug for LOLASpecification {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        // Format the expressions map ordered lexicographically by key
+        // rather than by variable ordering
+        let exprs_by_name: BTreeMap<String, &SExpr<VarName>> =
+            self.exprs.iter().map(|(k, v)| (k.to_string(), v)).collect();
+        let exprs_formatted = format!(
+            "{{{}}}",
+            exprs_by_name
+                .iter()
+                .map(|(k, v)| format!("{:?}: {:?}", VarName::new(k), v))
+                .collect::<Vec<String>>()
+                .join(", ")
+        );
+
+        // Type annotations ordered lexicographically by name
+        let type_annotations_by_name: BTreeMap<String, &StreamType> = self
+            .type_annotations
+            .iter()
+            .map(|(k, v)| (k.to_string(), v))
+            .collect();
+        let type_annotations_formatted = format!(
+            "{{{}}}",
+            type_annotations_by_name
+                .iter()
+                .map(|(k, v)| format!("{:?}: {:?}", VarName::new(k), v))
+                .collect::<Vec<String>>()
+                .join(", ")
+        );
+
+        write!(
+            f,
+            "LOLASpecification {{ input_vars: {:?}, output_vars: {:?}, exprs: {}, type_annotations: {} }}",
+            self.input_vars, self.output_vars, exprs_formatted, type_annotations_formatted
+        )
+    }
+}
+
+impl Specification for LOLASpecification {
+    type Expr = SExpr<VarName>;
+
     fn input_vars(&self) -> Vec<VarName> {
         self.input_vars.clone()
     }
@@ -176,19 +273,6 @@ impl Specification<SExpr<VarName>> for LOLASpecification {
     }
 }
 
-impl VarName {
-    pub fn to_indexed(&self, i: usize) -> IndexedVarName {
-        IndexedVarName(self.0.clone(), i)
-    }
-}
-
-impl Display for IndexedVarName {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let IndexedVarName(name, index) = self;
-        write!(f, "{}[{}]", name, index)
-    }
-}
-
 impl<VarT: Display + Debug> Display for SExpr<VarT> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         use SBinOp::*;
@@ -197,10 +281,11 @@ impl<VarT: Display + Debug> Display for SExpr<VarT> {
             If(b, e1, e2) => write!(f, "if {} then {} else {}", b, e1, e2),
             SIndex(s, i, c) => write!(f, "{}[{},{}]", s, i, c),
             Val(n) => write!(f, "{}", n),
-            BinOp(e1, e2, IOp(IntBinOp::Add)) => write!(f, "({} + {})", e1, e2),
-            BinOp(e1, e2, IOp(IntBinOp::Sub)) => write!(f, "({} - {})", e1, e2),
-            BinOp(e1, e2, IOp(IntBinOp::Mul)) => write!(f, "({} * {})", e1, e2),
-            BinOp(e1, e2, IOp(IntBinOp::Div)) => write!(f, "({} / {})", e1, e2),
+            BinOp(e1, e2, NOp(NumericalBinOp::Add)) => write!(f, "({} + {})", e1, e2),
+            BinOp(e1, e2, NOp(NumericalBinOp::Sub)) => write!(f, "({} - {})", e1, e2),
+            BinOp(e1, e2, NOp(NumericalBinOp::Mul)) => write!(f, "({} * {})", e1, e2),
+            BinOp(e1, e2, NOp(NumericalBinOp::Div)) => write!(f, "({} / {})", e1, e2),
+            BinOp(e1, e2, NOp(NumericalBinOp::Mod)) => write!(f, "({} % {})", e1, e2),
             BinOp(e1, e2, BOp(BoolBinOp::Or)) => write!(f, "({} || {})", e1, e2),
             BinOp(e1, e2, BOp(BoolBinOp::And)) => write!(f, "({} && {})", e1, e2),
             BinOp(e1, e2, SOp(StrBinOp::Concat)) => write!(f, "({} ++ {})", e1, e2),
@@ -211,6 +296,8 @@ impl<VarT: Display + Debug> Display for SExpr<VarT> {
             Eval(e) => write!(f, "eval({})", e),
             Defer(e) => write!(f, "defer({})", e),
             Update(e1, e2) => write!(f, "update({}, {})", e1, e2),
+            Default(e, v) => write!(f, "default({}, {})", e, v),
+            When(sexpr) => write!(f, "when({})", sexpr),
             List(es) => {
                 let es_str: Vec<String> = es.iter().map(|e| format!("{}", e)).collect();
                 write!(f, "[{}]", es_str.join(", "))

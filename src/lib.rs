@@ -1,5 +1,6 @@
 #![recursion_limit = "256"]
 
+pub mod benches_common;
 pub mod core;
 pub use crate::core::Value;
 pub use core::{
@@ -7,7 +8,7 @@ pub use core::{
     VarName,
 };
 pub mod cli;
-pub mod dependencies;
+pub mod dep_manage;
 pub mod io;
 pub use io::file::parse_file;
 pub mod lang;

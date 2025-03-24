@@ -21,14 +21,14 @@ fn value_assignment(s: &mut &str) -> Result<(VarName, Value)> {
         val,
         _: whitespace,
     ))
-    .map(|(name, value)| (VarName(name.into()), value))
+    .map(|(name, value)| (name.into(), value))
     .parse_next(s)
 }
 
 fn value_assignments(s: &mut &str) -> Result<BTreeMap<VarName, Value>> {
     seq!((
-        separated(0.., value_assignment, linebreak),
-        _: alt((linebreak.void(), empty)),
+        separated(0.., value_assignment, lb_or_lc),
+        _: alt((lb_or_lc, empty)),
     ))
     .map(|(x,)| x)
     .parse_next(s)
@@ -40,7 +40,7 @@ fn time_stamped_assignments(s: &mut &str) -> Result<(usize, BTreeMap<VarName, Va
         dec_uint,
         _: whitespace,
         _: literal(":"),
-        _: separated(0.., whitespace, linebreak).map(|_: Vec<_>| ()),
+        _: separated(0.., whitespace, lb_or_lc).map(|_: Vec<_>| ()),
         value_assignments
     ))
     .map(|(time, assignments)| (time, assignments))
@@ -60,17 +60,17 @@ mod tests {
     use winnow::error::ContextError;
 
     use super::*;
-    use crate::{Value, VarName, lang::untimed_input::parser::value_assignment};
+    use crate::{Value, lang::untimed_input::parser::value_assignment};
 
     #[test]
     fn test_value_assignment() -> Result<(), ContextError> {
         assert_eq!(
             value_assignment(&mut (*"x = 42".to_string()).into())?,
-            (VarName("x".into()), Value::Int(42)),
+            ("x".into(), Value::Int(42)),
         );
         assert_eq!(
             value_assignment(&mut (*"y = 3".to_string()).into())?,
-            (VarName("y".into()), Value::Int(3)),
+            ("y".into(), Value::Int(3)),
         );
         Ok(())
     }
@@ -79,12 +79,7 @@ mod tests {
     fn test_value_assignments() -> Result<(), ContextError> {
         assert_eq!(
             value_assignments(&mut (*"x = 42\ny = 3".to_string()).into())?,
-            vec![
-                (VarName("x".into()), Value::Int(42)),
-                (VarName("y".into()), Value::Int(3)),
-            ]
-            .into_iter()
-            .collect(),
+            BTreeMap::from([("x".into(), Value::Int(42)), ("y".into(), Value::Int(3)),]),
         );
         assert_eq!(
             value_assignments(&mut (*"".to_string()).into())?,
@@ -97,35 +92,20 @@ mod tests {
     fn test_time_stamped_assignment() -> Result<(), ContextError> {
         assert_eq!(
             time_stamped_assignments(&mut (*"0: x = 42".to_string()).into())?,
-            (
-                0,
-                vec![(VarName("x".into()), Value::Int(42))]
-                    .into_iter()
-                    .collect()
-            ),
+            (0, BTreeMap::from([("x".into(), Value::Int(42))])),
         );
         assert_eq!(
             time_stamped_assignments(&mut (*"1: x = 42\ny = 3".to_string()).into())?,
             (
                 1,
-                vec![
-                    (VarName("x".into()), Value::Int(42)),
-                    (VarName("y".into()), Value::Int(3))
-                ]
-                .into_iter()
-                .collect()
+                BTreeMap::from([("x".into(), Value::Int(42)), ("y".into(), Value::Int(3))])
             ),
         );
         assert_eq!(
             time_stamped_assignments(&mut (*"2:\n x = 42\ny = 3".to_string()).into())?,
             (
                 2,
-                vec![
-                    (VarName("x".into()), Value::Int(42)),
-                    (VarName("y".into()), Value::Int(3))
-                ]
-                .into_iter()
-                .collect()
+                BTreeMap::from([("x".into(), Value::Int(42)), ("y".into(), Value::Int(3))])
             ),
         );
         Ok(())
@@ -135,12 +115,24 @@ mod tests {
     fn test_list_assignments() {
         assert_eq!(
             presult_to_string(&value_assignment(&mut "y = List()")),
-            r#"Ok((VarName("y"), List([])))"#
+            r#"Ok((VarName::new("y"), List([])))"#
         );
         // Difference between value assignment and sexpr assignment
         assert_eq!(
             value_assignment(&mut "y = List()"),
-            Ok((VarName("y".into()), Value::List(vec![])))
+            Ok(("y".into(), Value::List(vec![].into())))
+        );
+    }
+
+    #[test]
+    fn test_float_assignments() {
+        assert_eq!(
+            presult_to_string(&value_assignment(&mut "y = 3.4")),
+            r#"Ok((VarName::new("y"), Float(3.4)))"#
+        );
+        assert_eq!(
+            presult_to_string(&value_assignment(&mut "y = 1e-3")),
+            r#"Ok((VarName::new("y"), Float(0.001)))"#
         );
     }
 }

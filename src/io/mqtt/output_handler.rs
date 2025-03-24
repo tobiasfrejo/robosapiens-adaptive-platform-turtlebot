@@ -1,11 +1,12 @@
 use std::collections::BTreeMap;
-use std::future::Future;
 use std::mem;
-use std::pin::Pin;
+use std::rc::Rc;
 
 use async_trait::async_trait;
 use futures::StreamExt;
+use futures::future::LocalBoxFuture;
 use paho_mqtt::{self as mqtt};
+use smol::LocalExecutor;
 use tracing::{Level, debug, info, info_span, instrument, warn};
 // TODO: should we use a cancellation token to cleanup the background task
 // or does it go away when anyway the receivers of our outputs go away?
@@ -29,6 +30,9 @@ pub struct VarData {
 pub type OutputChannelMap = BTreeMap<VarName, String>;
 
 pub struct MQTTOutputHandler {
+    #[allow(dead_code)]
+    executor: Rc<LocalExecutor<'static>>,
+    var_names: Vec<VarName>,
     pub var_map: BTreeMap<VarName, VarData>,
     // node: Arc<Mutex<r2r::Node>>,
     hostname: String,
@@ -61,17 +65,23 @@ async fn publish_stream(
     }
 }
 
-#[async_trait]
-impl OutputHandler<Value> for MQTTOutputHandler {
-    fn provide_streams(&mut self, streams: BTreeMap<VarName, OutputStream<Value>>) {
-        for (var, stream) in streams.into_iter() {
-            let var_data = self.var_map.get_mut(&var).expect("Variable not found");
+#[async_trait(?Send)]
+impl OutputHandler for MQTTOutputHandler {
+    type Val = Value;
+
+    fn var_names(&self) -> Vec<VarName> {
+        self.var_names.clone()
+    }
+
+    fn provide_streams(&mut self, streams: Vec<OutputStream<Value>>) {
+        for (var, stream) in self.var_names().iter().zip(streams.into_iter()) {
+            let var_data = self.var_map.get_mut(var).expect("Variable not found");
             var_data.stream = Some(stream);
         }
     }
 
     #[instrument(level = Level::INFO, skip(self))]
-    fn run(&mut self) -> Pin<Box<dyn Future<Output = ()> + 'static + Send>> {
+    fn run(&mut self) -> LocalBoxFuture<'static, ()> {
         let streams = self
             .var_map
             .iter_mut()
@@ -110,7 +120,12 @@ impl OutputHandler<Value> for MQTTOutputHandler {
 impl MQTTOutputHandler {
     // TODO: should we have dependency injection for the MQTT client?
     #[instrument(level = Level::INFO)]
-    pub fn new(host: &str, var_topics: OutputChannelMap) -> Result<Self, mqtt::Error> {
+    pub fn new(
+        executor: Rc<LocalExecutor<'static>>,
+        var_names: Vec<VarName>,
+        host: &str,
+        var_topics: OutputChannelMap,
+    ) -> Result<Self, mqtt::Error> {
         let hostname = host.to_string();
 
         let var_map = var_topics
@@ -127,6 +142,11 @@ impl MQTTOutputHandler {
             })
             .collect();
 
-        Ok(MQTTOutputHandler { var_map, hostname })
+        Ok(MQTTOutputHandler {
+            executor,
+            var_names,
+            var_map,
+            hostname,
+        })
     }
 }
