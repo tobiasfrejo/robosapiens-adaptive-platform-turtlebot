@@ -12,12 +12,12 @@ out w4
 out w5
 PosX = List.get(Pos, 0)
 PosY = List.get(Pos, 1)
-w0 = if !( !(3000 <= PosY) == !(-4000 <= PosY)) && !( ((285) * ((PosY) - (3000)) + (3000000)) <= (PosX * 1000)) then 1 else 0 
-w1 = if !( !(6000 <= PosY) == !(3000 <= PosY)) && !( ((-1666) * ((PosY) - (6000)) + (-2000000)) <= (PosX * 1000)) then 1 else 0 
-w2 = if !( !(2000 <= PosY) == !(6000 <= PosY)) && !( ((750) * ((PosY) - (2000)) + (-5000000)) <= (PosX * 1000)) then 1 else 0 
-w3 = if !( !(-1000 <= PosY) == !(2000 <= PosY)) && !( ((1000) * ((PosY) - (-1000)) + (-8000000)) <= (PosX * 1000)) then 1 else 0 
-w4 = if !( !(-6000 <= PosY) == !(-1000 <= PosY)) && !( ((0) * ((PosY) - (-6000)) + (-8000000)) <= (PosX * 1000)) then 1 else 0 
-w5 = if !( !(-4000 <= PosY) == !(-6000 <= PosY)) && !( ((4500) * ((PosY) - (-4000)) + (1000000)) <= (PosX * 1000)) then 1 else 0 
+w0 = if !( !(3.0 <= PosY) == !(-4.0 <= PosY)) && !( ((0.2857142857142857) * ((PosY) - (3.0)) + (3.0)) <= (PosX)) then 1 else 0 
+w1 = if !( !(6.0 <= PosY) == !(3.0 <= PosY)) && !( ((-1.6666666666666667) * ((PosY) - (6.0)) + (-2.0)) <= (PosX)) then 1 else 0 
+w2 = if !( !(2.0 <= PosY) == !(6.0 <= PosY)) && !( ((0.75) * ((PosY) - (2.0)) + (-5.0)) <= (PosX)) then 1 else 0 
+w3 = if !( !(-1.0 <= PosY) == !(2.0 <= PosY)) && !( ((1.0) * ((PosY) - (-1.0)) + (-8.0)) <= (PosX)) then 1 else 0 
+w4 = if !( !(-6.0 <= PosY) == !(-1.0 <= PosY)) && !( ((0.0) * ((PosY) - (-6.0)) + (-8.0)) <= (PosX)) then 1 else 0 
+w5 = if !( !(-4.0 <= PosY) == !(-6.0 <= PosY)) && !( ((4.5) * ((PosY) - (-4.0)) + (1.0)) <= (PosX)) then 1 else 0 
 seenwalls = (w0 + w1 + w2 + w3 + w4 + w5)
 inside = (seenwalls - ((seenwalls / 2) * 2)) == 1
 collision = !inside

@@ -38,10 +38,10 @@ warn(str(len(walls)))
 
 # (Cx, Cy, R)
 pillars = np.array([
-    # ( 1,  2,  1)
+    # ( 1.0,  2.0,  1.0)
 ])
 
-pillars *= 1000
+#pillars *= 1000
 
 # Collision if distance to center is smaller than the radius.
 #  (x-a)² + (y-b)² <= r²
@@ -86,10 +86,10 @@ for A, B in walls:
         continue
 
     expressions.append(expression.format_map({
-        'a':int((Bx-Ax)/(By-Ay)),
-        'ax1': int(Ax),
+        'a':(Bx-Ax)/(By-Ay),
+        'ax1': Ax,
         'ay': Ay,
-        'ay1': int(Ay),
+        'ay1': Ay,
         'bx': Bx,
         'by': By
     }))
