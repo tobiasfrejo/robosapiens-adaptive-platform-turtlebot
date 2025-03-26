@@ -134,7 +134,7 @@ for d in declarations:
     output+= f'{d}\n'
 
 output += f'seenwalls = ({" + ".join(streams)})\n'
-output += 'inside = (seenwalls - ((seenwalls / 2) * 2)) == 1\n'
+output += 'inside = (seenwalls % 2) == 1\n'
 if len(circles) == 0:
     output += 'collision = !inside'
 else:

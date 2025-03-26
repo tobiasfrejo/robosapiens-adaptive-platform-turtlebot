@@ -19,5 +19,5 @@ w3 = if !( !(-1.0 <= PosY) == !(2.0 <= PosY)) && !( ((1.0) * ((PosY) - (-1.0)) +
 w4 = if !( !(-6.0 <= PosY) == !(-1.0 <= PosY)) && !( ((0.0) * ((PosY) - (-6.0)) + (-8.0)) <= (PosX)) then 1 else 0 
 w5 = if !( !(-4.0 <= PosY) == !(-6.0 <= PosY)) && !( ((4.5) * ((PosY) - (-4.0)) + (1.0)) <= (PosX)) then 1 else 0 
 seenwalls = (w0 + w1 + w2 + w3 + w4 + w5)
-inside = (seenwalls - ((seenwalls / 2) * 2)) == 1
+inside = (seenwalls % 2) == 1
 collision = !inside
