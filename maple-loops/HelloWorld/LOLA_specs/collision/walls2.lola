@@ -10,25 +10,14 @@ out w2
 out w3
 out w4
 out w5
-out w6
-out w7
-out w8
-out w9
-out c0
 PosX = List.get(Pos, 0)
 PosY = List.get(Pos, 1)
-w0 = if !( !(-2000 <= PosY) == !(-3000 <= PosY)) && !( ((3000) * ((PosY * 1000) - (-2000000)) + (-2000000)) <= (PosX * 1000)) then 1 else 0 
-w1 = if !( !(1000 <= PosY) == !(-2000 <= PosY)) && !( ((-1000) * ((PosY * 1000) - (1000000)) + (-5000000)) <= (PosX * 1000)) then 1 else 0 
-w2 = if !( !(6000 <= PosY) == !(1000 <= PosY)) && !( ((400) * ((PosY * 1000) - (6000000)) + (-3000000)) <= (PosX * 1000)) then 1 else 0 
-w3 = if !( !(2000 <= PosY) == !(6000 <= PosY)) && !( ((-250) * ((PosY * 1000) - (2000000)) + (-2000000)) <= (PosX * 1000)) then 1 else 0 
-w4 = if !( !(5000 <= PosY) == !(2000 <= PosY)) && !( ((1333) * ((PosY * 1000) - (5000000)) + (2000000)) <= (PosX * 1000)) then 1 else 0 
-w5 = if !( !(-5000 <= PosY) == !(5000 <= PosY)) && !( ((100) * ((PosY * 1000) - (-5000000)) + (1000000)) <= (PosX * 1000)) then 1 else 0 
-w6 = if !( !(-3000 <= PosY) == !(-5000 <= PosY)) && !( ((-3000) * ((PosY * 1000) - (-3000000)) + (-5000000)) <= (PosX * 1000)) then 1 else 0 
-w7 = if !( !(0 <= PosY) == !(1000 <= PosY)) && !( ((-2000) * ((PosY * 1000) - (0)) + (-1000000)) <= (PosX * 1000)) then 1 else 0 
-w8 = if !( !(-3000 <= PosY) == !(0 <= PosY)) && !( ((-333) * ((PosY * 1000) - (-3000000)) + (0)) <= (PosX * 1000)) then 1 else 0 
-w9 = if !( !(1000 <= PosY) == !(-3000 <= PosY)) && !( ((0) * ((PosY * 1000) - (1000000)) + (0)) <= (PosX * 1000)) then 1 else 0 
-c0 = (   (((PosX - 1000) * (PosX - 1000))   + ((PosY - 2000) * (PosY - 2000)))     <= (1000 * 1000))
-seenwalls = (w0 + w1 + w2 + w3 + w4 + w5 + w6 + w7 + w8 + w9)
+w0 = if !( !(3000 <= PosY) == !(-4000 <= PosY)) && !( ((285) * ((PosY) - (3000)) + (3000000)) <= (PosX * 1000)) then 1 else 0 
+w1 = if !( !(6000 <= PosY) == !(3000 <= PosY)) && !( ((-1666) * ((PosY) - (6000)) + (-2000000)) <= (PosX * 1000)) then 1 else 0 
+w2 = if !( !(2000 <= PosY) == !(6000 <= PosY)) && !( ((750) * ((PosY) - (2000)) + (-5000000)) <= (PosX * 1000)) then 1 else 0 
+w3 = if !( !(-1000 <= PosY) == !(2000 <= PosY)) && !( ((1000) * ((PosY) - (-1000)) + (-8000000)) <= (PosX * 1000)) then 1 else 0 
+w4 = if !( !(-6000 <= PosY) == !(-1000 <= PosY)) && !( ((0) * ((PosY) - (-6000)) + (-8000000)) <= (PosX * 1000)) then 1 else 0 
+w5 = if !( !(-4000 <= PosY) == !(-6000 <= PosY)) && !( ((4500) * ((PosY) - (-4000)) + (1000000)) <= (PosX * 1000)) then 1 else 0 
+seenwalls = (w0 + w1 + w2 + w3 + w4 + w5)
 inside = (seenwalls - ((seenwalls / 2) * 2)) == 1
-collision = !inside && !(c0)
-
+collision = !inside

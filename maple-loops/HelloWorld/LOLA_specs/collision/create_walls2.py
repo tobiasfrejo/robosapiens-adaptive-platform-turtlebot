@@ -4,21 +4,20 @@ from itertools import chain
 # Scaled to keep precision as ints
 
 corners = np.array([
-    (-2, -2),
-    (-5,  1),
-    (-3,  6),
-    (-2,  2),
-    ( 2,  5),
-    ( 1, -5),
-    (-5, -3)
+    (3,3),
+    (-2,6),
+    (-5,2),
+    (-8,-1),
+    (-8,-6),
+    (1,-4),
 ])
 
-obstacle1 = np.array([
-    (-3,  1),
-    (-1,  0),
-    ( 0, -3),
-    ( 0,  1)
-])
+# obstacle1 = np.array([
+#     (-3,  1),
+#     (-1,  0),
+#     ( 0, -3),
+#     ( 0,  1)
+# ])
 
 def connect_polygon(corners):
     walls = []
@@ -31,7 +30,7 @@ def connect_polygon(corners):
 
 walls = np.concat((
     connect_polygon(corners),
-    connect_polygon(obstacle1)
+    # connect_polygon(obstacle1)
 ))
 warn(str(len(walls)))
 
@@ -39,7 +38,7 @@ walls *= 1000
 
 # (Cx, Cy, R)
 pillars = np.array([
-    ( 1,  2,  1)
+    # ( 1,  2,  1)
 ])
 
 pillars *= 1000
@@ -65,14 +64,14 @@ circle_collision_expression = '''\
 """
 https://wrfranklin.org/Research/Short_Notes/pnpoly.html
 
-(Ay > Py  !=  By > Py)  
+(Ay > Py  !=  By > Py)
 &&  (Px  <  (Bx-Ax) * (Py-Ay) / (By-Ay) + Ax)
 """
 expression = """\
 if !(\
  !({ay} <= PosY) == !({by} <= PosY)\
 ) && !(\
- (({a}) * ((PosY * 1000) - ({ay1})) + ({ax})) <= (PosX * 1000)) \
+ (({a}) * ((PosY) - ({ay})) + ({ax1})) <= (PosX * 1000)) \
 then 1 \
 else 0 \
 """
@@ -87,8 +86,8 @@ for A, B in walls:
         continue
 
     expressions.append(expression.format_map({
-        'a':int((Bx-Ax)/(By-Ay)*1000), 
-        'ax': int(Ax*1000),
+        'a':int((Bx-Ax)/(By-Ay)*1000),
+        'ax1': int(Ax*1000),
         'ay': Ay,
         'ay1': int(Ay*1000),
         'bx': Bx,
@@ -136,6 +135,9 @@ for d in declarations:
 
 output += f'seenwalls = ({" + ".join(streams)})\n'
 output += 'inside = (seenwalls - ((seenwalls / 2) * 2)) == 1\n'
-output += f'collision = !inside && !({ " || ".join(circles) })\n'
+if len(circles) == 0:
+    output += 'collision = !inside'
+else:
+    output += f'collision = !inside && !({ " || ".join(circles) })\n'
 
 print(output)
