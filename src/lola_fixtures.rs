@@ -1,5 +1,6 @@
 use crate::{InputProvider, OutputStream, Value, VarName};
 use futures::stream;
+use smol::stream::StreamExt;
 use std::collections::BTreeMap;
 
 // Dead code is allowed in this file since cargo does not correctly
@@ -10,18 +11,16 @@ pub fn input_empty() -> BTreeMap<VarName, OutputStream<Value>> {
     BTreeMap::new()
 }
 
-// TODO: Make the input streams have 3 values...
-
 #[allow(dead_code)]
 pub fn input_streams1() -> BTreeMap<VarName, OutputStream<Value>> {
     let mut input_streams = BTreeMap::new();
     input_streams.insert(
-        VarName("x".into()),
+        "x".into(),
         Box::pin(stream::iter(vec![Value::Int(1), Value::Int(3)].into_iter()))
             as OutputStream<Value>,
     );
     input_streams.insert(
-        VarName("y".into()),
+        "y".into(),
         Box::pin(stream::iter(vec![Value::Int(2), Value::Int(4)].into_iter()))
             as OutputStream<Value>,
     );
@@ -32,19 +31,19 @@ pub fn input_streams1() -> BTreeMap<VarName, OutputStream<Value>> {
 pub fn input_streams2() -> BTreeMap<VarName, OutputStream<Value>> {
     let mut input_streams = BTreeMap::new();
     input_streams.insert(
-        VarName("x".into()),
+        "x".into(),
         Box::pin(stream::iter(vec![Value::Int(1), Value::Int(3)].into_iter()))
             as OutputStream<Value>,
     );
     input_streams.insert(
-        VarName("y".into()),
+        "y".into(),
         Box::pin(stream::iter(vec![Value::Int(2), Value::Int(4)].into_iter()))
             as OutputStream<Value>,
     );
     input_streams.insert(
-        VarName("s".into()),
+        "s".into(),
         Box::pin(stream::iter(
-            vec![Value::Str("x+y".to_string()), Value::Str("x+y".to_string())].into_iter(),
+            vec![Value::Str("x+y".into()), Value::Str("x+y".into())].into_iter(),
         )) as OutputStream<Value>,
     );
     input_streams
@@ -54,12 +53,12 @@ pub fn input_streams2() -> BTreeMap<VarName, OutputStream<Value>> {
 pub fn input_streams3() -> BTreeMap<VarName, OutputStream<Value>> {
     let mut input_streams = BTreeMap::new();
     input_streams.insert(
-        VarName("x".into()),
+        "x".into(),
         Box::pin(stream::iter(vec![Value::Int(1), Value::Int(3)].into_iter()))
             as OutputStream<Value>,
     );
     input_streams.insert(
-        VarName("y".into()),
+        "y".into(),
         Box::pin(stream::iter(vec![Value::Int(2), Value::Int(4)].into_iter())),
     );
     input_streams
@@ -69,15 +68,15 @@ pub fn input_streams3() -> BTreeMap<VarName, OutputStream<Value>> {
 pub fn input_streams4() -> BTreeMap<VarName, OutputStream<Value>> {
     let mut input_streams = BTreeMap::new();
     input_streams.insert(
-        VarName("x".into()),
+        "x".into(),
         Box::pin(stream::iter(
-            vec![Value::Str("a".to_string()), Value::Str("c".to_string())].into_iter(),
+            vec![Value::Str("a".into()), Value::Str("c".into())].into_iter(),
         )) as OutputStream<Value>,
     );
     input_streams.insert(
-        VarName("y".into()),
+        "y".into(),
         Box::pin(stream::iter(
-            vec![Value::Str("b".to_string()), Value::Str("d".to_string())].into_iter(),
+            vec![Value::Str("b".into()), Value::Str("d".into())].into_iter(),
         )),
     );
     input_streams
@@ -87,16 +86,34 @@ pub fn input_streams4() -> BTreeMap<VarName, OutputStream<Value>> {
 pub fn input_streams5() -> BTreeMap<VarName, OutputStream<Value>> {
     let mut input_streams = BTreeMap::new();
     input_streams.insert(
-        VarName("x".into()),
+        "x".into(),
         Box::pin(stream::iter(
             vec![Value::Bool(true), Value::Bool(false), Value::Bool(true)].into_iter(),
         )) as OutputStream<Value>,
     );
     input_streams.insert(
-        VarName("y".into()),
+        "y".into(),
         Box::pin(stream::iter(
             vec![Value::Bool(true), Value::Bool(true), Value::Bool(false)].into_iter(),
         )),
+    );
+    input_streams
+}
+
+#[allow(dead_code)]
+pub fn input_streams_float() -> BTreeMap<VarName, OutputStream<Value>> {
+    let mut input_streams = BTreeMap::new();
+    input_streams.insert(
+        "x".into(),
+        Box::pin(stream::iter(
+            vec![Value::Float(1.3), Value::Float(3.4)].into_iter(),
+        )) as OutputStream<Value>,
+    );
+    input_streams.insert(
+        "y".into(),
+        Box::pin(stream::iter(
+            vec![Value::Float(2.4), Value::Float(4.3)].into_iter(),
+        )) as OutputStream<Value>,
     );
     input_streams
 }
@@ -115,10 +132,34 @@ pub fn spec_simple_add_monitor() -> &'static str {
 }
 
 #[allow(dead_code)]
+pub fn spec_simple_modulo_monitor() -> &'static str {
+    "in x\n\
+     in y\n\
+     out z\n\
+     z = y % x"
+}
+
+#[allow(dead_code)]
+pub fn spec_simple_modulo_monitor_typed() -> &'static str {
+    "in x: Int\n\
+     in y: Int\n\
+     out z: Int\n\
+     z = y % x"
+}
+
+#[allow(dead_code)]
 pub fn spec_simple_add_monitor_typed() -> &'static str {
     "in x: Int\n\
      in y: Int\n\
      out z: Int\n\
+     z = x + y"
+}
+
+#[allow(dead_code)]
+pub fn spec_simple_add_monitor_typed_float() -> &'static str {
+    "in x: Float\n\
+     in y: Float\n\
+     out z: Float\n\
      z = x + y"
 }
 
@@ -186,7 +227,7 @@ pub fn maple_valid_input_stream(size: usize) -> BTreeMap<VarName, OutputStream<V
     let size = size as i64;
     let mut input_streams = BTreeMap::new();
     input_streams.insert(
-        VarName("stage".into()),
+        "stage".into(),
         Box::pin(stream::iter((0..size).map(|x| {
             if x % 5 == 0 {
                 Value::Str("m".into())
@@ -209,7 +250,7 @@ pub fn maple_invalid_input_stream_1(size: usize) -> BTreeMap<VarName, OutputStre
     let size = size as i64;
     let mut input_streams = BTreeMap::new();
     input_streams.insert(
-        VarName("stage".into()),
+        "stage".into(),
         Box::pin(stream::iter((0..size).map(|x| {
             if x % 5 == 0 {
                 Value::Str("m".into())
@@ -232,7 +273,7 @@ pub fn maple_invalid_input_stream_2(size: usize) -> BTreeMap<VarName, OutputStre
     let size = size as i64;
     let mut input_streams = BTreeMap::new();
     input_streams.insert(
-        VarName("stage".into()),
+        "stage".into(),
         Box::pin(stream::iter((0..size).map(|x| {
             if x % 5 == 0 {
                 Value::Str("m".into())
@@ -283,13 +324,13 @@ pub fn input_streams_defer_1() -> impl InputProvider<Val = Value> {
 
     // Create x stream with values 1 through 15
     input_streams.insert(
-        VarName("x".into()),
+        "x".into(),
         Box::pin(futures::stream::iter((0..15).map(|i| Value::Int(i)))) as OutputStream<Value>,
     );
 
     // Create e stream with the defer expression
     input_streams.insert(
-        VarName("e".into()),
+        "e".into(),
         Box::pin(futures::stream::iter((0..15).map(|i| {
             if i == 1 {
                 Value::Str("x + 1".into())
@@ -308,13 +349,13 @@ pub fn input_streams_defer_2() -> impl InputProvider<Val = Value> {
 
     // Create x stream with values 1 through 15
     input_streams.insert(
-        VarName("x".into()),
+        "x".into(),
         Box::pin(futures::stream::iter((0..15).map(|i| Value::Int(i)))) as OutputStream<Value>,
     );
 
     // Create e stream with the defer expression
     input_streams.insert(
-        VarName("e".into()),
+        "e".into(),
         Box::pin(futures::stream::iter((0..15).map(|i| {
             if i == 3 {
                 Value::Str("x + 1".into())
@@ -333,13 +374,13 @@ pub fn input_streams_defer_3() -> impl InputProvider<Val = Value> {
 
     // Create x stream with values 1 through 15
     input_streams.insert(
-        VarName("x".into()),
+        "x".into(),
         Box::pin(futures::stream::iter((0..15).map(|i| Value::Int(i)))) as OutputStream<Value>,
     );
 
     // Create e stream with the defer expression
     input_streams.insert(
-        VarName("e".into()),
+        "e".into(),
         Box::pin(futures::stream::iter((0..15).map(|i| {
             if i == 12 {
                 Value::Str("x + 1".into())
@@ -359,13 +400,13 @@ pub fn input_streams_defer_4() -> impl InputProvider<Val = Value> {
 
     // Create x stream with values 1 through 5
     input_streams.insert(
-        VarName("x".into()),
+        "x".into(),
         Box::pin(futures::stream::iter((0..5).map(|i| Value::Int(i)))) as OutputStream<Value>,
     );
 
     // Create e stream with the defer expression
     input_streams.insert(
-        VarName("e".into()),
+        "e".into(),
         Box::pin(futures::stream::iter((0..5).map(|i| {
             if i == 2 {
                 Value::Str("x[-1, 0]".into())
@@ -410,43 +451,59 @@ pub fn input_streams_indexing() -> impl InputProvider<Val = Value> {
 
     // Create x stream with values 1 through 6
     input_streams.insert(
-        VarName("x".into()),
+        "x".into(),
         Box::pin(futures::stream::iter((0..6).map(|i| Value::Int(i)))) as OutputStream<Value>,
     );
 
     // Create x stream with values 1 through 6
     input_streams.insert(
-        VarName("y".into()),
+        "y".into(),
         Box::pin(futures::stream::iter((0..6).map(|i| Value::Int(i)))) as OutputStream<Value>,
     );
 
     input_streams
 }
 
-pub fn input_streams_simple_add_untyped(size: usize) -> BTreeMap<VarName, OutputStream<Value>> {
+#[allow(dead_code)]
+pub fn spec_add_defer() -> &'static str {
+    "in x
+     in y
+     in e
+     out z
+     z = defer(e)"
+}
+
+pub fn input_streams_add_defer(size: usize) -> BTreeMap<VarName, OutputStream<Value>> {
     let size = size as i64;
     let mut input_streams = BTreeMap::new();
     input_streams.insert(
-        VarName("x".into()),
+        "x".into(),
         Box::pin(stream::iter((0..size).map(|x| Value::Int(2 * x)))) as OutputStream<Value>,
     );
     input_streams.insert(
-        VarName("y".into()),
+        "y".into(),
         Box::pin(stream::iter((0..size).map(|y| Value::Int(2 * y + 1)))) as OutputStream<Value>,
     );
+    let e_stream = stream::repeat(Value::Unknown)
+        .take((size / 2) as usize)
+        .chain(stream::iter(
+            (0..size / 2).map(|_| Value::Str("x + y".into())),
+        ));
+    input_streams.insert("e".into(), Box::pin(e_stream) as OutputStream<Value>);
+
     input_streams
 }
 
-pub fn input_streams_simple_add_typed(size: usize) -> BTreeMap<VarName, OutputStream<Value>> {
-    let mut input_streams = BTreeMap::new();
+pub fn input_streams_simple_add(size: usize) -> BTreeMap<VarName, OutputStream<Value>> {
     let size = size as i64;
+    let mut input_streams = BTreeMap::new();
     input_streams.insert(
-        VarName("x".into()),
+        "x".into(),
         Box::pin(stream::iter((0..size).map(|x| Value::Int(2 * x)))) as OutputStream<Value>,
     );
     input_streams.insert(
-        VarName("y".into()),
-        Box::pin(stream::iter((0..size).map(|y| Value::Int(2 * y + 1)))),
+        "y".into(),
+        Box::pin(stream::iter((0..size).map(|y| Value::Int(2 * y + 1)))) as OutputStream<Value>,
     );
     input_streams
 }

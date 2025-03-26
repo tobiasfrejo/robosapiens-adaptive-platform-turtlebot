@@ -5,6 +5,7 @@ use std::marker::PhantomData;
 use std::mem;
 use std::rc::Rc;
 
+use async_cell::unsync::AsyncCell;
 use async_stream::stream;
 use async_trait::async_trait;
 use async_unsync::bounded;
@@ -15,9 +16,6 @@ use futures::future::LocalBoxFuture;
 use futures::future::join_all;
 use smol::LocalExecutor;
 use strum_macros::Display;
-use tokio::sync::watch;
-use tokio_util::sync::CancellationToken;
-use tokio_util::sync::DropGuard;
 use tracing::Level;
 use tracing::debug;
 use tracing::info;
@@ -32,7 +30,7 @@ use crate::core::Specification;
 use crate::core::SyncStreamContext;
 use crate::core::{OutputStream, StreamContext, StreamData, VarName};
 use crate::dep_manage::interface::DependencyManager;
-use crate::stream_utils::{drop_guard_stream, oneshot_to_stream};
+use crate::stream_utils::oneshot_to_stream;
 
 /// Track the stage of a variable's lifecycle
 #[derive(Debug, Display, Clone, PartialEq, Eq)]
@@ -85,7 +83,7 @@ struct VarManager<V: StreamData> {
     /// The input stream which is feeding data into the variable
     input_stream: Rc<RefCell<Option<OutputStream<V>>>>,
     /// The current stage of the variable's lifetime
-    var_stage: (watch::Sender<VarStage>, watch::Receiver<VarStage>),
+    var_stage: Rc<AsyncCell<VarStage>>,
     /// The number of outstanding unfulfilled subscription requests
     outstanding_sub_requests: Rc<RefCell<usize>>,
     /// The semaphore used to control access to the variable
@@ -104,7 +102,7 @@ impl<V: StreamData> VarManager<V> {
         var: VarName,
         input_stream: OutputStream<V>,
     ) -> Self {
-        let var_stage = watch::channel(VarStage::Gathering);
+        let var_stage = AsyncCell::new_with(VarStage::Gathering).into_shared();
         let var_semaphore = Rc::new(semaphore::Semaphore::new(1));
         let clock = Rc::new(RefCell::new(0));
         let subscribers = Rc::new(RefCell::new(vec![]));
@@ -128,22 +126,17 @@ impl<V: StreamData> VarManager<V> {
         let semaphore = self.var_semaphore.clone();
         let input_stream_ref = self.input_stream.clone();
         let subscribers_ref = self.subscribers.clone();
-        let mut var_stage_recv = self.var_stage.1.clone();
+        let var_stage_ref = self.var_stage.clone();
         let outstanding_sub_requests_ref = self.outstanding_sub_requests.clone();
-        let mut current_var_stage = var_stage_recv.borrow().clone();
         let var = self.var.clone();
 
         debug!(?var, "Subscribing to variable");
-
-        if current_var_stage == VarStage::Closed {
-            panic!("Cannot subscribe to a variable in the closed stage");
-        }
 
         // Create a oneshot channel to send the output stream to the subscriber
         let (output_tx, output_rx) = oneshot::channel().into_split();
 
         // Prepare an inner channel which will be used to return the output
-        let (tx, mut rx) = bounded::channel(10).into_split();
+        let (tx, mut rx) = bounded::channel(1000).into_split();
         subscribers_ref.borrow_mut().push(tx);
 
         // Increment the number of outstanding subscription requests and remove
@@ -152,20 +145,22 @@ impl<V: StreamData> VarManager<V> {
         *self.outstanding_sub_requests.borrow_mut() += 1;
         semaphore.remove_permits(1);
 
+        // This should return immediately since var_stage is never None
+        // (it is initialized to Gathering in the constructor)
+        let mut current_var_stage = smol::future::block_on(var_stage_ref.get_shared());
+
         // Spawn a background async task to handle the subscription request
         self.executor
             .spawn(async move {
-                if current_var_stage == VarStage::Gathering {
+                if current_var_stage == VarStage::Closed {
+                    panic!("Cannot subscribe to a variable in the closed stage");
+                }
+
+                while current_var_stage == VarStage::Gathering {
                     debug!(?var, "Waiting for context stage to move to open or closed");
-                    current_var_stage = var_stage_recv
-                        .wait_for(|stage| *stage != VarStage::Gathering)
-                        .await
-                        .unwrap()
-                        .clone();
-                    debug!(
-                        ?var,
-                        "done waiting with current stage {}", current_var_stage
-                    );
+                    smol::future::yield_now().await;
+                    current_var_stage = var_stage_ref.get_shared().await;
+                    debug!(?var, "var stage changed {}", current_var_stage);
                 }
 
                 let res = if current_var_stage == VarStage::Closed
@@ -222,14 +217,15 @@ impl<V: StreamData> VarManager<V> {
         let var = self.var.clone();
         let var_stage = self.var_stage.clone();
 
-        // Move to the open stage if we are in the gathering stage and we
-        // have been ticked
-        if var_stage.1.borrow().clone() == VarStage::Gathering {
-            var_stage.0.send(VarStage::Open).unwrap();
-        }
-
         // Return a future which will actually do the distribution
         Box::pin(async move {
+            // Move to the open stage if we are in the gathering stage and we
+            // have been ticked
+            if var_stage.get().await == VarStage::Gathering {
+                debug!("Moving to open stage from tick");
+                var_stage.set(VarStage::Open);
+            }
+
             debug!(?var, "Waiting for permit");
             let _permit = semaphore.acquire().await.unwrap();
             debug!(?var, "Acquired permit");
@@ -245,7 +241,7 @@ impl<V: StreamData> VarManager<V> {
                 }
             };
 
-            if *var_stage.1.borrow() == VarStage::Closed && subscribers_ref.borrow().is_empty() {
+            if var_stage.get().await == VarStage::Closed && subscribers_ref.borrow().is_empty() {
                 debug!("No subscribers; stopping distribution");
                 return false;
             }
@@ -281,7 +277,8 @@ impl<V: StreamData> VarManager<V> {
     /// is exhausted
     fn run(self) -> LocalBoxFuture<'static, ()> {
         // Move to the closed stage since the variable is now running
-        self.var_stage.0.send(VarStage::Closed).unwrap();
+        debug!("Moving to closed stage from run");
+        self.var_stage.set(VarStage::Closed);
 
         // Return a future which will run the tick function until it returns
         // false (indicating the input stream is exhausted or there are no
@@ -344,7 +341,7 @@ struct Context<Val: StreamData> {
     /// The executor which is used to run background tasks
     executor: Rc<LocalExecutor<'static>>,
     /// The variables which are available in the context
-    vars: Vec<VarName>,
+    var_names: Vec<VarName>,
     /// The amount of history stored for retrospective monitoring
     /// of each variable (0 means no history)
     #[allow(dead_code)]
@@ -353,24 +350,20 @@ struct Context<Val: StreamData> {
     clock: usize,
     /// Variable manangers
     var_managers: Rc<RefCell<BTreeMap<VarName, VarManager<Val>>>>,
-    /// The cancellation token used to cancel all background tasks
-    cancellation_token: CancellationToken,
 }
 
 impl<Val: StreamData> Context<Val> {
     fn new(
         executor: Rc<LocalExecutor<'static>>,
-        input_streams: BTreeMap<VarName, OutputStream<Val>>,
+        var_names: Vec<VarName>,
+        input_streams: Vec<OutputStream<Val>>,
         history_length: usize,
-        cancellation_token: CancellationToken,
     ) -> Self {
-        let mut vars = Vec::new();
         let clock: usize = 0;
         // TODO: push the mutability to the API of contexts
         let var_managers = Rc::new(RefCell::new(BTreeMap::new()));
 
-        for (var, input_stream) in input_streams.into_iter() {
-            vars.push(var.clone());
+        for (var, input_stream) in var_names.iter().zip(input_streams.into_iter()) {
             let input_stream =
                 store_history(executor.clone(), var.clone(), history_length, input_stream);
             var_managers.borrow_mut().insert(
@@ -381,11 +374,10 @@ impl<Val: StreamData> Context<Val> {
 
         Context {
             executor,
-            vars,
+            var_names,
             history_length,
             clock,
             var_managers,
-            cancellation_token,
         }
     }
 }
@@ -404,17 +396,17 @@ impl<Val: StreamData> StreamContext<Val> for Context<Val> {
 
     fn subcontext(&self, history_length: usize) -> Box<dyn SyncStreamContext<Val>> {
         let input_streams = self
-            .vars
+            .var_names
             .iter()
-            .map(|var| (var.clone(), self.var(var).unwrap()))
+            .map(|var| self.var(var).unwrap())
             .collect();
 
         // Recursively create a new context based on ourself
         Box::new(Context::new(
             self.executor.clone(),
+            self.var_names.clone(),
             input_streams,
             history_length,
-            self.cancellation_token.clone(),
         ))
     }
 }
@@ -479,23 +471,19 @@ where
     Val: StreamData,
     S: MonitoringSemantics<Expr, Val>,
     M: Specification<Expr = Expr>,
-    Expr: Sync + Send,
 {
     #[allow(dead_code)]
     executor: Rc<LocalExecutor<'static>>,
     model: M,
     output_handler: Box<dyn OutputHandler<Val = Val>>,
-    output_streams: BTreeMap<VarName, OutputStream<Val>>,
+    output_streams: Vec<OutputStream<Val>>,
     #[allow(dead_code)]
-    // This is used for RAII to cancel background tasks when the async var
-    // exchange is dropped
-    cancellation_guard: Rc<DropGuard>,
     expr_t: PhantomData<Expr>,
     semantics_t: PhantomData<S>,
 }
 
 #[async_trait(?Send)]
-impl<Expr: Sync + Send, Val, S, M> Monitor<M, Val> for AsyncMonitorRunner<Expr, Val, S, M>
+impl<Expr, Val, S, M> Monitor<M, Val> for AsyncMonitorRunner<Expr, Val, S, M>
 where
     Val: StreamData,
     S: MonitoringSemantics<Expr, Val>,
@@ -508,15 +496,17 @@ where
         output: Box<dyn OutputHandler<Val = Val>>,
         _dependencies: DependencyManager,
     ) -> Self {
-        let cancellation_token = CancellationToken::new();
-        let cancellation_guard = Rc::new(cancellation_token.clone().drop_guard());
-
         let input_vars = model.input_vars().clone();
         let output_vars = model.output_vars().clone();
+        let var_names = input_vars
+            .iter()
+            .chain(output_vars.iter())
+            .cloned()
+            .collect();
 
         let input_streams = input_vars.iter().map(|var| {
             let stream = input_streams.input_stream(var).unwrap();
-            (var.clone(), stream)
+            stream
         });
 
         // Create deferred streams based on each of the output variables
@@ -532,12 +522,11 @@ where
             .zip(output_txs.into_iter())
             .collect();
         let output_streams = output_rxs.into_iter().map(oneshot_to_stream);
-        let output_streams = output_vars.iter().cloned().zip(output_streams.into_iter());
 
         // Combine the input and output streams into a single map
         let streams = input_streams.chain(output_streams.into_iter()).collect();
 
-        let mut context = Context::new(executor.clone(), streams, 0, cancellation_token.clone());
+        let mut context = Context::new(executor.clone(), var_names, streams, 0);
 
         // Create a map of the output variables to their streams
         // based on using the context
@@ -545,17 +534,8 @@ where
             .output_vars()
             .iter()
             .map(|var| {
-                (
-                    var.clone(),
-                    // Add a guard to the stream to cancel background
-                    // tasks whenever all the outputs are dropped
-                    drop_guard_stream(
-                        context.var(var).expect(
-                            format!("Failed to find expression for var {}", var.0.as_str())
-                                .as_str(),
-                        ),
-                        cancellation_guard.clone(),
-                    ),
+                context.var(var).expect(
+                    format!("Failed to find expression for var {}", var.name().as_str()).as_str(),
                 )
             })
             .collect();
@@ -563,9 +543,9 @@ where
         // Send outputs computed based on the context to the
         // output handler
         for (var, tx) in output_txs {
-            let expr = model
-                .var_expr(&var)
-                .expect(format!("Failed to find expression for var {}", var.0.as_str()).as_str());
+            let expr = model.var_expr(&var).expect(
+                format!("Failed to find expression for var {}", var.name().as_str()).as_str(),
+            );
             let stream = S::to_async_stream(expr, &context);
             if let Err(_) = tx.send(stream) {
                 warn!(?var, "Failed to send stream for var to requester");
@@ -583,7 +563,6 @@ where
             model,
             output_streams,
             semantics_t: PhantomData,
-            cancellation_guard,
             expr_t: PhantomData,
             output_handler: output,
         }
@@ -616,8 +595,7 @@ mod tests {
             yield 3;
         });
 
-        let mut manager =
-            VarManager::new(executor.clone(), VarName("test".to_string()), input_stream);
+        let mut manager = VarManager::new(executor.clone(), "test".into(), input_stream);
 
         info!("subscribing 1");
         let sub1 = manager.subscribe();
@@ -643,8 +621,7 @@ mod tests {
             yield 4;
         });
 
-        let mut manager =
-            VarManager::new(executor.clone(), VarName("test".to_string()), input_stream);
+        let mut manager = VarManager::new(executor.clone(), "test".into(), input_stream);
 
         info!("ticking 1");
         manager.tick().await;

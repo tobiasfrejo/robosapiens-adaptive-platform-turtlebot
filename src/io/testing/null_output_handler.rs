@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, rc::Rc};
+use std::rc::Rc;
 
 use async_trait::async_trait;
 use futures::{StreamExt, future::LocalBoxFuture};
@@ -31,7 +31,11 @@ impl<V: StreamData> NullOutputHandler<V> {
 impl<V: StreamData> OutputHandler for NullOutputHandler<V> {
     type Val = V;
 
-    fn provide_streams(&mut self, streams: BTreeMap<VarName, OutputStream<V>>) {
+    fn var_names(&self) -> Vec<VarName> {
+        self.manual_output_handler.var_names()
+    }
+
+    fn provide_streams(&mut self, streams: Vec<OutputStream<V>>) {
         self.manual_output_handler.provide_streams(streams);
     }
 
@@ -50,7 +54,7 @@ impl<V: StreamData> OutputHandler for NullOutputHandler<V> {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::{OutputStream, Value, VarName};
+    use crate::core::{OutputStream, Value};
     use futures::stream;
 
     use super::*;
@@ -64,15 +68,10 @@ mod tests {
         let x_stream: OutputStream<Value> = Box::pin(stream::iter((0..10).map(|x| (x * 2).into())));
         let y_stream: OutputStream<Value> =
             Box::pin(stream::iter((0..10).map(|x| (x * 2 + 1).into())));
-        let mut handler: NullOutputHandler<Value> = NullOutputHandler::new(
-            executor.clone(),
-            vec![VarName("x".to_string()), VarName("y".to_string())],
-        );
+        let mut handler: NullOutputHandler<Value> =
+            NullOutputHandler::new(executor.clone(), vec!["x".into(), "y".into()]);
 
-        handler.provide_streams(BTreeMap::from([
-            (VarName("x".to_string()), x_stream),
-            (VarName("y".to_string()), y_stream),
-        ]));
+        handler.provide_streams(vec![x_stream, y_stream]);
 
         let task = executor.spawn(handler.run());
 
