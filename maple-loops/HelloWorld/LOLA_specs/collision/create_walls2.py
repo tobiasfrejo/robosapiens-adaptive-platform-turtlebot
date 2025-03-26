@@ -4,12 +4,12 @@ from itertools import chain
 # Scaled to keep precision as ints
 
 corners = np.array([
-    (3,3),
-    (-2,6),
-    (-5,2),
-    (-8,-1),
-    (-8,-6),
-    (1,-4),
+    ( 3.0, 3.0),
+    (-2.0, 6.0),
+    (-5.0, 2.0),
+    (-8.0,-1.0),
+    (-8.0,-6.0),
+    ( 1.0,-4.0),
 ])
 
 # obstacle1 = np.array([
@@ -34,7 +34,7 @@ walls = np.concat((
 ))
 warn(str(len(walls)))
 
-walls *= 1000
+#walls *= 1000
 
 # (Cx, Cy, R)
 pillars = np.array([
@@ -71,7 +71,7 @@ expression = """\
 if !(\
  !({ay} <= PosY) == !({by} <= PosY)\
 ) && !(\
- (({a}) * ((PosY) - ({ay})) + ({ax1})) <= (PosX * 1000)) \
+ (({a}) * ((PosY) - ({ay})) + ({ax1})) <= (PosX)) \
 then 1 \
 else 0 \
 """
@@ -86,10 +86,10 @@ for A, B in walls:
         continue
 
     expressions.append(expression.format_map({
-        'a':int((Bx-Ax)/(By-Ay)*1000),
-        'ax1': int(Ax*1000),
+        'a':int((Bx-Ax)/(By-Ay)),
+        'ax1': int(Ax),
         'ay': Ay,
-        'ay1': int(Ay*1000),
+        'ay1': int(Ay),
         'bx': Bx,
         'by': By
     }))
