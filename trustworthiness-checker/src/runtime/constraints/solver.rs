@@ -10,7 +10,7 @@ use crate::lang::dynamic_lola::parser::lola_expression;
 // An SExpr with an absolute time
 // Identical to SExpr except SIndex is unsigned, Var has a time index and certain DUP functions are
 // removed (because they are not needed)
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum SExprAbs {
     // if-then-else
     If(Box<Self>, Box<Self>, Box<Self>),
@@ -65,9 +65,7 @@ pub struct ConstraintStore {
 pub fn model_constraints(model: LOLASpecification) -> ConstraintStore {
     let mut constraints = ConstraintStore::default();
     for (var, sexpr) in model.exprs.iter() {
-        constraints
-            .output_exprs
-            .insert(VarName(var.0.clone()), sexpr.clone());
+        constraints.output_exprs.insert(var.clone(), sexpr.clone());
     }
     constraints
 }
@@ -131,24 +129,44 @@ fn binop_table(v1: Value, v2: Value, op: SBinOp) -> Value {
     use Value::*;
 
     match (v1, v2, op) {
-        (Int(i1), Int(i2), IOp(iop)) => match iop {
-            IntBinOp::Add => Int(i1 + i2),
-            IntBinOp::Sub => Int(i1 - i2),
-            IntBinOp::Mul => Int(i1 * i2),
-            IntBinOp::Div => Int(i1 / i2),
+        (Int(i1), Int(i2), NOp(iop)) => match iop {
+            NumericalBinOp::Add => Int(i1 + i2),
+            NumericalBinOp::Sub => Int(i1 - i2),
+            NumericalBinOp::Mul => Int(i1 * i2),
+            NumericalBinOp::Div => Int(i1 / i2),
+            NumericalBinOp::Mod => Int(i1 % i2),
+        },
+        (Float(i1), Int(i2), NOp(iop)) => match iop {
+            NumericalBinOp::Add => Float(i1 + i2 as f32),
+            NumericalBinOp::Sub => Float(i1 - i2 as f32),
+            NumericalBinOp::Mul => Float(i1 * i2 as f32),
+            NumericalBinOp::Div => Float(i1 / i2 as f32),
+            NumericalBinOp::Mod => Float(i1 % i2 as f32),
+        },
+        (Int(i1), Float(i2), NOp(iop)) => match iop {
+            NumericalBinOp::Add => Float(i1 as f32 + i2),
+            NumericalBinOp::Sub => Float(i1 as f32 - i2),
+            NumericalBinOp::Mul => Float(i1 as f32 * i2),
+            NumericalBinOp::Div => Float(i1 as f32 / i2),
+            NumericalBinOp::Mod => Float(i1 as f32 % i2),
+        },
+        (Float(i1), Float(i2), NOp(iop)) => match iop {
+            NumericalBinOp::Add => Float(i1 + i2),
+            NumericalBinOp::Sub => Float(i1 - i2),
+            NumericalBinOp::Mul => Float(i1 * i2),
+            NumericalBinOp::Div => Float(i1 / i2),
+            NumericalBinOp::Mod => Float(i1 % i2),
         },
         (Bool(b1), Bool(b2), BOp(bop)) => match bop {
             BoolBinOp::Or => Bool(b1 || b2),
             BoolBinOp::And => Bool(b1 && b2),
         },
-        (Str(s1), Str(s2), SOp(sop)) => {
-            match sop {
-                StrBinOp::Concat => {
-                    // TODO: Probably more efficient way to concat than to create a new string
-                    Str(format!("{}{}", s1, s2))
-                }
+        (Str(mut s1), Str(s2), SOp(sop)) => match sop {
+            StrBinOp::Concat => {
+                s1.push_str(&s2);
+                Str(s1)
             }
-        }
+        },
         (Str(s1), Str(s2), COp(sop)) => match sop {
             CompBinOp::Eq => Bool(s1 == s2),
             CompBinOp::Le => Bool(s1 <= s2),
@@ -473,9 +491,8 @@ impl Simplifiable for SExpr<VarName> {
                         }
                     },
                 };
-                let defer_parse = &mut defer_s.as_str();
                 let new_expr = lola_expression
-                    .parse_next(defer_parse)
+                    .parse_next(&mut defer_s.as_ref())
                     .expect("Parsing the defer string resulted in an invalid expression.");
                 let res = new_expr.simplify(base_time, store, var, deps);
                 match &res {

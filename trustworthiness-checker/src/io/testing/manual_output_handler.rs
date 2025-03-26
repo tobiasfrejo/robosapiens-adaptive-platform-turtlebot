@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, mem, rc::Rc};
+use std::{mem, rc::Rc};
 
 use async_stream::stream;
 use async_trait::async_trait;
@@ -23,8 +23,8 @@ pub struct ManualOutputHandler<V: StreamData> {
     executor: Rc<LocalExecutor<'static>>,
     stream_senders: Option<Vec<oneshot::Sender<OutputStream<V>>>>,
     stream_receivers: Option<Vec<oneshot::Receiver<OutputStream<V>>>>,
-    output_receiver: Option<oneshot::Receiver<OutputStream<BTreeMap<VarName, V>>>>,
-    output_sender: Option<oneshot::Sender<OutputStream<BTreeMap<VarName, V>>>>,
+    output_receiver: Option<oneshot::Receiver<OutputStream<Vec<V>>>>,
+    output_sender: Option<oneshot::Sender<OutputStream<Vec<V>>>>,
 }
 
 impl<V: StreamData> ManualOutputHandler<V> {
@@ -48,7 +48,7 @@ impl<V: StreamData> ManualOutputHandler<V> {
         }
     }
 
-    pub fn get_output(&mut self) -> OutputStream<BTreeMap<VarName, V>> {
+    pub fn get_output(&mut self) -> OutputStream<Vec<V>> {
         let receiver = self
             .output_receiver
             .take()
@@ -61,18 +61,19 @@ impl<V: StreamData> ManualOutputHandler<V> {
 impl<V: StreamData> OutputHandler for ManualOutputHandler<V> {
     type Val = V;
 
+    fn var_names(&self) -> Vec<VarName> {
+        self.var_names.clone()
+    }
+
     #[instrument(skip(self, streams))]
-    fn provide_streams(&mut self, mut streams: BTreeMap<VarName, OutputStream<V>>) {
+    fn provide_streams(&mut self, streams: Vec<OutputStream<V>>) {
         debug!(name: "Providing streams",
             num_streams = self.var_names.len());
-        for (var_name, sender) in self
-            .var_names
-            .iter()
-            .zip(self.stream_senders.take().unwrap())
-        {
-            let stream = streams
-                .remove(var_name)
-                .expect(format!("Stream for {} not found", var_name).as_str());
+        for (stream, sender) in streams.into_iter().zip(
+            self.stream_senders
+                .take()
+                .expect("Stream senders not found"),
+        ) {
             assert!(sender.send(stream).is_ok());
         }
     }
@@ -90,7 +91,6 @@ impl<V: StreamData> OutputHandler for ManualOutputHandler<V> {
             .into_iter()
             .map(|mut r| r.try_recv().unwrap())
             .collect();
-        let var_names = self.var_names.clone();
 
         let (output_done_tx, output_done_rx) = oneshot::channel().into_split();
 
@@ -107,9 +107,8 @@ impl<V: StreamData> OutputHandler for ManualOutputHandler<V> {
                         .into_iter()
                         .collect::<Option<Vec<V>>>()
                     {
-                        // Combine the values into a single map
-                        let output: BTreeMap<VarName, V> =
-                            var_names.iter().cloned().zip(vals.into_iter()).collect();
+                        // Collect the values into a Vec<V>
+                        let output = vals;
                         // Output the combined data
                         debug!(name = "Outputting data", ?output);
                         yield output;
@@ -146,15 +145,12 @@ pub struct AsyncManualOutputHandler<V: StreamData> {
 impl<V: StreamData> OutputHandler for AsyncManualOutputHandler<V> {
     type Val = V;
 
-    fn provide_streams(&mut self, mut streams: BTreeMap<VarName, OutputStream<V>>) {
-        for (var_name, sender) in self
-            .var_names
-            .iter()
-            .zip(self.stream_senders.take().unwrap())
-        {
-            let stream = streams
-                .remove(var_name)
-                .expect(format!("Stream for {} not found", var_name).as_str());
+    fn var_names(&self) -> Vec<VarName> {
+        self.var_names.clone()
+    }
+
+    fn provide_streams(&mut self, streams: Vec<OutputStream<V>>) {
+        for (stream, sender) in streams.into_iter().zip(self.stream_senders.take().unwrap()) {
             assert!(sender.send(stream).is_ok());
         }
     }
@@ -235,6 +231,11 @@ mod tests {
     use smol_macros::test as smol_test;
     use test_log::test;
 
+    // Implement Eq for Value - only available for testing since this is not
+    // true for floats
+    impl Eq for Value {
+    }
+
     // Ordering of Value - only available for testing
     impl Ord for Value {
         fn cmp(&self, other: &Self) -> Ordering {
@@ -246,8 +247,9 @@ mod tests {
                 Unit => 1,
                 Bool(_) => 2,
                 Int(_) => 3,
-                Str(_) => 4,
-                List(_) => 5,
+                Float(_) => 4,
+                Str(_) => 5,
+                List(_) => 6,
             };
 
             // First compare based on variant order
@@ -262,6 +264,9 @@ mod tests {
             match (self, other) {
                 (Bool(a), Bool(b)) => a.cmp(b),
                 (Int(a), Int(b)) => a.cmp(b),
+                // Compare floats as ordered floats (with NaNs at either end of 
+                // the ordering) for the purposes of this test
+                (Float(a), Float(b)) => ordered_float::OrderedFloat(*a).cmp(&ordered_float::OrderedFloat(*b)),
                 (Str(a), Str(b)) => a.cmp(b),
                 (List(a), List(b)) => a.cmp(b), // Vec<Value> implements Ord if Value does
                 _ => Ordering::Equal, // Unit and Unknown are considered equal within their kind
@@ -280,32 +285,20 @@ mod tests {
         let x_stream: OutputStream<Value> = Box::pin(stream::iter((0..10).map(|x| (x * 2).into())));
         let y_stream: OutputStream<Value> =
             Box::pin(stream::iter((0..10).map(|x| (x * 2 + 1).into())));
-        let xy_expected: Vec<BTreeMap<VarName, Value>> = (0..10)
-            .map(|x| {
-                BTreeMap::from([
-                    (VarName("x".to_string()), (x * 2).into()),
-                    (VarName("y".to_string()), (x * 2 + 1).into()),
-                ])
-            })
+        let xy_expected: Vec<Vec<Value>> = (0..10)
+            .map(|x| vec![(x * 2).into(), (x * 2 + 1).into()])
             .collect();
-        let mut handler: ManualOutputHandler<Value> = ManualOutputHandler::new(
-            ex.clone(),
-            vec![VarName("x".to_string()), VarName("y".to_string())],
-        );
+        let mut handler: ManualOutputHandler<Value> =
+            ManualOutputHandler::new(ex.clone(), vec!["x".into(), "y".into()]);
 
-        handler.provide_streams(BTreeMap::from([
-            (VarName("x".to_string()), x_stream),
-            (VarName("y".to_string()), y_stream),
-        ]));
-
-        //
+        handler.provide_streams(vec![x_stream, y_stream]);
 
         let run_fut = handler.run();
         let output_stream = handler.get_output();
 
         let task = ex.spawn(run_fut);
 
-        let output: Vec<BTreeMap<VarName, Value>> = output_stream.collect().await;
+        let output: Vec<Vec<Value>> = output_stream.collect().await;
 
         assert_eq!(output, xy_expected);
 
@@ -320,7 +313,7 @@ mod tests {
             multiplier: i64,
             offset: i64,
         ) -> (VarName, OutputStream<Value>) {
-            let var_name = VarName(name.to_string());
+            let var_name = name.into();
             // Delay to force expected ordering of the streams
             let stream =
                 Box::pin(stream::iter(0..10).map(move |x| (multiplier * x + offset).into()));
@@ -344,11 +337,7 @@ mod tests {
         // Initialize the handler
         let mut handler =
             AsyncManualOutputHandler::new(executor.clone(), vec![x_name.clone(), y_name.clone()]);
-        handler.provide_streams(
-            vec![(x_name, x_stream), (y_name, y_stream)]
-                .into_iter()
-                .collect::<BTreeMap<_, _>>(),
-        );
+        handler.provide_streams(vec![x_stream, y_stream].into_iter().collect::<Vec<_>>());
 
         // Run the handler and validate output
         let output_stream = handler.get_output();

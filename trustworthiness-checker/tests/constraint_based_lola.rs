@@ -13,13 +13,13 @@ use trustworthiness_checker::{Monitor, Value, VarName};
 pub fn input_streams1() -> BTreeMap<VarName, OutputStream<Value>> {
     let mut input_streams = BTreeMap::new();
     input_streams.insert(
-        VarName("x".into()),
+        "x".into(),
         Box::pin(stream::iter(
             vec![Value::Int(1), 3.into(), 5.into()].into_iter(),
         )) as OutputStream<Value>,
     );
     input_streams.insert(
-        VarName("y".into()),
+        "y".into(),
         Box::pin(stream::iter(
             vec![Value::Int(2), 4.into(), 6.into()].into_iter(),
         )) as OutputStream<Value>,
@@ -50,6 +50,7 @@ fn output_handler(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use approx::assert_abs_diff_eq;
     use strum::IntoEnumIterator;
 
     use macro_rules_attribute::apply;
@@ -60,8 +61,7 @@ mod tests {
         DependencyKind, create_dependency_manager,
     };
     use trustworthiness_checker::lola_fixtures::{
-        input_empty, input_streams_simple_add_untyped, input_streams4, input_streams5, spec_empty,
-        spec_simple_add_monitor,
+        input_empty, input_streams4, input_streams5, input_streams_float, input_streams_simple_add, spec_empty, spec_simple_add_monitor, spec_simple_add_monitor_typed_float, spec_simple_modulo_monitor
     };
 
     #[test(apply(smol_test))]
@@ -79,23 +79,77 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert_eq!(
                 outputs,
                 vec![
-                    (0, BTreeMap::from([(VarName("z".into()), 3.into())]),),
-                    (1, BTreeMap::from([(VarName("z".into()), 7.into())]),),
-                    (2, BTreeMap::from([(VarName("z".into()), 11.into())]),),
+                    (0, vec![3.into()]),
+                    (1, vec![7.into()]),
+                    (2, vec![11.into()]),
                 ]
             );
         }
     }
 
     #[test(apply(smol_test))]
+    async fn test_simple_modulo(executor: Rc<LocalExecutor<'static>>) {
+        for kind in DependencyKind::iter() {
+            let mut input_streams = input_streams1();
+            let spec = lola_specification(&mut spec_simple_modulo_monitor()).unwrap();
+            let mut output_handler = output_handler(executor.clone(), spec.clone());
+            let outputs = output_handler.get_output();
+            let monitor = ConstraintBasedMonitor::new(
+                executor.clone(),
+                spec.clone(),
+                &mut input_streams,
+                output_handler,
+                create_dependency_manager(kind, spec),
+            );
+            executor.spawn(monitor.run()).detach();
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
+            assert_eq!(
+                outputs,
+                vec![
+                    (0, vec![0.into()]),
+                    (1, vec![1.into()]),
+                    (2, vec![1.into()]),
+                ]
+            );
+        }
+    }
+
+    #[test(apply(smol_test))]
+    async fn test_simple_add_monitor_float(executor: Rc<LocalExecutor<'static>>) {
+        for kind in DependencyKind::iter() {
+            let mut input_streams = input_streams_float();
+            let spec = lola_specification(&mut spec_simple_add_monitor_typed_float()).unwrap();
+            let mut output_handler = output_handler(executor.clone(), spec.clone());
+            let outputs = output_handler.get_output();
+            let monitor = ConstraintBasedMonitor::new(
+                executor.clone(),
+                spec.clone(),
+                &mut input_streams,
+                output_handler,
+                create_dependency_manager(kind, spec),
+            );
+            executor.spawn(monitor.run()).detach();
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
+            assert_eq!(outputs.len(), 2);
+            match outputs[0].1[0] {
+                Value::Float(f) => assert_abs_diff_eq!(f, 3.7, epsilon = 1e-4),
+                _ => panic!("Expected float"),
+            }
+            match outputs[1].1[0] {
+                Value::Float(f) => assert_abs_diff_eq!(f, 7.7, epsilon = 1e-4),
+                _ => panic!("Expected float"),
+            }
+        }
+    }
+
+    #[test(apply(smol_test))]
     async fn test_simple_add_monitor_large_input(executor: Rc<LocalExecutor<'static>>) {
         for kind in DependencyKind::iter() {
-            let mut input_streams = input_streams_simple_add_untyped(100);
+            let mut input_streams = input_streams_simple_add(100);
             let spec = lola_specification(&mut spec_simple_add_monitor()).unwrap();
             let mut output_handler = Box::new(ManualOutputHandler::new(
                 executor.clone(),
@@ -110,8 +164,7 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert_eq!(outputs.len(), 100);
         }
     }
@@ -132,7 +185,7 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<BTreeMap<VarName, Value>> = outputs.collect().await;
+            let outputs: Vec<Vec<Value>> = outputs.collect().await;
             assert_eq!(outputs.len(), 0);
         }
     }
@@ -153,15 +206,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (0, BTreeMap::from([(VarName("z".into()), 1.into())]),),
-                    (1, BTreeMap::from([(VarName("z".into()), 3.into())]),),
-                    (2, BTreeMap::from([(VarName("z".into()), 5.into())]),),
+                    (0, vec![1.into()]),
+                    (1, vec![3.into()]),
+                    (2, vec![5.into()]),
                 ]
             );
         }
@@ -183,15 +235,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.take(3).enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.take(3).enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (0, BTreeMap::from([(VarName("z".into()), 42.into())]),),
-                    (1, BTreeMap::from([(VarName("z".into()), 42.into())]),),
-                    (2, BTreeMap::from([(VarName("z".into()), 42.into())]),),
+                    (0, vec![42.into()]),
+                    (1, vec![42.into()]),
+                    (2, vec![42.into()]),
                 ]
             );
         }
@@ -213,15 +264,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (0, BTreeMap::from([(VarName("z".into()), 2.into())]),),
-                    (1, BTreeMap::from([(VarName("z".into()), 4.into())]),),
-                    (2, BTreeMap::from([(VarName("z".into()), 6.into())]),),
+                    (0, vec![2.into()]),
+                    (1, vec![4.into()]),
+                    (2, vec![6.into()]),
                 ]
             );
         }
@@ -243,24 +293,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (
-                        0,
-                        BTreeMap::from([(VarName("z".into()), Value::Int(-9))]).into(),
-                    ),
-                    (
-                        1,
-                        BTreeMap::from([(VarName("z".into()), Value::Int(-7))]).into(),
-                    ),
-                    (
-                        2,
-                        BTreeMap::from([(VarName("z".into()), Value::Int(-5))]).into(),
-                    ),
+                    (0, vec![Value::Int(-9)]),
+                    (1, vec![Value::Int(-7)]),
+                    (2, vec![Value::Int(-5)]),
                 ]
             );
         }
@@ -282,8 +322,7 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
@@ -291,17 +330,17 @@ mod tests {
                     (
                         // Resolved to default on first step
                         0,
-                        BTreeMap::from([(VarName("z".into()), 0.into())]),
+                        vec![0.into()],
                     ),
                     (
                         // Resolving to previous value on second step
                         1,
-                        BTreeMap::from([(VarName("z".into()), 1.into())]),
+                        vec![1.into()],
                     ),
                     (
                         // Resolving to previous value on second step
                         2,
-                        BTreeMap::from([(VarName("z".into()), 3.into())]),
+                        vec![3.into()],
                     ),
                 ]
             );
@@ -325,8 +364,7 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
@@ -334,29 +372,17 @@ mod tests {
                     (
                         // Both resolve to default
                         0,
-                        BTreeMap::from([
-                            (VarName("z1".into()), 0.into()),
-                            (VarName("z2".into()), 0.into())
-                        ])
-                        .into(),
+                        vec![0.into(), 0.into()],
                     ),
                     (
                         // z1 resolves to prev, z2 resolves to default
                         1,
-                        BTreeMap::from([
-                            (VarName("z1".into()), 1.into()),
-                            (VarName("z2".into()), 0.into())
-                        ])
-                        .into(),
+                        vec![1.into(), 0.into()],
                     ),
                     (
                         // z1 resolves to prev, z2 resolves to prev_prev
                         2,
-                        BTreeMap::from([
-                            (VarName("z1".into()), 3.into()),
-                            (VarName("z2".into()), 1.into())
-                        ])
-                        .into(),
+                        vec![3.into(), 1.into()],
                     ),
                 ]
             );
@@ -385,8 +411,7 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert_eq!(outputs.len(), 2);
             assert_eq!(
                 outputs,
@@ -394,9 +419,9 @@ mod tests {
                     (
                         // Resolved to index 1 on first step
                         0,
-                        BTreeMap::from([(VarName("z".into()), 3.into())]),
+                        vec![3.into()],
                     ),
-                    (1, BTreeMap::from([(VarName("z".into()), 5.into())]),),
+                    (1, vec![5.into()]),
                 ]
             );
         }
@@ -418,24 +443,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (
-                        0,
-                        BTreeMap::from([(VarName("z".into()), true.into())]).into(),
-                    ),
-                    (
-                        1,
-                        BTreeMap::from([(VarName("z".into()), false.into())]).into(),
-                    ),
-                    (
-                        2,
-                        BTreeMap::from([(VarName("z".into()), false.into())]).into(),
-                    ),
+                    (0, vec![true.into()]),
+                    (1, vec![false.into()]),
+                    (2, vec![false.into()]),
                 ]
             );
         }
@@ -457,21 +472,11 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 2);
             assert_eq!(
                 outputs,
-                vec![
-                    (
-                        0,
-                        BTreeMap::from([(VarName("z".into()), "ab".into())]).into(),
-                    ),
-                    (
-                        1,
-                        BTreeMap::from([(VarName("z".into()), "cd".into())]).into(),
-                    ),
-                ]
+                vec![(0, vec!["ab".into()]), (1, vec!["cd".into()]),]
             );
         }
     }
@@ -492,36 +497,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (
-                        0,
-                        BTreeMap::from([
-                            (VarName("r1".into()), 3.into()),
-                            (VarName("r2".into()), 2.into()),
-                        ])
-                        .into(),
-                    ),
-                    (
-                        1,
-                        BTreeMap::from([
-                            (VarName("r1".into()), 7.into()),
-                            (VarName("r2".into()), 12.into()),
-                        ])
-                        .into(),
-                    ),
-                    (
-                        2,
-                        BTreeMap::from([
-                            (VarName("r1".into()), 11.into()),
-                            (VarName("r2".into()), 30.into()),
-                        ])
-                        .into(),
-                    ),
+                    (0, vec![3.into(), 2.into()]),
+                    (1, vec![7.into(), 12.into()]),
+                    (2, vec![11.into(), 30.into()]),
                 ]
             );
         }
@@ -544,15 +527,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (0, BTreeMap::from([(VarName("y".into()), 0.into())]),),
-                    (1, BTreeMap::from([(VarName("y".into()), 1.into())]),),
-                    (2, BTreeMap::from([(VarName("y".into()), 2.into())]),),
+                    (0, vec![0.into()]),
+                    (1, vec![1.into()]),
+                    (2, vec![2.into()]),
                 ]
             );
         }
@@ -575,15 +557,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (0, BTreeMap::from([(VarName("y".into()), 42.into())]),),
-                    (1, BTreeMap::from([(VarName("y".into()), 42.into())]),),
-                    (2, BTreeMap::from([(VarName("y".into()), 42.into())]),),
+                    (0, vec![42.into()]),
+                    (1, vec![42.into()]),
+                    (2, vec![42.into()]),
                 ]
             );
         }
@@ -606,15 +587,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (0, BTreeMap::from([(VarName("y".into()), 0.into())]),),
-                    (1, BTreeMap::from([(VarName("y".into()), 42.into())]),),
-                    (2, BTreeMap::from([(VarName("y".into()), 2.into())]),),
+                    (0, vec![0.into()]),
+                    (1, vec![42.into()]),
+                    (2, vec![2.into()]),
                 ]
             );
         }
@@ -636,15 +616,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().take(3).collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().take(3).collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (0, BTreeMap::from([(VarName("y".into()), 1.into())]),),
-                    (1, BTreeMap::from([(VarName("y".into()), 2.into())]),),
-                    (2, BTreeMap::from([(VarName("y".into()), 3.into())]),),
+                    (0, vec![1.into()]),
+                    (1, vec![2.into()]),
+                    (2, vec![3.into()]),
                 ]
             );
         }
@@ -670,15 +649,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (0, BTreeMap::from([(VarName("z".into()), 1.into())]),),
-                    (1, BTreeMap::from([(VarName("z".into()), 2.into())]),),
-                    (2, BTreeMap::from([(VarName("z".into()), 3.into())]),),
+                    (0, vec![1.into()]),
+                    (1, vec![2.into()]),
+                    (2, vec![3.into()]),
                 ]
             );
         }
@@ -704,15 +682,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (0, BTreeMap::from([(VarName("z".into()), 1.into())]),),
-                    (1, BTreeMap::from([(VarName("z".into()), 4.into())]),),
-                    (2, BTreeMap::from([(VarName("z".into()), 9.into())]),),
+                    (0, vec![1.into()]),
+                    (1, vec![4.into()]),
+                    (2, vec![9.into()]),
                 ]
             );
         }
@@ -738,18 +715,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (
-                        0,
-                        BTreeMap::from([(VarName("z".into()), Value::Unknown)]).into(),
-                    ),
-                    (1, BTreeMap::from([(VarName("z".into()), 2.into())]),),
-                    (2, BTreeMap::from([(VarName("z".into()), 3.into())]),),
+                    (0, vec![Value::Unknown]),
+                    (1, vec![2.into()]),
+                    (2, vec![3.into()]),
                 ]
             );
         }
@@ -775,18 +748,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (
-                        0,
-                        BTreeMap::from([(VarName("z".into()), Value::Unknown)]).into(),
-                    ),
-                    (1, BTreeMap::from([(VarName("z".into()), 2.into())]),),
-                    (2, BTreeMap::from([(VarName("z".into()), 3.into())]),),
+                    (0, vec![Value::Unknown]),
+                    (1, vec![2.into()]),
+                    (2, vec![3.into()]),
                 ]
             );
         }
@@ -816,27 +785,23 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 4);
             let sample_1 = if kind == DependencyKind::DepGraph {
                 // Because the new dependency is added at time idx 1 and requires knowledge
                 // of cleaned memory, it is not solved at this time index.
-                (1, BTreeMap::from([(VarName("z".into()), Value::Unknown)]))
+                (1, vec![Value::Unknown])
             } else {
                 // Might need more cases in the future
-                (1, BTreeMap::from([(VarName("z".into()), 0.into())]))
+                (1, vec![0.into()])
             };
             assert_eq!(
                 outputs,
                 vec![
-                    (
-                        0,
-                        BTreeMap::from([(VarName("z".into()), Value::Unknown)]).into(),
-                    ),
+                    (0, vec![Value::Unknown]),
                     sample_1,
-                    (2, BTreeMap::from([(VarName("z".into()), 1.into())]),),
-                    (3, BTreeMap::from([(VarName("z".into()), 2.into())]),),
+                    (2, vec![1.into()]),
+                    (3, vec![2.into()]),
                 ]
             );
         }
@@ -861,24 +826,14 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 3);
             assert_eq!(
                 outputs,
                 vec![
-                    (
-                        0,
-                        BTreeMap::from([(VarName("z".into()), "y0".into())]).into(),
-                    ),
-                    (
-                        1,
-                        BTreeMap::from([(VarName("z".into()), "y1".into())]).into(),
-                    ),
-                    (
-                        2,
-                        BTreeMap::from([(VarName("z".into()), "y2".into())]).into(),
-                    ),
+                    (0, vec!["y0".into()]),
+                    (1, vec!["y1".into()]),
+                    (2, vec!["y2".into()]),
                 ]
             );
         }
@@ -903,28 +858,15 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 4);
             assert_eq!(
                 outputs,
                 vec![
-                    (
-                        0,
-                        BTreeMap::from([(VarName("z".into()), "x0".into())]).into(),
-                    ),
-                    (
-                        1,
-                        BTreeMap::from([(VarName("z".into()), "y1".into())]).into(),
-                    ),
-                    (
-                        2,
-                        BTreeMap::from([(VarName("z".into()), Value::Unknown)]).into(),
-                    ),
-                    (
-                        3,
-                        BTreeMap::from([(VarName("z".into()), "y3".into())]).into(),
-                    ),
+                    (0, vec!["x0".into()]),
+                    (1, vec!["y1".into()]),
+                    (2, vec![Value::Unknown]),
+                    (3, vec!["y3".into()]),
                 ]
             );
         }
@@ -949,28 +891,15 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 4);
             assert_eq!(
                 outputs,
                 vec![
-                    (
-                        0,
-                        BTreeMap::from([(VarName("z".into()), "def".into())]).into(),
-                    ),
-                    (
-                        1,
-                        BTreeMap::from([(VarName("z".into()), "x1".into())]).into(),
-                    ),
-                    (
-                        2,
-                        BTreeMap::from([(VarName("z".into()), "x2".into())]).into(),
-                    ),
-                    (
-                        3,
-                        BTreeMap::from([(VarName("z".into()), "x3".into())]).into(),
-                    ),
+                    (0, vec!["def".into()]),
+                    (1, vec!["x1".into()]),
+                    (2, vec!["x2".into()]),
+                    (3, vec!["x3".into()]),
                 ]
             );
         }
@@ -1002,28 +931,15 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 4);
             assert_eq!(
                 outputs,
                 vec![
-                    (
-                        0,
-                        BTreeMap::from([(VarName("z".into()), Value::Unknown)]).into(),
-                    ),
-                    (
-                        1,
-                        BTreeMap::from([(VarName("z".into()), "y".into())]).into(),
-                    ),
-                    (
-                        2,
-                        BTreeMap::from([(VarName("z".into()), "y_won!".into())]).into(),
-                    ),
-                    (
-                        3,
-                        BTreeMap::from([(VarName("z".into()), "y_happy".into())]).into(),
-                    ),
+                    (0, vec![Value::Unknown]),
+                    (1, vec!["y".into()]),
+                    (2, vec!["y_won!".into()]),
+                    (3, vec!["y_happy".into()]),
                 ]
             );
         }
@@ -1047,28 +963,15 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 4);
             assert_eq!(
                 outputs,
                 vec![
-                    (
-                        0,
-                        BTreeMap::from([(VarName("z".into()), "x0".into())]).into(),
-                    ),
-                    (
-                        1,
-                        BTreeMap::from([(VarName("z".into()), "x1".into())]).into(),
-                    ),
-                    (
-                        2,
-                        BTreeMap::from([(VarName("z".into()), "x2".into())]).into(),
-                    ),
-                    (
-                        3,
-                        BTreeMap::from([(VarName("z".into()), "x3".into())]).into(),
-                    ),
+                    (0, vec!["x0".into()]),
+                    (1, vec!["x1".into()]),
+                    (2, vec!["x2".into()]),
+                    (3, vec!["x3".into()]),
                 ]
             );
         }
@@ -1095,28 +998,27 @@ mod tests {
                 create_dependency_manager(kind, spec),
             );
             executor.spawn(monitor.run()).detach();
-            let outputs: Vec<(usize, BTreeMap<VarName, Value>)> =
-                outputs.enumerate().collect().await;
+            let outputs: Vec<(usize, Vec<Value>)> = outputs.enumerate().collect().await;
             assert!(outputs.len() == 4);
             // The outcommented are if update(defer(x), z) worked as we initially envisioned
             assert_eq!(
                 outputs,
                 vec![
-                    (0, BTreeMap::from([(VarName("z".into()), 0.into())]),),
+                    (0, vec![0.into()]),
                     (
                         1,
-                        BTreeMap::from([(VarName("z".into()), 0.into())]),
-                        // BTreeMap::from([(VarName("z".into()), 1.into())]),
+                        vec![0.into()],
+                        // vec![1.into()],
                     ),
                     (
                         2,
-                        BTreeMap::from([(VarName("z".into()), 0.into())]),
-                        // BTreeMap::from([(VarName("z".into()), 2.into())]),
+                        vec![0.into()],
+                        // vec![2.into()],
                     ),
                     (
                         3,
-                        BTreeMap::from([(VarName("z".into()), 0.into())]),
-                        // BTreeMap::from([(VarName("z".into()), 3.into())]),
+                        vec![0.into()],
+                        // vec![3.into()]),
                     ),
                 ]
             );

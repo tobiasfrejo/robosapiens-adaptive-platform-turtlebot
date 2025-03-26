@@ -154,7 +154,24 @@ pub fn plus(x: OutputStream<Value>, y: OutputStream<Value>) -> OutputStream<Valu
     lift2(
         |x, y| match (x, y) {
             (Value::Int(x), Value::Int(y)) => Value::Int(x + y),
+            (Value::Int(x), Value::Float(y)) => Value::Float(x as f32 + y),
+            (Value::Float(x), Value::Int(y)) => Value::Float(x + y as f32),
+            (Value::Float(x), Value::Float(y)) => Value::Float(x + y),
             (x, y) => panic!("Invalid addition with types: {:?}, {:?}", x, y),
+        },
+        x,
+        y,
+    )
+}
+
+pub fn modulo(x: OutputStream<Value>, y: OutputStream<Value>) -> OutputStream<Value> {
+    lift2(
+        |x, y| match (x, y) {
+            (Value::Int(x), Value::Int(y)) => Value::Int(x % y),
+            (Value::Int(x), Value::Float(y)) => Value::Float(x as f32 % y),
+            (Value::Float(x), Value::Int(y)) => Value::Float(x % y as f32),
+            (Value::Float(x), Value::Float(y)) => Value::Float(x % y),
+            (x, y) => panic!("Invalid modulo with types: {:?}, {:?}", x, y),
         },
         x,
         y,
@@ -165,6 +182,9 @@ pub fn minus(x: OutputStream<Value>, y: OutputStream<Value>) -> OutputStream<Val
     lift2(
         |x, y| match (x, y) {
             (Value::Int(x), Value::Int(y)) => Value::Int(x - y),
+            (Value::Int(x), Value::Float(y)) => Value::Float(x as f32 - y),
+            (Value::Float(x), Value::Int(y)) => Value::Float(x - y as f32),
+            (Value::Float(x), Value::Float(y)) => Value::Float(x - y),
             _ => panic!("Invalid subtraction"),
         },
         x,
@@ -176,6 +196,9 @@ pub fn mult(x: OutputStream<Value>, y: OutputStream<Value>) -> OutputStream<Valu
     lift2(
         |x, y| match (x, y) {
             (Value::Int(x), Value::Int(y)) => Value::Int(x * y),
+            (Value::Int(x), Value::Float(y)) => Value::Float(x as f32 * y),
+            (Value::Float(x), Value::Int(y)) => Value::Float(x * y as f32),
+            (Value::Float(x), Value::Float(y)) => Value::Float(x * y),
             _ => panic!("Invalid multiplication"),
         },
         x,
@@ -187,6 +210,9 @@ pub fn div(x: OutputStream<Value>, y: OutputStream<Value>) -> OutputStream<Value
     lift2(
         |x, y| match (x, y) {
             (Value::Int(x), Value::Int(y)) => Value::Int(x / y),
+            (Value::Int(x), Value::Float(y)) => Value::Float(x as f32 / y),
+            (Value::Float(x), Value::Int(y)) => Value::Float(x / y as f32),
+            (Value::Float(x), Value::Float(y)) => Value::Float(x / y),
             _ => panic!("Invalid multiplication"),
         },
         x,
@@ -199,7 +225,7 @@ pub fn concat(x: OutputStream<Value>, y: OutputStream<Value>) -> OutputStream<Va
         |x, y| match (x, y) {
             (Value::Str(x), Value::Str(y)) => {
                 // ConcreteStreamData::Str(format!("{x}{y}").into());
-                Value::Str(format!("{x}{y}"))
+                Value::Str(format!("{x}{y}").into())
             }
             _ => panic!("Invalid concatenation"),
         },
@@ -253,7 +279,7 @@ pub fn eval(
                     yield Value::Unknown;
                 }
                 Value::Str(s) => {
-                    let expr = lola_expression.parse_next(&mut s.as_str())
+                    let expr = lola_expression.parse_next(&mut s.as_ref())
                         .expect("Invalid eval str");
                     let mut eval_output_stream = UntimedLolaSemantics::to_async_stream(expr, subcontext.upcast());
                     // Advance the subcontext to make a new set of input values
@@ -279,7 +305,6 @@ pub fn var(ctx: &dyn StreamContext<Value>, x: VarName) -> OutputStream<Value> {
     match ctx.var(&x) {
         Some(x) => x,
         None => {
-            let VarName(x) = x;
             panic!("Variable {} not found", x)
         }
     }
@@ -306,11 +331,10 @@ pub fn defer(
             match current {
                 Value::Str(defer_s) => {
                     // We have a string to evaluate so do so
-                    let defer_parse = &mut defer_s.as_str();
-                    let expr = lola_expression.parse_next(defer_parse)
+                    let expr = lola_expression.parse_next(&mut defer_s.as_ref())
                         .expect("Invalid eval str");
                     eval_output_stream = Some(UntimedLolaSemantics::to_async_stream(expr, subcontext.upcast()));
-                    debug!(defer_s, "Evaluated defer string");
+                    debug!(s = ?defer_s.as_ref(), "Evaluated defer string");
                     subcontext.start_auto_clock().await;
                     break;
                 }
@@ -328,17 +352,18 @@ pub fn defer(
             }
         }
 
-        let eval_output_stream = eval_output_stream.expect("No eval stream");
+        // This is None if the prop_stream is done but we never received a property
+        if let Some(eval_output_stream) = eval_output_stream {
+            // Wind forward the stream to the current time
+            let time_progressed = i.min(history_length);
+            debug!(?i, ?time_progressed, ?history_length, "Time progressed");
+            // subcontext.advance_clock();
+            let mut eval_output_stream = eval_output_stream.skip(time_progressed);
 
-        // Wind forward the stream to the current time
-        let time_progressed = i.min(history_length);
-        debug!(?i, ?time_progressed, ?history_length, "Time progressed");
-        // subcontext.advance_clock();
-        let mut eval_output_stream = eval_output_stream.skip(time_progressed);
-
-        // Yield the saved value until the inner stream is done
-        while let Some(eval_res) = eval_output_stream.next().await {
-            yield eval_res;
+            // Yield the saved value until the inner stream is done
+            while let Some(eval_res) = eval_output_stream.next().await {
+                yield eval_res;
+            }
         }
     })
 }
@@ -473,7 +498,7 @@ pub fn ltail(mut x: OutputStream<Value>) -> OutputStream<Value> {
             match l {
                 Value::List(l) => {
                     if let Some(val) = l.get(1..) {
-                        yield Value::List(val.to_vec());
+                        yield Value::List(val.into());
                     } else {
                         panic!("List is empty");
                     }
@@ -599,7 +624,7 @@ mod tests {
 
     #[test(apply(smol_test))]
     async fn test_mock_subcontext() {
-        let map: VarMap = vec![(VarName("x".into()), vec![1.into(), 2.into(), 3.into()]).into()]
+        let map: VarMap = vec![("x".into(), vec![1.into(), 2.into(), 3.into()]).into()]
             .into_iter()
             .collect();
         let ctx = MockContext { xs: map };
@@ -607,7 +632,7 @@ mod tests {
         // This does not properly model a subcontext since need values need to
         // be able to arrive, after which they will be pruned down to the
         // history length on .advance()
-        let res: Vec<Value> = subctx.var(&VarName("x".into())).unwrap().collect().await;
+        let res: Vec<Value> = subctx.var(&"x".into()).unwrap().collect().await;
         assert_eq!(res, vec![3.into()]);
     }
 
@@ -641,7 +666,7 @@ mod tests {
     #[test(apply(smol_test))]
     async fn test_eval() {
         let e: OutputStream<Value> = Box::pin(stream::iter(vec!["x + 1".into(), "x + 2".into()]));
-        let map: VarMap = vec![(VarName("x".into()), vec![1.into(), 2.into()]).into()]
+        let map: VarMap = vec![("x".into(), vec![1.into(), 2.into()]).into()]
             .into_iter()
             .collect();
         let ctx = MockContext { xs: map };
@@ -654,7 +679,7 @@ mod tests {
     async fn test_eval_x_squared() {
         // This test is interesting since we use x twice in the eval strings
         let e: OutputStream<Value> = Box::pin(stream::iter(vec!["x * x".into(), "x * x".into()]));
-        let map: VarMap = vec![(VarName("x".into()), vec![2.into(), 3.into()]).into()]
+        let map: VarMap = vec![("x".into(), vec![2.into(), 3.into()]).into()]
             .into_iter()
             .collect();
         let ctx = MockContext { xs: map };
@@ -670,7 +695,7 @@ mod tests {
             "x + 1".into(),
             "x + 2".into(),
         ]));
-        let map: VarMap = vec![(VarName("x".into()), vec![1.into(), 2.into(), 3.into()]).into()]
+        let map: VarMap = vec![("x".into(), vec![1.into(), 2.into(), 3.into()]).into()]
             .into_iter()
             .collect();
         let ctx = MockContext { xs: map };
@@ -687,7 +712,7 @@ mod tests {
             Value::Unknown,
             "x + 2".into(),
         ]));
-        let map: VarMap = vec![(VarName("x".into()), vec![1.into(), 2.into(), 3.into()]).into()]
+        let map: VarMap = vec![("x".into(), vec![1.into(), 2.into(), 3.into()]).into()]
             .into_iter()
             .collect();
         let ctx = MockContext { xs: map };
@@ -701,7 +726,7 @@ mod tests {
     async fn test_defer() {
         // Notice that even though we first say "x + 1", "x + 2", it continues evaluating "x + 1"
         let e: OutputStream<Value> = Box::pin(stream::iter(vec!["x + 1".into(), "x + 2".into()]));
-        let map: VarMap = vec![(VarName("x".into()), vec![1.into(), 2.into()]).into()]
+        let map: VarMap = vec![("x".into(), vec![1.into(), 2.into()]).into()]
             .into_iter()
             .collect();
         let ctx = MockContext { xs: map };
@@ -714,7 +739,7 @@ mod tests {
         // This test is interesting since we use x twice in the eval strings
         let e: OutputStream<Value> =
             Box::pin(stream::iter(vec!["x * x".into(), "x * x + 1".into()]));
-        let map: VarMap = vec![(VarName("x".into()), vec![2.into(), 3.into()]).into()]
+        let map: VarMap = vec![("x".into(), vec![2.into(), 3.into()]).into()]
             .into_iter()
             .collect();
         let ctx = MockContext { xs: map };
@@ -727,7 +752,7 @@ mod tests {
     async fn test_defer_unknown() {
         // Using unknown to represent no data on the stream
         let e: OutputStream<Value> = Box::pin(stream::iter(vec![Value::Unknown, "x + 1".into()]));
-        let map: VarMap = vec![(VarName("x".into()), vec![2.into(), 3.into()]).into()]
+        let map: VarMap = vec![("x".into(), vec![2.into(), 3.into()]).into()]
             .into_iter()
             .collect();
         let ctx = MockContext { xs: map };
@@ -744,12 +769,25 @@ mod tests {
             "x + 1".into(),
             Value::Unknown,
         ])) as OutputStream<Value>;
-        let map: VarMap = vec![(VarName("x".into()), vec![2.into(), 3.into(), 4.into()]).into()]
+        let map: VarMap = vec![("x".into(), vec![2.into(), 3.into(), 4.into()]).into()]
             .into_iter()
             .collect();
         let ctx = MockContext { xs: map };
         let res = defer(&ctx, e, 10).collect::<Vec<Value>>().await;
         let exp: Vec<Value> = vec![Value::Unknown, 4.into(), 5.into()];
+        assert_eq!(res, exp)
+    }
+
+    #[test(apply(smol_test))]
+    async fn test_defer_only_unknown() {
+        // Using unknown to represent no data on the stream
+        let e: OutputStream<Value> = Box::pin(stream::iter(vec![Value::Unknown, Value::Unknown]));
+        let map: VarMap = vec![("x".into(), vec![2.into(), 3.into()]).into()]
+            .into_iter()
+            .collect();
+        let ctx = MockContext { xs: map };
+        let res = defer(&ctx, e, 10).collect::<Vec<Value>>().await;
+        let exp: Vec<Value> = vec![Value::Unknown, Value::Unknown];
         assert_eq!(res, exp)
     }
 
@@ -873,8 +911,8 @@ mod tests {
         ];
         let res: Vec<Value> = list(x).collect().await;
         let exp: Vec<Value> = vec![
-            Value::List(vec![1.into(), 3.into()]),
-            Value::List(vec![2.into(), 4.into()]),
+            Value::List(vec![1.into(), 3.into()].into()),
+            Value::List(vec![2.into(), 4.into()].into()),
         ];
         assert_eq!(res, exp);
     }
@@ -893,8 +931,8 @@ mod tests {
         ];
         let res: Vec<Value> = list(x).collect().await;
         let exp: Vec<Value> = vec![
-            Value::List(vec![4.into(), "Hello World".into()]),
-            Value::List(vec![6.into(), "Goddag Verden".into()]),
+            Value::List(vec![4.into(), "Hello World".into()].into()),
+            Value::List(vec![6.into(), "Goddag Verden".into()].into()),
         ];
         assert_eq!(res, exp);
     }
@@ -945,11 +983,11 @@ mod tests {
             Box::pin(stream::iter(vec![1.into(), 2.into()])),
             Box::pin(stream::iter(vec![3.into(), 4.into()])),
         ];
-        let map: VarMap = vec![(VarName("y".into()), vec![0.into(), 1.into()]).into()]
+        let map: VarMap = vec![("y".into(), vec![0.into(), 1.into()]).into()]
             .into_iter()
             .collect();
         let ctx = MockContext { xs: map };
-        let i: OutputStream<Value> = var(&ctx, VarName("y".into()));
+        let i: OutputStream<Value> = var(&ctx, "y".into());
         let res: Vec<Value> = lindex(list(x), i).collect().await;
         let exp: Vec<Value> = vec![1.into(), 4.into()];
         assert_eq!(res, exp)
@@ -964,8 +1002,8 @@ mod tests {
         let y: OutputStream<Value> = Box::pin(stream::iter(vec![5.into(), 6.into()]));
         let res: Vec<Value> = lappend(list(x), y).collect().await;
         let exp: Vec<Value> = vec![
-            Value::List(vec![1.into(), 3.into(), 5.into()]),
-            Value::List(vec![2.into(), 4.into(), 6.into()]),
+            Value::List(vec![1.into(), 3.into(), 5.into()].into()),
+            Value::List(vec![2.into(), 4.into(), 6.into()].into()),
         ];
         assert_eq!(res, exp);
     }
@@ -982,8 +1020,8 @@ mod tests {
         ];
         let res: Vec<Value> = lconcat(list(x), list(y)).collect().await;
         let exp: Vec<Value> = vec![
-            Value::List(vec![1.into(), 3.into(), 5.into(), 7.into()]),
-            Value::List(vec![2.into(), 4.into(), 6.into(), 8.into()]),
+            Value::List(vec![1.into(), 3.into(), 5.into(), 7.into()].into()),
+            Value::List(vec![2.into(), 4.into(), 6.into(), 8.into()].into()),
         ];
         assert_eq!(res, exp);
     }
@@ -1008,8 +1046,8 @@ mod tests {
         ];
         let res: Vec<Value> = ltail(list(x)).collect().await;
         let exp: Vec<Value> = vec![
-            Value::List(vec![3.into(), 5.into()]),
-            Value::List(vec![4.into(), 6.into()]),
+            Value::List(vec![3.into(), 5.into()].into()),
+            Value::List(vec![4.into(), 6.into()].into()),
         ];
         assert_eq!(res, exp);
     }
@@ -1018,7 +1056,7 @@ mod tests {
     async fn test_list_tail_one_el() {
         let x: Vec<OutputStream<Value>> = vec![Box::pin(stream::iter(vec![1.into(), 2.into()]))];
         let res: Vec<Value> = ltail(list(x)).collect().await;
-        let exp: Vec<Value> = vec![Value::List(vec![]), Value::List(vec![])];
+        let exp: Vec<Value> = vec![Value::List(vec![].into()), Value::List(vec![].into())];
         assert_eq!(res, exp);
     }
 }

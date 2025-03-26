@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use std::rc::Rc;
 
 use async_trait::async_trait;
@@ -33,7 +32,11 @@ impl<V: StreamData> StdoutOutputHandler<V> {
 impl<V: StreamData> OutputHandler for StdoutOutputHandler<V> {
     type Val = V;
 
-    fn provide_streams(&mut self, streams: BTreeMap<VarName, OutputStream<V>>) {
+    fn var_names(&self) -> Vec<VarName> {
+        self.manual_output_handler.var_names()
+    }
+
+    fn provide_streams(&mut self, streams: Vec<OutputStream<V>>) {
         self.manual_output_handler.provide_streams(streams);
     }
 
@@ -41,10 +44,15 @@ impl<V: StreamData> OutputHandler for StdoutOutputHandler<V> {
         let output_stream = self.manual_output_handler.get_output();
         let mut enumerated_outputs = output_stream.enumerate();
         let task = self.executor.spawn(self.manual_output_handler.run());
+        let var_names = self
+            .var_names()
+            .iter()
+            .map(|x| x.name())
+            .collect::<Vec<_>>();
 
         Box::pin(async move {
             while let Some((i, output)) = enumerated_outputs.next().await {
-                for (var, data) in output {
+                for (var, data) in var_names.iter().zip(output) {
                     println!("{}[{}] = {:?}", var, i, data);
                 }
             }
@@ -55,7 +63,7 @@ impl<V: StreamData> OutputHandler for StdoutOutputHandler<V> {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::{OutputStream, Value, VarName};
+    use crate::core::{OutputStream, Value};
     use futures::stream;
 
     use super::*;
@@ -68,19 +76,10 @@ mod tests {
         let x_stream: OutputStream<Value> = Box::pin(stream::iter((0..10).map(|x| (x * 2).into())));
         let y_stream: OutputStream<Value> =
             Box::pin(stream::iter((0..10).map(|x| (x * 2 + 1).into())));
-        let mut handler: StdoutOutputHandler<Value> = StdoutOutputHandler::new(
-            executor.clone(),
-            vec![VarName("x".to_string()), VarName("y".to_string())],
-        );
+        let mut handler: StdoutOutputHandler<Value> =
+            StdoutOutputHandler::new(executor.clone(), vec!["x".into(), "y".into()]);
 
-        handler.provide_streams(
-            vec![
-                (VarName("x".to_string()), x_stream),
-                (VarName("y".to_string()), y_stream),
-            ]
-            .into_iter()
-            .collect(),
-        );
+        handler.provide_streams(vec![x_stream, y_stream].into_iter().collect());
 
         let task = executor.spawn(handler.run());
 
