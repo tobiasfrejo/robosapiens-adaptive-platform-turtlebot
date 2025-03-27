@@ -42,7 +42,13 @@ pub const VELOCITY_TOPIC: Topic = Topic {
     mqtt_name: "NormalVelocity"
 };
 
-pub const TOPICS: [Topic; 4] = [SCAN_TOPIC, SPIN_TOPIC, COLLISION_TOPIC, VELOCITY_TOPIC];
+pub const ODOM_TOPIC: Topic = Topic {
+    ros_name: "/odom",
+    mqtt_name: "Odometry"
+};
+
+
+pub const TOPICS: [Topic; 5] = [SCAN_TOPIC, SPIN_TOPIC, COLLISION_TOPIC, VELOCITY_TOPIC, ODOM_TOPIC];
 
 #[derive(Clone)]
 pub struct Topic {
@@ -68,6 +74,7 @@ impl Topic {
 enum ROS2MQTTData {
     LaserScan(r2r::sensor_msgs::msg::LaserScan),
     Twist(r2r::geometry_msgs::msg::Twist),
+    Odometry(r2r::nav_msgs::msg::Odometry),
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -236,6 +243,7 @@ async fn ros_node_actor(
         BoxStream<'static, r2r::sensor_msgs::msg::LaserScan>,
         BoxStream<'static, r2r::geometry_msgs::msg::Twist>,
         BoxStream<'static, r2r::geometry_msgs::msg::Twist>,
+        BoxStream<'static, r2r::nav_msgs::msg::Odometry>,
         // Spin command publisher
         Publisher<MSpinCommands>,
         // Future marking the end of the actor
@@ -274,6 +282,8 @@ async fn ros_node_actor(
         .subscribe::<r2r::geometry_msgs::msg::Twist>(VELOCITY_TOPIC.ros_name, sensor_qos.clone())?;
     let sub_mon = node
         .subscribe::<r2r::geometry_msgs::msg::Twist>(COLLISION_TOPIC.ros_name, sensor_qos.clone())?;
+    let sub_odom = node
+        .subscribe::<r2r::nav_msgs::msg::Odometry>(ODOM_TOPIC.ros_name, sensor_qos.clone())?; 
     debug!("Subscribed to scan safe");
 
     let publisher =
@@ -287,7 +297,7 @@ async fn ros_node_actor(
         }
     };
 
-    Ok((Box::pin(sub_laser), Box::pin(sub_vel), Box::pin(sub_mon), publisher, fut))
+    Ok((Box::pin(sub_laser), Box::pin(sub_vel), Box::pin(sub_mon), Box::pin(sub_odom), publisher, fut))
 }
 
 // Duplicate for additional ROS streams in separate loop
@@ -445,6 +455,43 @@ async fn ros_to_mqtt_mon(
     info!(" Collision monitor velocity input stream ended; shutting down");
 }
 
+#[instrument(level=tracing::Level::DEBUG, skip(ros_stream, mqtt_sender))]
+async fn ros_to_mqtt_odom(
+    mut ros_stream: BoxStream<'static, r2r::nav_msgs::msg::Odometry>,
+    mqtt_sender: &tokio::sync::mpsc::Sender<(oneshot::Sender<Option<mqtt::Error>>, Message)>,
+) {
+    info!("Starting ROS to MQTT bridge");
+    while let Some(msg) = ros_stream.next().await {
+        debug!("Received Odom ROS message");
+        // let _span = tracing::info_span!("Sending ROS message to MQTT", ?msg).entered();
+
+        let topic = ODOM_TOPIC;
+
+        let pos_x =  &msg.pose.pose.position.x;
+        let pos_y =  &msg.pose.pose.position.y;
+        let angle_z =  &msg.pose.pose.orientation.z.asin()/2.;
+
+        // let serialized_msg = format!("{\"x\":{},\"y\":{},\"angle\":{}}", pos_x, pos_y, angle_z);
+        // Valid list format: {"List": [{"Int": 1}, {"Float": 2.5}]}
+        let serialized_msg = format!("{{\"List\":[{{\"Float\":{}}},{{\"Float\":{}}},{{\"Float\":{}}}]}}", pos_x, pos_y, angle_z);
+
+        let mqtt_msg = mqtt::Message::new(topic.mqtt_name, serialized_msg, MQTT_QOS);
+
+
+        let (tx, rx) = oneshot::channel();
+        mqtt_sender.send((tx, mqtt_msg)).await.unwrap();
+        info!("[ROS->MQTT] Forwarded Odom message");
+        debug!("Odom: {:?}", msg);
+
+        if let Some(e) = rx.await.unwrap() {
+            error!(?e, "Failed to publish Odom MQTT message");
+            // TODO: should this be a break
+        }
+    }
+
+    info!("Odom input stream ended; shutting down");
+}
+
 #[instrument(level=tracing::Level::DEBUG, skip(mqtt_stream, ros_publisher))]
 async fn mqtt_to_ros(
     mut mqtt_stream: BoxStream<'static, Option<Message>>,
@@ -490,12 +537,14 @@ pub async fn bridge(
     let (ros_stream_laser, 
         ros_stream_velocity,
         ros_stream_monitor,
+        ros_stream_odom,
         ros_publisher, ros_fut) = ros_node_actor(ros_namespace).await.unwrap();
     let (mqtt_stream, mqtt_sender, mqtt_fut) =
         mqtt_client_actor(mqtt_hostname, vec![SPIN_TOPIC.mqtt_name]).await?;
     let ros_to_mqtt_laser_fut = ros_to_mqtt_laser(ros_stream_laser, &mqtt_sender);
     let ros_to_mqtt_vel_fut = ros_to_mqtt_vel(ros_stream_velocity, &mqtt_sender);
     let ros_to_mqtt_mon_fut = ros_to_mqtt_mon(ros_stream_monitor, &mqtt_sender);
+    let ros_to_mqtt_odom_fut = ros_to_mqtt_odom(ros_stream_odom, &mqtt_sender);
     let mqtt_to_ros_fut = mqtt_to_ros(mqtt_stream, ros_publisher);
     // let blocking_ros_fut = tokio::task::spawn_blocking(|| ros_fut);
 
@@ -505,6 +554,7 @@ pub async fn bridge(
         _ = ros_to_mqtt_laser_fut => (),
         _ = ros_to_mqtt_vel_fut => (),
         _ = ros_to_mqtt_mon_fut => (),
+        _ = ros_to_mqtt_odom_fut => (),
         _ = mqtt_to_ros_fut => (),
         _ = ros_fut => (),
         _ = mqtt_fut => (),
