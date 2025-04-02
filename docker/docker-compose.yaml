@@ -115,7 +115,14 @@ services:
     volumes:
       - ../collision_monitor_params.yaml:/opt/ros/humble/share/nav2_collision_monitor/params/collision_monitor_params.yaml:ro
     command: ros2 launch demo_bringup sim_demo_tb3_monitor.launch.py
-
+  grafana:
+    image: grafana/grafana-oss
+    user: '1000'
+    network_mode: "host"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_PLUGINS_PREINSTALL=grafana-clock-panel, grafana-mqtt-datasource
 volumes:
   vol-emqx-data:
     name: foo-emqx-data
@@ -123,3 +130,5 @@ volumes:
     name: foo-emqx-etc
   vol-emqx-log:
     name: foo-emqx-log
+  grafana-data:
+    name: grafana-data

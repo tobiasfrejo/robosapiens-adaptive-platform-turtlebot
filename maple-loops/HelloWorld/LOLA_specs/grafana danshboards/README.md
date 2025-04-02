@@ -1,14 +1,10 @@
 # Setup Grafana
 
-- Follow the guide guide at https://grafana.com/docs/grafana/latest/setup-grafana/installation/
-- Start Grafana with `sudo systemctl start grafana-server`
+- Grafana is configured to start with the Full TB3 Mesa devcontainer. The MQTT data source plugin is installed automatically.
 - Open [http://localhost:3000](localhost:3000)
-- Open the menu > Administration > Plugins and data > Plugins
-- Find the MQTT plugin and install
 - Setup the MQTT data source with the local MQTT broker (localhost:1883)
 - Setup the Redis data source with the local Redis server (redis://127.0.0.1:6379)
 - Create a new Dashboard or import an existing one
-
 
 
 

@@ -1,0 +1,382 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "deho8c93yyy9sb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMax": 3,
+            "axisSoftMin": -3,
+            "fillOpacity": 50,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "pointShape": "circle",
+            "pointSize": {
+              "fixed": 5
+            },
+            "pointStrokeWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "show": "points"
+          },
+          "mappings": [
+            {
+              "options": {
+                "from": 0,
+                "result": {
+                  "color": "dark-blue",
+                  "index": 0
+                },
+                "to": 0
+              },
+              "type": "range"
+            },
+            {
+              "options": {
+                "from": 1,
+                "result": {
+                  "color": "dark-red",
+                  "index": 1
+                },
+                "to": 1
+              },
+              "type": "range"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "super-light-blue"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 9,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "maxDataPoints": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "mapping": "manual",
+        "series": [
+          {
+            "frame": {
+              "matcher": {
+                "id": "byIndex",
+                "options": 0
+              }
+            },
+            "name": {
+              "fixed": "Center"
+            },
+            "x": {
+              "matcher": {
+                "id": "byName",
+                "options": "x"
+              }
+            },
+            "y": {
+              "matcher": {
+                "id": "byName",
+                "options": "y"
+              }
+            }
+          },
+          {
+            "color": {
+              "matcher": {
+                "id": "byName",
+                "options": "0"
+              }
+            },
+            "frame": {
+              "matcher": {
+                "id": "byIndex",
+                "options": 0
+              }
+            },
+            "name": {
+              "fixed": "P0"
+            },
+            "x": {
+              "matcher": {
+                "id": "byName",
+                "options": "P0x"
+              }
+            },
+            "y": {
+              "matcher": {
+                "id": "byName",
+                "options": "P0y"
+              }
+            }
+          },
+          {
+            "color": {
+              "matcher": {
+                "id": "byName",
+                "options": "1"
+              }
+            },
+            "frame": {
+              "matcher": {
+                "id": "byIndex",
+                "options": 0
+              }
+            },
+            "name": {
+              "fixed": "P1"
+            },
+            "x": {
+              "matcher": {
+                "id": "byName",
+                "options": "P1x"
+              }
+            },
+            "y": {
+              "matcher": {
+                "id": "byName",
+                "options": "P1y"
+              }
+            }
+          },
+          {
+            "color": {
+              "matcher": {
+                "id": "byName",
+                "options": "2"
+              }
+            },
+            "frame": {
+              "matcher": {
+                "id": "byIndex",
+                "options": 0
+              }
+            },
+            "name": {
+              "fixed": "P2"
+            },
+            "x": {
+              "matcher": {
+                "id": "byName",
+                "options": "P2x"
+              }
+            },
+            "y": {
+              "matcher": {
+                "id": "byName",
+                "options": "P2y"
+              }
+            }
+          },
+          {
+            "color": {
+              "matcher": {
+                "id": "byName",
+                "options": "3"
+              }
+            },
+            "frame": {
+              "matcher": {
+                "id": "byIndex",
+                "options": 0
+              }
+            },
+            "name": {
+              "fixed": "P3"
+            },
+            "x": {
+              "matcher": {
+                "id": "byName",
+                "options": "P3x"
+              }
+            },
+            "y": {
+              "matcher": {
+                "id": "byName",
+                "options": "P3y"
+              }
+            }
+          }
+        ],
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "refId": "A",
+          "topic": "telemetry/collision"
+        }
+      ],
+      "timeFrom": "now-1s",
+      "title": "Panel Title",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "delimiter": ",",
+            "source": "Center"
+          }
+        },
+        {
+          "id": "extractFields",
+          "options": {
+            "delimiter": ",",
+            "format": "json",
+            "jsonPaths": [
+              {
+                "alias": "P0x",
+                "path": "[0].x"
+              },
+              {
+                "alias": "P0y",
+                "path": "[0].y"
+              },
+              {
+                "alias": "P1x",
+                "path": "[1].x"
+              },
+              {
+                "alias": "P1y",
+                "path": "[1].y"
+              },
+              {
+                "alias": "P2x",
+                "path": "[2].x"
+              },
+              {
+                "alias": "P2y",
+                "path": "[2].y"
+              },
+              {
+                "alias": "P3x",
+                "path": "[3].x"
+              },
+              {
+                "alias": "P3y",
+                "path": "[3].y"
+              }
+            ],
+            "source": "Corners"
+          }
+        },
+        {
+          "id": "extractFields",
+          "options": {
+            "delimiter": ",",
+            "format": "auto",
+            "jsonPaths": [
+              {
+                "alias": "collision0",
+                "path": "[0]"
+              },
+              {
+                "alias": "coll",
+                "path": "[1]"
+              },
+              {
+                "path": ""
+              },
+              {
+                "path": ""
+              }
+            ],
+            "source": "Collisions"
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "number",
+                "targetField": "0"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "1"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "2"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "3"
+              }
+            ],
+            "fields": {}
+          }
+        }
+      ],
+      "type": "xychart"
+    }
+  ],
+  "preload": false,
+  "schemaVersion": 41,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1s",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "TB map",
+  "uid": "aehhyauq539j4a",
+  "version": 3
+}

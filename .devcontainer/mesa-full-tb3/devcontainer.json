@@ -3,7 +3,8 @@
 	"dockerComposeFile": "../../docker/docker-compose.yaml",
 	"service": "devfullmesatb3",
 	"runServices": [
-		"devfullmesatb3"
+		"devfullmesatb3",
+		"grafana"
 	],
 	"workspaceFolder": "/ws",
 	"shutdownAction": "stopCompose",
