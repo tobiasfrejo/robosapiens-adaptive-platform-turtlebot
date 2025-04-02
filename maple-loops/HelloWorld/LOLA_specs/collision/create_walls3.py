@@ -76,10 +76,10 @@ Could potentially be optimized to avoid extra multiplication operations if outsi
 # )'''
 
 robot_corners_offsets = np.array([
-    (-0.153, 0.1),
-    ( 0.153, 0.1),
-    (-0.153, -0.181),
-    ( 0.153, -0.181)
+    ( 0.1,   0.153),
+    ( 0.1,  -0.153),
+    (-0.181, 0.153),
+    (-0.181,-0.153),
 ])
 
 robot_corners_names = []
@@ -87,8 +87,8 @@ declarations = []
 for n, (x, y) in enumerate(robot_corners_offsets):
     rc = 'RC'+str(n)
     robot_corners_names.append(rc)
-    declarations.append(f'{rc}X = ({x}) * cos(a) - ({y}) * sin(a) + x')
-    declarations.append(f'{rc}Y = ({x}) * sin(a) + ({y}) * cos(a) + y')
+    declarations.append(f'{rc}X = ((({x}) * cos(a)) - (({y}) * sin(a))) + x')
+    declarations.append(f'{rc}Y =   ({x}) * sin(a)  +  ({y}) * cos(a)   + y')
 
 """
 https://wrfranklin.org/Research/Short_Notes/pnpoly.html
@@ -156,7 +156,6 @@ in Pos
 out x
 out y
 out a
-out inside
 out seenwalls
 out collision
 """
@@ -164,6 +163,7 @@ out collision
 for corner in robot_corners_names:
     output += f'out {corner}X\n'
     output += f'out {corner}Y\n'
+    output += f'out inside{corner}\n'
 
 for s in chain(streams):
     output+= f'out {s}\n'
