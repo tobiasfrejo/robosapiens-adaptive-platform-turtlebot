@@ -58,6 +58,7 @@ mqtt_subscribe_topics:
 
 mqtt_publish_topics:
   - "/anomaly"
+  - "/no_anomaly"
 
 redis_host: "localhost"
 redis_port: 6379

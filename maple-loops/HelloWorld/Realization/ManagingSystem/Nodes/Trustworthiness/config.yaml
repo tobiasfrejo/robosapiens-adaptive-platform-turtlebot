@@ -113,13 +113,13 @@ eventOut:
         type: "stage"
         name: "stage"
         class: "-"
-        topic: "/stage"
+        topic: "stage"
         QoS: 10
     - property:
         type: "stage"
         name: "stage2"
         class: "-"
-        topic: "/stage2"
+        topic: "stage2"
         QoS: 10
 
 
@@ -130,13 +130,14 @@ mqtt_subscribe_topics:
   - "/Scan"
   - "/new_data"
   - "/anomaly"
+  - "/no_anomaly"
   - "/new_plan"
   - "/isLegit"
   - "/spin_config"
   - "/maple"
 
 mqtt_publish_topics:
-  - "/stage"
+  - "stage"
 
 redis_host: "localhost"
 redis_port: 6379
