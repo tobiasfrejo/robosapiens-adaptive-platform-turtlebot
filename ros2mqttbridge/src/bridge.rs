@@ -16,6 +16,7 @@ use tokio::sync::oneshot;
 use tracing::info;
 // Removed incorrect import of std::fmt::Result.
 use serde::de::{self, Deserializer};
+use std::f64::consts::PI;
 use std::time::Duration;
 use tracing::debug;
 use tracing::error;
@@ -469,7 +470,9 @@ async fn ros_to_mqtt_odom(
 
         let pos_x =  &msg.pose.pose.position.x;
         let pos_y =  &msg.pose.pose.position.y;
-        let angle_z =  &msg.pose.pose.orientation.z.asin()/2.;
+        let angle_qz =  &msg.pose.pose.orientation.z.asin()*2.;
+        let angle_qw =  &msg.pose.pose.orientation.w.acos()*2.;
+        let angle_z = if angle_qw > PI {-angle_qz} else {angle_qz};
 
         // let serialized_msg = format!("{\"x\":{},\"y\":{},\"angle\":{}}", pos_x, pos_y, angle_z);
         // Valid list format: {"List": [{"Int": 1}, {"Float": 2.5}]}
