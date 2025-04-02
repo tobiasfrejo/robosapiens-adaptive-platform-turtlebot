@@ -159,5 +159,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-maple-loops/HelloWorld/LOLA_specs/Logs/
+maple-loops/HelloWorld/LOLA_specs/**/Logs/
 prob_lidar_mask.png
