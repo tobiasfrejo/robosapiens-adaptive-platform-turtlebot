@@ -7,7 +7,8 @@
 		"rosmqttbridge",
 		"simdeploymesatb3",
 		"redis",
-		"emqx"
+		"emqx",
+		"grafana"
 	],
 	"workspaceFolder": "/ws",
 	"shutdownAction": "stopCompose",
