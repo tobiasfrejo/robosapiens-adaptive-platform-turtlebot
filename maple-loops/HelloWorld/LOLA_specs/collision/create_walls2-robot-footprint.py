@@ -22,12 +22,12 @@ corners = np.array([
     (-1.7248,  2.0125),
 ])
 
-# obstacle1 = np.array([
-#     (-3,  1),
-#     (-1,  0),
-#     ( 0, -3),
-#     ( 0,  1)
-# ])
+obstacle1 = np.array([
+    (-2.3, -0.3),
+    (-1.7, -0.3),
+    (-1.7,  0.3),
+    (-2.3,  0.3)
+])
 
 def connect_polygon(corners):
     walls = []
@@ -40,7 +40,7 @@ def connect_polygon(corners):
 
 walls = np.concat((
     connect_polygon(corners),
-    # connect_polygon(obstacle1)
+    connect_polygon(obstacle1)
 ))
 # warn(str(len(walls)))
 
@@ -70,16 +70,16 @@ Could potentially be optimized to avoid extra multiplication operations if outsi
 """
 circle_collision_expression = '''\
 (\
-   ((({PosX} - {cx}) * ({PosX} - {cx})) \
-  + (({PosY} - {cy}) * ({PosY} - {cy}))) \
-    <= ({r} * {r})\
+   ((({PosX} - ({cx})) * ({PosX} - ({cx}))) \
+  + (({PosY} - ({cy})) * ({PosY} - ({cy})))) \
+    <= (({r}) * ({r}))\
 )'''
 
 robot_corners_offsets = np.array([
-    (-0.153, 0.1),
-    ( 0.153, 0.1),
-    (-0.153, -0.181),
-    ( 0.153, -0.181)
+    ( 0.1,   0.153),
+    ( 0.1,  -0.153),
+    (-0.181, 0.153),
+    (-0.181,-0.153),
 ])
 
 robot_corners_names = []
@@ -87,7 +87,7 @@ declarations = []
 for n, (x, y) in enumerate(robot_corners_offsets):
     rc = 'RC'+str(n)
     robot_corners_names.append(rc)
-    declarations.append(f'{rc}X = ({x}) * cos(a) - ({y}) * sin(a) + x')
+    declarations.append(f'{rc}X = ((({x}) * cos(a)) - (({y}) * sin(a))) + x')
     declarations.append(f'{rc}Y = ({x}) * sin(a) + ({y}) * cos(a) + y')
 
 """
@@ -137,8 +137,8 @@ circles = []
 circle_i = 0
 for cx,cy,r in pillars:
     for corner in robot_corners_names:
-        cx = 'c'+str(circle_i)+corner    
-        circles.append(cx) 
+        cxe = 'c'+str(circle_i)+corner    
+        circles.append(cxe) 
         expr = (circle_collision_expression.format_map({
             'cx': cx,
             'cy': cy,
@@ -146,18 +146,15 @@ for cx,cy,r in pillars:
             'PosX': corner+'X',
             'PosY': corner+'Y'
         }))
-        declarations.append(f'{cx} = {expr}')
+        declarations.append(f'{cxe} = {expr}')
     circle_i += 1
 
 
 output = """\
-in Pos
+in Odometry
 out x
 out y
 out a
-out inside
-out seenwalls
-out collision
 """
 for corner in robot_corners_names:
     output += f'out {corner}X\n'
@@ -165,11 +162,15 @@ for corner in robot_corners_names:
 
 for s in chain(streams, circles):
     output+= f'out {s}\n'
-    
+
+for corner in robot_corners_names:
+    output += f'out inside{corner}\n'
+
 output += """\
-x = List.get(Pos, 0)
-y = List.get(Pos, 1)
-a = List.get(Pos, 2)
+out collision
+x = List.get(Odometry, 0)
+y = List.get(Odometry, 1)
+a = List.get(Odometry, 2)
 """
 
 for d in declarations:
