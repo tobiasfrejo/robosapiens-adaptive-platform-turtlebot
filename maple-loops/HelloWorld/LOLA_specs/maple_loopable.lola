@@ -6,7 +6,7 @@ out l: Bool
 out e: Bool
 out maple : Bool
 out stageout : Str
-m = (stage == "m") && (default(e[-1], true) || default(a[-1], false)) 
+m = (stage == "m") && (default(e[-1], true) || default(a[-1], false)) // Test for resetting on succeeding M-phase: || !default(maple[-1], false)
 a = (stage == "a") && default(m[-1], false) 
 p = (stage == "p") && default(a[-1], false) 
 l = (stage == "l") && default(p[-1], false)
