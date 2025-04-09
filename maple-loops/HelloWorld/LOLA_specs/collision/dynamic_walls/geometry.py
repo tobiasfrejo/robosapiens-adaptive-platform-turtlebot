@@ -51,6 +51,26 @@ def circle_line_overlap(c: Circle, wall: tuple[Point, Point]):
         lt(t2, f'({r})*({r})')
     ], '&&')
 
+def test_circles_walls_overlaps(cs: Iterable[Circle], ws: Iterable[tuple[Point, Point]]):
+    wall_streams: dict[int, list[LolaStream]] = dict()
+    circle_streams: dict[int, list[LolaStream]] = dict()
+    expressions: dict[LolaStream, str] = dict()
+
+    for cn, c in enumerate(cs):
+        if cn not in circle_streams:
+            circle_streams[cn] = list()
+        for wn, w in enumerate(ws):
+            if wn not in wall_streams:
+                wall_streams[wn] = list()
+            
+            stream = LolaStream(f'Circle{cn}CollidesWall{wn}')
+            wall_streams[wn].append(stream)
+            circle_streams[cn].append(stream)
+
+            expressions[stream] = circle_line_overlap(c, w)
+
+    return expressions, wall_streams, circle_streams
+
 def point_in_circle(p: Point, c: Circle):
     """Gives a lola expression to calculate if a point is on the border of or inside a circle. Evaluates to true when in/on.
 
