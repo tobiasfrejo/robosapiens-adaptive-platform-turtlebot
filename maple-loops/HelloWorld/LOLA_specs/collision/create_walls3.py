@@ -3,7 +3,7 @@ import numpy as np
 from itertools import chain
 # Scaled to keep precision as ints
 
-corners = np.array([
+map_corners = np.array([
     (-2.8868,  0.0),
     (-1.7248, -2.0125),
     (-1.4031, -2.0125),
@@ -22,12 +22,17 @@ corners = np.array([
     (-1.7248,  2.0125),
 ])
 
-# obstacle1 = np.array([
-#     (-3,  1),
-#     (-1,  0),
-#     ( 0, -3),
-#     ( 0,  1)
-# ])
+obstacle1 = np.array([
+    (-2.01, -0.01),
+    (-1.99, -0.01),
+    (-1.99,  0.01),
+    (-2.01,  0.01)
+])
+
+corners = np.concat((
+    map_corners,
+    obstacle1
+))
 
 def connect_polygon(corners):
     walls = []
@@ -38,10 +43,10 @@ def connect_polygon(corners):
     walls = np.array(walls)
     return walls
 
-walls = np.concat((
-    connect_polygon(corners),
-    # connect_polygon(obstacle1)
-))
+# walls = np.concat((
+#     connect_polygon(corners),
+#     connect_polygon(obstacle1)
+# ))
 # warn(str(len(walls)))
 
 # (Cx, Cy, R)
@@ -152,26 +157,27 @@ for n, corner in enumerate(corners):
 
 
 output = """\
-in Pos
+in Odometry
 out x
 out y
 out a
-out seenwalls
-out collision
 """
 
 for corner in robot_corners_names:
-    output += f'out {corner}X\n'
-    output += f'out {corner}Y\n'
-    output += f'out inside{corner}\n'
+    output += f'out {corner}X // MQTT out\n'
+    output += f'out {corner}Y // MQTT out\n'
+
+for corner in wall_names.keys():
+    output += f'out inside{corner} // MQTT out\n'
 
 for s in chain(streams):
     output+= f'out {s}\n'
     
 output += """\
-x = List.get(Pos, 0)
-y = List.get(Pos, 1)
-a = List.get(Pos, 2)
+out collision // MQTT out
+x = List.get(Odometry, 0)
+y = List.get(Odometry, 1)
+a = List.get(Odometry, 2)
 """
 
 for d in declarations:

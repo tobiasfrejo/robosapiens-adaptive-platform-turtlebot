@@ -1,0 +1,775 @@
+======== TRUSTWORTHINESS OUTPUT (cargo build --release) =======
+
+thread 'main' panicked at src/io/mqtt/output_handler.rs:61:46:
+called `Result::unwrap()` on an `Err` value: CommandIgnored
+stack backtrace:
+   0:     0x55e7eb5a45d3 - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::hfc616348d9ad0abc
+   1:     0x55e7eb4fc273 - core::fmt::write::h7ca648217bc79799
+   2:     0x55e7eb5a3d32 - std::io::Write::write_fmt::h7960c58bfa5ccbcb
+   3:     0x55e7eb5a4293 - std::sys::backtrace::BacktraceLock::print::h3fb349e80cbe0423
+   4:     0x55e7eb5a3b50 - std::panicking::rust_panic_with_hook::h66e909d048c263a9
+   5:     0x55e7eb5d2898 - std::panicking::begin_panic_handler::{{closure}}::h8d9aa8be7e8634cf
+   6:     0x55e7eb5d27f9 - std::sys::backtrace::__rust_end_short_backtrace::h7d7e47ef99abf6aa
+   7:     0x55e7eb5d2cec - rust_begin_unwind
+   8:     0x55e7eb43eeaf - core::panicking::panic_fmt::hf8ffc7c15bfb58a0
+   9:     0x55e7eb43f1e5 - core::result::unwrap_failed::ha0269c4bdff93d7d
+  10:     0x55e7eb65060e - trustworthiness_checker::io::mqtt::output_handler::publish_stream::{{closure}}::{{closure}}::he4b8972a3197c634
+  11:     0x55e7eb64efd2 - trustworthiness_checker::io::mqtt::output_handler::publish_stream::{{closure}}::ha95c62ea55400389
+  12:     0x55e7eb64e1ae - <trustworthiness_checker::io::mqtt::output_handler::MQTTOutputHandler as trustworthiness_checker::core::OutputHandler>::run::{{closure}}::{{closure}}::h27bf0ab71199b2b8
+  13:     0x55e7eb64cca1 - <trustworthiness_checker::io::mqtt::output_handler::MQTTOutputHandler as trustworthiness_checker::core::OutputHandler>::run::{{closure}}::h9f9f70ee0e9840aa
+  14:     0x55e7eb46f794 - <trustworthiness_checker::runtime::asynchronous::AsyncMonitorRunner<Expr,Val,S,M> as trustworthiness_checker::core::Monitor<M,Val>>::run::{{closure}}::{{closure}}::h7ca2ea73ff65c21b
+  15:     0x55e7eb46f50c - <trustworthiness_checker::runtime::asynchronous::AsyncMonitorRunner<Expr,Val,S,M> as trustworthiness_checker::core::Monitor<M,Val>>::run::{{closure}}::h6ad255886512f749
+  16:     0x55e7eb45c6d4 - async_task::raw::RawTask<F,T,S,M>::run::hed9c1bf0fff22262
+  17:     0x55e7eb49ff25 - trustworthiness_checker::main::he72a524ce2704b00
+  18:     0x55e7eb476663 - std::sys::backtrace::__rust_begin_short_backtrace::h520c300cc8b40729
+  19:     0x55e7eb4b46b0 - main
+  20:     0x7f04aa63024a - <unknown>
+  21:     0x7f04aa630305 - __libc_start_main
+  22:     0x55e7eb4563c1 - _start
+  23:                0x0 - <unknown>
+--: line 1:     7 Aborted                 (core dumped) /opt/trustworthiness-checker/target/release/trustworthiness_checker "$@"
+
+
+
+
+======== TRUSTWORTHINESS OUTPUT (cargo build) =======
+
+thread 'main' panicked at src/io/mqtt/output_handler.rs:61:46:
+called `Result::unwrap()` on an `Err` value: CommandIgnored
+stack backtrace:
+   0:     0x564e0568a14a - std::backtrace_rs::backtrace::libunwind::trace::h2740d05102fd9881
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/../../backtrace/src/backtrace/libunwind.rs:116:5
+   1:     0x564e0568a14a - std::backtrace_rs::backtrace::trace_unsynchronized::h93ae2edf130065c8
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
+   2:     0x564e0568a14a - std::sys::backtrace::_print_fmt::h7660a544e6110dd9
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:66:9
+   3:     0x564e0568a14a - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::hfc616348d9ad0abc
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:39:26
+   4:     0x564e056ad9f3 - core::fmt::rt::Argument::fmt::h3a92517f8117fcd5
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/fmt/rt.rs:177:76
+   5:     0x564e056ad9f3 - core::fmt::write::h7ca648217bc79799
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/fmt/mod.rs:1440:21
+   6:     0x564e05687493 - std::io::Write::write_fmt::h7960c58bfa5ccbcb
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/io/mod.rs:1887:15
+   7:     0x564e05689f92 - std::sys::backtrace::BacktraceLock::print::h3fb349e80cbe0423
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:42:9
+   8:     0x564e0568ae50 - std::panicking::default_hook::{{closure}}::h3366e5842cba645d
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:295:22
+   9:     0x564e0568ac30 - std::panicking::default_hook::hd7573a5d4879884b
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:322:9
+  10:     0x564e0568b5b2 - std::panicking::rust_panic_with_hook::h66e909d048c263a9
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:828:13
+  11:     0x564e0568b35a - std::panicking::begin_panic_handler::{{closure}}::h8d9aa8be7e8634cf
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:701:13
+  12:     0x564e0568a659 - std::sys::backtrace::__rust_end_short_backtrace::h7d7e47ef99abf6aa
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:168:18
+  13:     0x564e0568afed - rust_begin_unwind
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:692:5
+  14:     0x564e04a06a20 - core::panicking::panic_fmt::hf8ffc7c15bfb58a0
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/panicking.rs:75:14
+  15:     0x564e04a06e96 - core::result::unwrap_failed::ha0269c4bdff93d7d
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/result.rs:1704:5
+  16:     0x564e0500c874 - core::result::Result<T,E>::unwrap::h428db3c5aadba3ff
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/result.rs:1109:23
+  17:     0x564e0500c874 - trustworthiness_checker::io::mqtt::output_handler::publish_stream::{{closure}}::{{closure}}::h3e4b7b316d03ca2d
+                               at /opt/trustworthiness-checker/src/io/mqtt/output_handler.rs:61:21
+  18:     0x564e0500c376 - trustworthiness_checker::io::mqtt::output_handler::publish_stream::{{closure}}::h53c95746283b3a76
+                               at /opt/trustworthiness-checker/src/io/mqtt/output_handler.rs:41:1
+  19:     0x564e04edda3c - <futures_util::stream::futures_ordered::OrderWrapper<T> as core::future::future::Future>::poll::h0acf9d6125294e94
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/stream/futures_ordered.rs:56:9
+  20:     0x564e04ff9005 - <futures_util::stream::futures_unordered::FuturesUnordered<Fut> as futures_core::stream::Stream>::poll_next::h680a1c49e5d81462
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/stream/futures_unordered/mod.rs:528:17
+  21:     0x564e04ffbdcb - futures_util::stream::stream::StreamExt::poll_next_unpin::hb2003fe6e33fd2ca
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/stream/stream/mod.rs:1638:9
+  22:     0x564e04ede216 - <futures_util::stream::futures_ordered::FuturesOrdered<Fut> as futures_core::stream::Stream>::poll_next::heefe41a4378e6fa7
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/stream/futures_ordered.rs:195:26
+  23:     0x564e050128c8 - <futures_util::stream::stream::collect::Collect<St,C> as core::future::future::Future>::poll::h26dab299096a6140
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/stream/stream/collect.rs:50:26
+  24:     0x564e04edd379 - <futures_util::future::join_all::JoinAll<F> as core::future::future::Future>::poll::h349a1862fb764f6f
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/future/join_all.rs:158:41
+  25:     0x564e0500fd40 - <trustworthiness_checker::io::mqtt::output_handler::MQTTOutputHandler as trustworthiness_checker::core::OutputHandler>::run::{{closure}}::{{closure}}::h59cf8222db425d44
+                               at /opt/trustworthiness-checker/src/io/mqtt/output_handler.rs:115:14
+  26:     0x564e0500e73b - <trustworthiness_checker::io::mqtt::output_handler::MQTTOutputHandler as trustworthiness_checker::core::OutputHandler>::run::{{closure}}::hef1ed6470064492b
+                               at /opt/trustworthiness-checker/src/io/mqtt/output_handler.rs:83:5
+  27:     0x564e04e3f353 - <core::pin::Pin<P> as core::future::future::Future>::poll::h5c23629b62b887ad
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/future/future.rs:124:9
+  28:     0x564e04ac83d3 - <trustworthiness_checker::runtime::asynchronous::AsyncMonitorRunner<Expr,Val,S,M> as trustworthiness_checker::core::Monitor<M,Val>>::run::{{closure}}::{{closure}}::hee71abd58a1c68a3
+                               at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:604:35
+  29:     0x564e04ac7d76 - <trustworthiness_checker::runtime::asynchronous::AsyncMonitorRunner<Expr,Val,S,M> as trustworthiness_checker::core::Monitor<M,Val>>::run::{{closure}}::h31f097ccf64b9468
+                               at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:601:5
+  30:     0x564e04e3f353 - <core::pin::Pin<P> as core::future::future::Future>::poll::h5c23629b62b887ad
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/future/future.rs:124:9
+  31:     0x564e04a674b6 - async_executor::Executor::spawn_inner::{{closure}}::hafa05bbf6953c9eb
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:250:20
+  32:     0x564e04a8d2b0 - async_task::raw::RawTask<F,T,S,M>::run::{{closure}}::h0d06007ad39ac3fa
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/raw.rs:550:21
+  33:     0x564e04ab1ef8 - core::ops::function::FnOnce::call_once::h87894b1d0367be45
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:250:5
+  34:     0x564e04ad9853 - <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once::he4e02c756019ef7c
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/panic/unwind_safe.rs:272:9
+  35:     0x564e04a4f6d0 - std::panicking::try::do_call::hf625611bcbf44e36
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  36:     0x564e04aab46b - __rust_try
+  37:     0x564e04aaaa94 - std::panicking::try::h8602fbfe315ea191
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  38:     0x564e04aaaa94 - std::panic::catch_unwind::h4b0076ceb9d4fd9e
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  39:     0x564e04a87ee3 - async_task::raw::RawTask<F,T,S,M>::run::h775d06bf88912ea0
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/raw.rs:549:23
+  40:     0x564e0555345f - async_task::runnable::Runnable<M>::run::h090ddbd26ded40c8
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/runnable.rs:781:18
+  41:     0x564e04a6514b - async_executor::State::run::{{closure}}::{{closure}}::h0b40403d6be8b7dc
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:741:21
+  42:     0x564e04a1e75f - <futures_lite::future::Or<F1,F2> as core::future::future::Future>::poll::h8c1c6ceb0bba725d
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-lite-2.6.0/src/future.rs:457:33
+  43:     0x564e04a64d59 - async_executor::State::run::{{closure}}::h61be7c6891dcdea4
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:748:32
+  44:     0x564e04a6808e - async_executor::Executor::run::{{closure}}::h57c44483bed51611
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:344:34
+  45:     0x564e04a638f2 - async_executor::LocalExecutor::run::{{closure}}::h7b51ac46e52a3753
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:648:34
+  46:     0x564e04a2ff71 - async_io::driver::block_on::{{closure}}::h981f32fcc983b78e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-io-2.4.0/src/driver.rs:199:37
+  47:     0x564e04ad7f5d - std::thread::local::LocalKey<T>::try_with::h1b79ff58667ad140
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/thread/local.rs:308:12
+  48:     0x564e04ad7dba - std::thread::local::LocalKey<T>::with::h96651f024913d803
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/thread/local.rs:272:9
+  49:     0x564e04a2fba7 - async_io::driver::block_on::h3a4bc03f1a4e41f8
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-io-2.4.0/src/driver.rs:175:5
+  50:     0x564e04a9fef5 - trustworthiness_checker::main::{{closure}}::h37ba9f20c827b63e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:153:17
+  51:     0x564e04ad5d5a - <alloc::rc::Rc<async_executor::LocalExecutor> as smol_macros::__private::MainExecutor>::with_main::h1496905cc5de6d1e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:256:13
+  52:     0x564e04ad8506 - trustworthiness_checker::main::hf2c96597b2a05b1c
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:152:13
+  53:     0x564e04ab1c2b - core::ops::function::FnOnce::call_once::h2563a0c0c3892de7
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:250:5
+  54:     0x564e04a78f7e - std::sys::backtrace::__rust_begin_short_backtrace::h0eb626bb62882180
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:152:18
+  55:     0x564e04a18f51 - std::rt::lang_start::{{closure}}::h5b6ec8792af87fee
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:195:18
+  56:     0x564e05682187 - core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once::h6889704b556d4c77
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:284:13
+  57:     0x564e05682187 - std::panicking::try::do_call::hb54df035e1ac8c92
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  58:     0x564e05682187 - std::panicking::try::h58823af4bcc61a96
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  59:     0x564e05682187 - std::panic::catch_unwind::hc30ff8fe04ef2371
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  60:     0x564e05682187 - std::rt::lang_start_internal::{{closure}}::h527f54f1892dcb9b
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:174:48
+  61:     0x564e05682187 - std::panicking::try::do_call::h41aaba5fff752501
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  62:     0x564e05682187 - std::panicking::try::hf0596d206f5fce25
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  63:     0x564e05682187 - std::panic::catch_unwind::h5a2061dbbb8ffdf4
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  64:     0x564e05682187 - std::rt::lang_start_internal::heee0af441e41a6d2
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:174:20
+  65:     0x564e04a18f2a - std::rt::lang_start::h5db9349051e100bc
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:194:17
+  66:     0x564e04ad852e - main
+  67:     0x7f170005e24a - <unknown>
+  68:     0x7f170005e305 - __libc_start_main
+  69:     0x564e04a07321 - _start
+  70:                0x0 - <unknown>
+
+thread 'main' panicked at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:261:54:
+removal index (is 1) should be < len (is 1)
+stack backtrace:
+   0:     0x564e0568a14a - std::backtrace_rs::backtrace::libunwind::trace::h2740d05102fd9881
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/../../backtrace/src/backtrace/libunwind.rs:116:5
+   1:     0x564e0568a14a - std::backtrace_rs::backtrace::trace_unsynchronized::h93ae2edf130065c8
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
+   2:     0x564e0568a14a - std::sys::backtrace::_print_fmt::h7660a544e6110dd9
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:66:9
+   3:     0x564e0568a14a - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::hfc616348d9ad0abc
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:39:26
+   4:     0x564e056ad9f3 - core::fmt::rt::Argument::fmt::h3a92517f8117fcd5
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/fmt/rt.rs:177:76
+   5:     0x564e056ad9f3 - core::fmt::write::h7ca648217bc79799
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/fmt/mod.rs:1440:21
+   6:     0x564e05687493 - std::io::Write::write_fmt::h7960c58bfa5ccbcb
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/io/mod.rs:1887:15
+   7:     0x564e05689f92 - std::sys::backtrace::BacktraceLock::print::h3fb349e80cbe0423
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:42:9
+   8:     0x564e0568ae50 - std::panicking::default_hook::{{closure}}::h3366e5842cba645d
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:295:22
+   9:     0x564e0568ac30 - std::panicking::default_hook::hd7573a5d4879884b
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:322:9
+  10:     0x564e0568b5b2 - std::panicking::rust_panic_with_hook::h66e909d048c263a9
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:828:13
+  11:     0x564e0568b35a - std::panicking::begin_panic_handler::{{closure}}::h8d9aa8be7e8634cf
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:701:13
+  12:     0x564e0568a659 - std::sys::backtrace::__rust_end_short_backtrace::h7d7e47ef99abf6aa
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:168:18
+  13:     0x564e0568afed - rust_begin_unwind
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:692:5
+  14:     0x564e04a06a20 - core::panicking::panic_fmt::hf8ffc7c15bfb58a0
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/panicking.rs:75:14
+  15:     0x564e04a06810 - alloc::vec::Vec<T,A>::remove::assert_failed::h6a88dc80eefe1dfe
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/alloc/src/vec/mod.rs:2045:13
+  16:     0x564e04a5c1f3 - alloc::vec::Vec<T,A>::remove::heaa6ec281b0a5448
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/alloc/src/vec/mod.rs:2050:13
+  17:     0x564e04ad1438 - trustworthiness_checker::runtime::asynchronous::VarManager<V>::tick::{{closure}}::h435d143f0d29e622
+                               at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:261:25
+  18:     0x564e04b11172 - <core::pin::Pin<P> as core::future::future::Future>::poll::h63f8c0678cda3faa
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/future/future.rs:124:9
+  19:     0x564e04acc353 - trustworthiness_checker::runtime::asynchronous::VarManager<V>::run::{{closure}}::hebc280c0d82a4bd7
+                               at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:286:49
+  20:     0x564e04e3f353 - <core::pin::Pin<P> as core::future::future::Future>::poll::h5c23629b62b887ad
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/future/future.rs:124:9
+  21:     0x564e04a674b6 - async_executor::Executor::spawn_inner::{{closure}}::hafa05bbf6953c9eb
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:250:20
+  22:     0x564e04a8d2b0 - async_task::raw::RawTask<F,T,S,M>::run::{{closure}}::h0d06007ad39ac3fa
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/raw.rs:550:21
+  23:     0x564e04ab1ef8 - core::ops::function::FnOnce::call_once::h87894b1d0367be45
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:250:5
+  24:     0x564e04ad9853 - <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once::he4e02c756019ef7c
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/panic/unwind_safe.rs:272:9
+  25:     0x564e04a4f6d0 - std::panicking::try::do_call::hf625611bcbf44e36
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  26:     0x564e04aab46b - __rust_try
+  27:     0x564e04aaaa94 - std::panicking::try::h8602fbfe315ea191
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  28:     0x564e04aaaa94 - std::panic::catch_unwind::h4b0076ceb9d4fd9e
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  29:     0x564e04a87ee3 - async_task::raw::RawTask<F,T,S,M>::run::h775d06bf88912ea0
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/raw.rs:549:23
+  30:     0x564e0555345f - async_task::runnable::Runnable<M>::run::h090ddbd26ded40c8
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/runnable.rs:781:18
+  31:     0x564e04a6514b - async_executor::State::run::{{closure}}::{{closure}}::h0b40403d6be8b7dc
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:741:21
+  32:     0x564e04a1e75f - <futures_lite::future::Or<F1,F2> as core::future::future::Future>::poll::h8c1c6ceb0bba725d
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-lite-2.6.0/src/future.rs:457:33
+  33:     0x564e04a64d59 - async_executor::State::run::{{closure}}::h61be7c6891dcdea4
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:748:32
+  34:     0x564e04a6808e - async_executor::Executor::run::{{closure}}::h57c44483bed51611
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:344:34
+  35:     0x564e04a638f2 - async_executor::LocalExecutor::run::{{closure}}::h7b51ac46e52a3753
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:648:34
+  36:     0x564e04a2ff71 - async_io::driver::block_on::{{closure}}::h981f32fcc983b78e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-io-2.4.0/src/driver.rs:199:37
+  37:     0x564e04ad7f5d - std::thread::local::LocalKey<T>::try_with::h1b79ff58667ad140
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/thread/local.rs:308:12
+  38:     0x564e04ad7dba - std::thread::local::LocalKey<T>::with::h96651f024913d803
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/thread/local.rs:272:9
+  39:     0x564e04a2fba7 - async_io::driver::block_on::h3a4bc03f1a4e41f8
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-io-2.4.0/src/driver.rs:175:5
+  40:     0x564e04a9fef5 - trustworthiness_checker::main::{{closure}}::h37ba9f20c827b63e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:153:17
+  41:     0x564e04ad5d5a - <alloc::rc::Rc<async_executor::LocalExecutor> as smol_macros::__private::MainExecutor>::with_main::h1496905cc5de6d1e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:256:13
+  42:     0x564e04ad8506 - trustworthiness_checker::main::hf2c96597b2a05b1c
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:152:13
+  43:     0x564e04ab1c2b - core::ops::function::FnOnce::call_once::h2563a0c0c3892de7
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:250:5
+  44:     0x564e04a78f7e - std::sys::backtrace::__rust_begin_short_backtrace::h0eb626bb62882180
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:152:18
+  45:     0x564e04a18f51 - std::rt::lang_start::{{closure}}::h5b6ec8792af87fee
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:195:18
+  46:     0x564e05682187 - core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once::h6889704b556d4c77
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:284:13
+  47:     0x564e05682187 - std::panicking::try::do_call::hb54df035e1ac8c92
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  48:     0x564e05682187 - std::panicking::try::h58823af4bcc61a96
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  49:     0x564e05682187 - std::panic::catch_unwind::hc30ff8fe04ef2371
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  50:     0x564e05682187 - std::rt::lang_start_internal::{{closure}}::h527f54f1892dcb9b
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:174:48
+  51:     0x564e05682187 - std::panicking::try::do_call::h41aaba5fff752501
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  52:     0x564e05682187 - std::panicking::try::hf0596d206f5fce25
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  53:     0x564e05682187 - std::panic::catch_unwind::h5a2061dbbb8ffdf4
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  54:     0x564e05682187 - std::rt::lang_start_internal::heee0af441e41a6d2
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:174:20
+  55:     0x564e04a18f2a - std::rt::lang_start::h5db9349051e100bc
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:194:17
+  56:     0x564e04ad852e - main
+  57:     0x7f170005e24a - <unknown>
+  58:     0x7f170005e305 - __libc_start_main
+  59:     0x564e04a07321 - _start
+  60:                0x0 - <unknown>
+
+thread 'main' panicked at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:261:54:
+removal index (is 1) should be < len (is 1)
+stack backtrace:
+   0:     0x564e0568a14a - std::backtrace_rs::backtrace::libunwind::trace::h2740d05102fd9881
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/../../backtrace/src/backtrace/libunwind.rs:116:5
+   1:     0x564e0568a14a - std::backtrace_rs::backtrace::trace_unsynchronized::h93ae2edf130065c8
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
+   2:     0x564e0568a14a - std::sys::backtrace::_print_fmt::h7660a544e6110dd9
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:66:9
+   3:     0x564e0568a14a - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::hfc616348d9ad0abc
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:39:26
+   4:     0x564e056ad9f3 - core::fmt::rt::Argument::fmt::h3a92517f8117fcd5
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/fmt/rt.rs:177:76
+   5:     0x564e056ad9f3 - core::fmt::write::h7ca648217bc79799
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/fmt/mod.rs:1440:21
+   6:     0x564e05687493 - std::io::Write::write_fmt::h7960c58bfa5ccbcb
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/io/mod.rs:1887:15
+   7:     0x564e05689f92 - std::sys::backtrace::BacktraceLock::print::h3fb349e80cbe0423
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:42:9
+   8:     0x564e0568ae50 - std::panicking::default_hook::{{closure}}::h3366e5842cba645d
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:295:22
+   9:     0x564e0568ac30 - std::panicking::default_hook::hd7573a5d4879884b
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:322:9
+  10:     0x564e0568b5b2 - std::panicking::rust_panic_with_hook::h66e909d048c263a9
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:828:13
+  11:     0x564e0568b35a - std::panicking::begin_panic_handler::{{closure}}::h8d9aa8be7e8634cf
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:701:13
+  12:     0x564e0568a659 - std::sys::backtrace::__rust_end_short_backtrace::h7d7e47ef99abf6aa
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:168:18
+  13:     0x564e0568afed - rust_begin_unwind
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:692:5
+  14:     0x564e04a06a20 - core::panicking::panic_fmt::hf8ffc7c15bfb58a0
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/panicking.rs:75:14
+  15:     0x564e04a06810 - alloc::vec::Vec<T,A>::remove::assert_failed::h6a88dc80eefe1dfe
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/alloc/src/vec/mod.rs:2045:13
+  16:     0x564e04a5c1f3 - alloc::vec::Vec<T,A>::remove::heaa6ec281b0a5448
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/alloc/src/vec/mod.rs:2050:13
+  17:     0x564e04ad1438 - trustworthiness_checker::runtime::asynchronous::VarManager<V>::tick::{{closure}}::h435d143f0d29e622
+                               at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:261:25
+  18:     0x564e04b11172 - <core::pin::Pin<P> as core::future::future::Future>::poll::h63f8c0678cda3faa
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/future/future.rs:124:9
+  19:     0x564e04acc353 - trustworthiness_checker::runtime::asynchronous::VarManager<V>::run::{{closure}}::hebc280c0d82a4bd7
+                               at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:286:49
+  20:     0x564e04e3f353 - <core::pin::Pin<P> as core::future::future::Future>::poll::h5c23629b62b887ad
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/future/future.rs:124:9
+  21:     0x564e04a674b6 - async_executor::Executor::spawn_inner::{{closure}}::hafa05bbf6953c9eb
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:250:20
+  22:     0x564e04a8d2b0 - async_task::raw::RawTask<F,T,S,M>::run::{{closure}}::h0d06007ad39ac3fa
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/raw.rs:550:21
+  23:     0x564e04ab1ef8 - core::ops::function::FnOnce::call_once::h87894b1d0367be45
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:250:5
+  24:     0x564e04ad9853 - <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once::he4e02c756019ef7c
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/panic/unwind_safe.rs:272:9
+  25:     0x564e04a4f6d0 - std::panicking::try::do_call::hf625611bcbf44e36
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  26:     0x564e04aab46b - __rust_try
+  27:     0x564e04aaaa94 - std::panicking::try::h8602fbfe315ea191
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  28:     0x564e04aaaa94 - std::panic::catch_unwind::h4b0076ceb9d4fd9e
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  29:     0x564e04a87ee3 - async_task::raw::RawTask<F,T,S,M>::run::h775d06bf88912ea0
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/raw.rs:549:23
+  30:     0x564e0555345f - async_task::runnable::Runnable<M>::run::h090ddbd26ded40c8
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/runnable.rs:781:18
+  31:     0x564e04a6514b - async_executor::State::run::{{closure}}::{{closure}}::h0b40403d6be8b7dc
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:741:21
+  32:     0x564e04a1e75f - <futures_lite::future::Or<F1,F2> as core::future::future::Future>::poll::h8c1c6ceb0bba725d
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-lite-2.6.0/src/future.rs:457:33
+  33:     0x564e04a64d59 - async_executor::State::run::{{closure}}::h61be7c6891dcdea4
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:748:32
+  34:     0x564e04a6808e - async_executor::Executor::run::{{closure}}::h57c44483bed51611
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:344:34
+  35:     0x564e04a638f2 - async_executor::LocalExecutor::run::{{closure}}::h7b51ac46e52a3753
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:648:34
+  36:     0x564e04a2ff71 - async_io::driver::block_on::{{closure}}::h981f32fcc983b78e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-io-2.4.0/src/driver.rs:199:37
+  37:     0x564e04ad7f5d - std::thread::local::LocalKey<T>::try_with::h1b79ff58667ad140
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/thread/local.rs:308:12
+  38:     0x564e04ad7dba - std::thread::local::LocalKey<T>::with::h96651f024913d803
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/thread/local.rs:272:9
+  39:     0x564e04a2fba7 - async_io::driver::block_on::h3a4bc03f1a4e41f8
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-io-2.4.0/src/driver.rs:175:5
+  40:     0x564e04a9fef5 - trustworthiness_checker::main::{{closure}}::h37ba9f20c827b63e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:153:17
+  41:     0x564e04ad5d5a - <alloc::rc::Rc<async_executor::LocalExecutor> as smol_macros::__private::MainExecutor>::with_main::h1496905cc5de6d1e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:256:13
+  42:     0x564e04ad8506 - trustworthiness_checker::main::hf2c96597b2a05b1c
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:152:13
+  43:     0x564e04ab1c2b - core::ops::function::FnOnce::call_once::h2563a0c0c3892de7
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:250:5
+  44:     0x564e04a78f7e - std::sys::backtrace::__rust_begin_short_backtrace::h0eb626bb62882180
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:152:18
+  45:     0x564e04a18f51 - std::rt::lang_start::{{closure}}::h5b6ec8792af87fee
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:195:18
+  46:     0x564e05682187 - core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once::h6889704b556d4c77
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:284:13
+  47:     0x564e05682187 - std::panicking::try::do_call::hb54df035e1ac8c92
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  48:     0x564e05682187 - std::panicking::try::h58823af4bcc61a96
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  49:     0x564e05682187 - std::panic::catch_unwind::hc30ff8fe04ef2371
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  50:     0x564e05682187 - std::rt::lang_start_internal::{{closure}}::h527f54f1892dcb9b
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:174:48
+  51:     0x564e05682187 - std::panicking::try::do_call::h41aaba5fff752501
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  52:     0x564e05682187 - std::panicking::try::hf0596d206f5fce25
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  53:     0x564e05682187 - std::panic::catch_unwind::h5a2061dbbb8ffdf4
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  54:     0x564e05682187 - std::rt::lang_start_internal::heee0af441e41a6d2
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:174:20
+  55:     0x564e04a18f2a - std::rt::lang_start::h5db9349051e100bc
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:194:17
+  56:     0x564e04ad852e - main
+  57:     0x7f170005e24a - <unknown>
+  58:     0x7f170005e305 - __libc_start_main
+  59:     0x564e04a07321 - _start
+  60:                0x0 - <unknown>
+
+thread 'main' panicked at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:261:54:
+removal index (is 1) should be < len (is 1)
+stack backtrace:
+   0:     0x564e0568a14a - std::backtrace_rs::backtrace::libunwind::trace::h2740d05102fd9881
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/../../backtrace/src/backtrace/libunwind.rs:116:5
+   1:     0x564e0568a14a - std::backtrace_rs::backtrace::trace_unsynchronized::h93ae2edf130065c8
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
+   2:     0x564e0568a14a - std::sys::backtrace::_print_fmt::h7660a544e6110dd9
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:66:9
+   3:     0x564e0568a14a - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::hfc616348d9ad0abc
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:39:26
+   4:     0x564e056ad9f3 - core::fmt::rt::Argument::fmt::h3a92517f8117fcd5
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/fmt/rt.rs:177:76
+   5:     0x564e056ad9f3 - core::fmt::write::h7ca648217bc79799
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/fmt/mod.rs:1440:21
+   6:     0x564e05687493 - std::io::Write::write_fmt::h7960c58bfa5ccbcb
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/io/mod.rs:1887:15
+   7:     0x564e05689f92 - std::sys::backtrace::BacktraceLock::print::h3fb349e80cbe0423
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:42:9
+   8:     0x564e0568ae50 - std::panicking::default_hook::{{closure}}::h3366e5842cba645d
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:295:22
+   9:     0x564e0568ac30 - std::panicking::default_hook::hd7573a5d4879884b
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:322:9
+  10:     0x564e0568b5b2 - std::panicking::rust_panic_with_hook::h66e909d048c263a9
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:828:13
+  11:     0x564e0568b35a - std::panicking::begin_panic_handler::{{closure}}::h8d9aa8be7e8634cf
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:701:13
+  12:     0x564e0568a659 - std::sys::backtrace::__rust_end_short_backtrace::h7d7e47ef99abf6aa
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:168:18
+  13:     0x564e0568afed - rust_begin_unwind
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:692:5
+  14:     0x564e04a06a20 - core::panicking::panic_fmt::hf8ffc7c15bfb58a0
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/panicking.rs:75:14
+  15:     0x564e04a06810 - alloc::vec::Vec<T,A>::remove::assert_failed::h6a88dc80eefe1dfe
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/alloc/src/vec/mod.rs:2045:13
+  16:     0x564e04a5c1f3 - alloc::vec::Vec<T,A>::remove::heaa6ec281b0a5448
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/alloc/src/vec/mod.rs:2050:13
+  17:     0x564e04ad1438 - trustworthiness_checker::runtime::asynchronous::VarManager<V>::tick::{{closure}}::h435d143f0d29e622
+                               at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:261:25
+  18:     0x564e04b11172 - <core::pin::Pin<P> as core::future::future::Future>::poll::h63f8c0678cda3faa
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/future/future.rs:124:9
+  19:     0x564e04acc353 - trustworthiness_checker::runtime::asynchronous::VarManager<V>::run::{{closure}}::hebc280c0d82a4bd7
+                               at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:286:49
+  20:     0x564e04e3f353 - <core::pin::Pin<P> as core::future::future::Future>::poll::h5c23629b62b887ad
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/future/future.rs:124:9
+  21:     0x564e04a674b6 - async_executor::Executor::spawn_inner::{{closure}}::hafa05bbf6953c9eb
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:250:20
+  22:     0x564e04a8d2b0 - async_task::raw::RawTask<F,T,S,M>::run::{{closure}}::h0d06007ad39ac3fa
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/raw.rs:550:21
+  23:     0x564e04ab1ef8 - core::ops::function::FnOnce::call_once::h87894b1d0367be45
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:250:5
+  24:     0x564e04ad9853 - <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once::he4e02c756019ef7c
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/panic/unwind_safe.rs:272:9
+  25:     0x564e04a4f6d0 - std::panicking::try::do_call::hf625611bcbf44e36
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  26:     0x564e04aab46b - __rust_try
+  27:     0x564e04aaaa94 - std::panicking::try::h8602fbfe315ea191
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  28:     0x564e04aaaa94 - std::panic::catch_unwind::h4b0076ceb9d4fd9e
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  29:     0x564e04a87ee3 - async_task::raw::RawTask<F,T,S,M>::run::h775d06bf88912ea0
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/raw.rs:549:23
+  30:     0x564e0555345f - async_task::runnable::Runnable<M>::run::h090ddbd26ded40c8
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/runnable.rs:781:18
+  31:     0x564e04a6514b - async_executor::State::run::{{closure}}::{{closure}}::h0b40403d6be8b7dc
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:741:21
+  32:     0x564e04a1e75f - <futures_lite::future::Or<F1,F2> as core::future::future::Future>::poll::h8c1c6ceb0bba725d
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-lite-2.6.0/src/future.rs:457:33
+  33:     0x564e04a64d59 - async_executor::State::run::{{closure}}::h61be7c6891dcdea4
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:748:32
+  34:     0x564e04a6808e - async_executor::Executor::run::{{closure}}::h57c44483bed51611
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:344:34
+  35:     0x564e04a638f2 - async_executor::LocalExecutor::run::{{closure}}::h7b51ac46e52a3753
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:648:34
+  36:     0x564e04a2ff71 - async_io::driver::block_on::{{closure}}::h981f32fcc983b78e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-io-2.4.0/src/driver.rs:199:37
+  37:     0x564e04ad7f5d - std::thread::local::LocalKey<T>::try_with::h1b79ff58667ad140
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/thread/local.rs:308:12
+  38:     0x564e04ad7dba - std::thread::local::LocalKey<T>::with::h96651f024913d803
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/thread/local.rs:272:9
+  39:     0x564e04a2fba7 - async_io::driver::block_on::h3a4bc03f1a4e41f8
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-io-2.4.0/src/driver.rs:175:5
+  40:     0x564e04a9fef5 - trustworthiness_checker::main::{{closure}}::h37ba9f20c827b63e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:153:17
+  41:     0x564e04ad5d5a - <alloc::rc::Rc<async_executor::LocalExecutor> as smol_macros::__private::MainExecutor>::with_main::h1496905cc5de6d1e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:256:13
+  42:     0x564e04ad8506 - trustworthiness_checker::main::hf2c96597b2a05b1c
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:152:13
+  43:     0x564e04ab1c2b - core::ops::function::FnOnce::call_once::h2563a0c0c3892de7
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:250:5
+  44:     0x564e04a78f7e - std::sys::backtrace::__rust_begin_short_backtrace::h0eb626bb62882180
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:152:18
+  45:     0x564e04a18f51 - std::rt::lang_start::{{closure}}::h5b6ec8792af87fee
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:195:18
+  46:     0x564e05682187 - core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once::h6889704b556d4c77
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:284:13
+  47:     0x564e05682187 - std::panicking::try::do_call::hb54df035e1ac8c92
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  48:     0x564e05682187 - std::panicking::try::h58823af4bcc61a96
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  49:     0x564e05682187 - std::panic::catch_unwind::hc30ff8fe04ef2371
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  50:     0x564e05682187 - std::rt::lang_start_internal::{{closure}}::h527f54f1892dcb9b
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:174:48
+  51:     0x564e05682187 - std::panicking::try::do_call::h41aaba5fff752501
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  52:     0x564e05682187 - std::panicking::try::hf0596d206f5fce25
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  53:     0x564e05682187 - std::panic::catch_unwind::h5a2061dbbb8ffdf4
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  54:     0x564e05682187 - std::rt::lang_start_internal::heee0af441e41a6d2
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:174:20
+  55:     0x564e04a18f2a - std::rt::lang_start::h5db9349051e100bc
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:194:17
+  56:     0x564e04ad852e - main
+  57:     0x7f170005e24a - <unknown>
+  58:     0x7f170005e305 - __libc_start_main
+  59:     0x564e04a07321 - _start
+  60:                0x0 - <unknown>
+
+thread 'main' panicked at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:261:54:
+removal index (is 1) should be < len (is 1)
+stack backtrace:
+   0:     0x564e0568a14a - std::backtrace_rs::backtrace::libunwind::trace::h2740d05102fd9881
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/../../backtrace/src/backtrace/libunwind.rs:116:5
+   1:     0x564e0568a14a - std::backtrace_rs::backtrace::trace_unsynchronized::h93ae2edf130065c8
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
+   2:     0x564e0568a14a - std::sys::backtrace::_print_fmt::h7660a544e6110dd9
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:66:9
+   3:     0x564e0568a14a - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::hfc616348d9ad0abc
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:39:26
+   4:     0x564e056ad9f3 - core::fmt::rt::Argument::fmt::h3a92517f8117fcd5
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/fmt/rt.rs:177:76
+   5:     0x564e056ad9f3 - core::fmt::write::h7ca648217bc79799
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/fmt/mod.rs:1440:21
+   6:     0x564e05687493 - std::io::Write::write_fmt::h7960c58bfa5ccbcb
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/io/mod.rs:1887:15
+   7:     0x564e05689f92 - std::sys::backtrace::BacktraceLock::print::h3fb349e80cbe0423
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:42:9
+   8:     0x564e0568ae50 - std::panicking::default_hook::{{closure}}::h3366e5842cba645d
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:295:22
+   9:     0x564e0568ac30 - std::panicking::default_hook::hd7573a5d4879884b
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:322:9
+  10:     0x564e0568b5b2 - std::panicking::rust_panic_with_hook::h66e909d048c263a9
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:828:13
+  11:     0x564e0568b35a - std::panicking::begin_panic_handler::{{closure}}::h8d9aa8be7e8634cf
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:701:13
+  12:     0x564e0568a659 - std::sys::backtrace::__rust_end_short_backtrace::h7d7e47ef99abf6aa
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:168:18
+  13:     0x564e0568afed - rust_begin_unwind
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:692:5
+  14:     0x564e04a06a20 - core::panicking::panic_fmt::hf8ffc7c15bfb58a0
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/panicking.rs:75:14
+  15:     0x564e04a06810 - alloc::vec::Vec<T,A>::remove::assert_failed::h6a88dc80eefe1dfe
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/alloc/src/vec/mod.rs:2045:13
+  16:     0x564e04a5c1f3 - alloc::vec::Vec<T,A>::remove::heaa6ec281b0a5448
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/alloc/src/vec/mod.rs:2050:13
+  17:     0x564e04ad1438 - trustworthiness_checker::runtime::asynchronous::VarManager<V>::tick::{{closure}}::h435d143f0d29e622
+                               at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:261:25
+  18:     0x564e04b11172 - <core::pin::Pin<P> as core::future::future::Future>::poll::h63f8c0678cda3faa
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/future/future.rs:124:9
+  19:     0x564e04acc353 - trustworthiness_checker::runtime::asynchronous::VarManager<V>::run::{{closure}}::hebc280c0d82a4bd7
+                               at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:286:49
+  20:     0x564e04e3f353 - <core::pin::Pin<P> as core::future::future::Future>::poll::h5c23629b62b887ad
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/future/future.rs:124:9
+  21:     0x564e04a674b6 - async_executor::Executor::spawn_inner::{{closure}}::hafa05bbf6953c9eb
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:250:20
+  22:     0x564e04a8d2b0 - async_task::raw::RawTask<F,T,S,M>::run::{{closure}}::h0d06007ad39ac3fa
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/raw.rs:550:21
+  23:     0x564e04ab1ef8 - core::ops::function::FnOnce::call_once::h87894b1d0367be45
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:250:5
+  24:     0x564e04ad9853 - <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once::he4e02c756019ef7c
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/panic/unwind_safe.rs:272:9
+  25:     0x564e04a4f6d0 - std::panicking::try::do_call::hf625611bcbf44e36
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  26:     0x564e04aab46b - __rust_try
+  27:     0x564e04aaaa94 - std::panicking::try::h8602fbfe315ea191
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  28:     0x564e04aaaa94 - std::panic::catch_unwind::h4b0076ceb9d4fd9e
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  29:     0x564e04a87ee3 - async_task::raw::RawTask<F,T,S,M>::run::h775d06bf88912ea0
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/raw.rs:549:23
+  30:     0x564e0555345f - async_task::runnable::Runnable<M>::run::h090ddbd26ded40c8
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/runnable.rs:781:18
+  31:     0x564e04a6514b - async_executor::State::run::{{closure}}::{{closure}}::h0b40403d6be8b7dc
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:741:21
+  32:     0x564e04a1e75f - <futures_lite::future::Or<F1,F2> as core::future::future::Future>::poll::h8c1c6ceb0bba725d
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-lite-2.6.0/src/future.rs:457:33
+  33:     0x564e04a64d59 - async_executor::State::run::{{closure}}::h61be7c6891dcdea4
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:748:32
+  34:     0x564e04a6808e - async_executor::Executor::run::{{closure}}::h57c44483bed51611
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:344:34
+  35:     0x564e04a638f2 - async_executor::LocalExecutor::run::{{closure}}::h7b51ac46e52a3753
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:648:34
+  36:     0x564e04a2ff71 - async_io::driver::block_on::{{closure}}::h981f32fcc983b78e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-io-2.4.0/src/driver.rs:199:37
+  37:     0x564e04ad7f5d - std::thread::local::LocalKey<T>::try_with::h1b79ff58667ad140
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/thread/local.rs:308:12
+  38:     0x564e04ad7dba - std::thread::local::LocalKey<T>::with::h96651f024913d803
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/thread/local.rs:272:9
+  39:     0x564e04a2fba7 - async_io::driver::block_on::h3a4bc03f1a4e41f8
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-io-2.4.0/src/driver.rs:175:5
+  40:     0x564e04a9fef5 - trustworthiness_checker::main::{{closure}}::h37ba9f20c827b63e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:153:17
+  41:     0x564e04ad5d5a - <alloc::rc::Rc<async_executor::LocalExecutor> as smol_macros::__private::MainExecutor>::with_main::h1496905cc5de6d1e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:256:13
+  42:     0x564e04ad8506 - trustworthiness_checker::main::hf2c96597b2a05b1c
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:152:13
+  43:     0x564e04ab1c2b - core::ops::function::FnOnce::call_once::h2563a0c0c3892de7
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:250:5
+  44:     0x564e04a78f7e - std::sys::backtrace::__rust_begin_short_backtrace::h0eb626bb62882180
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:152:18
+  45:     0x564e04a18f51 - std::rt::lang_start::{{closure}}::h5b6ec8792af87fee
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:195:18
+  46:     0x564e05682187 - core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once::h6889704b556d4c77
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:284:13
+  47:     0x564e05682187 - std::panicking::try::do_call::hb54df035e1ac8c92
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  48:     0x564e05682187 - std::panicking::try::h58823af4bcc61a96
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  49:     0x564e05682187 - std::panic::catch_unwind::hc30ff8fe04ef2371
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  50:     0x564e05682187 - std::rt::lang_start_internal::{{closure}}::h527f54f1892dcb9b
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:174:48
+  51:     0x564e05682187 - std::panicking::try::do_call::h41aaba5fff752501
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  52:     0x564e05682187 - std::panicking::try::hf0596d206f5fce25
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  53:     0x564e05682187 - std::panic::catch_unwind::h5a2061dbbb8ffdf4
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  54:     0x564e05682187 - std::rt::lang_start_internal::heee0af441e41a6d2
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:174:20
+  55:     0x564e04a18f2a - std::rt::lang_start::h5db9349051e100bc
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:194:17
+  56:     0x564e04ad852e - main
+  57:     0x7f170005e24a - <unknown>
+  58:     0x7f170005e305 - __libc_start_main
+  59:     0x564e04a07321 - _start
+  60:                0x0 - <unknown>
+
+thread 'main' panicked at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:261:54:
+removal index (is 1) should be < len (is 1)
+stack backtrace:
+   0:     0x564e0568a14a - std::backtrace_rs::backtrace::libunwind::trace::h2740d05102fd9881
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/../../backtrace/src/backtrace/libunwind.rs:116:5
+   1:     0x564e0568a14a - std::backtrace_rs::backtrace::trace_unsynchronized::h93ae2edf130065c8
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
+   2:     0x564e0568a14a - std::sys::backtrace::_print_fmt::h7660a544e6110dd9
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:66:9
+   3:     0x564e0568a14a - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::hfc616348d9ad0abc
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:39:26
+   4:     0x564e056ad9f3 - core::fmt::rt::Argument::fmt::h3a92517f8117fcd5
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/fmt/rt.rs:177:76
+   5:     0x564e056ad9f3 - core::fmt::write::h7ca648217bc79799
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/fmt/mod.rs:1440:21
+   6:     0x564e05687493 - std::io::Write::write_fmt::h7960c58bfa5ccbcb
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/io/mod.rs:1887:15
+   7:     0x564e05689f92 - std::sys::backtrace::BacktraceLock::print::h3fb349e80cbe0423
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:42:9
+   8:     0x564e0568ae50 - std::panicking::default_hook::{{closure}}::h3366e5842cba645d
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:295:22
+   9:     0x564e0568ac30 - std::panicking::default_hook::hd7573a5d4879884b
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:322:9
+  10:     0x564e0568b5b2 - std::panicking::rust_panic_with_hook::h66e909d048c263a9
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:828:13
+  11:     0x564e0568b35a - std::panicking::begin_panic_handler::{{closure}}::h8d9aa8be7e8634cf
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:701:13
+  12:     0x564e0568a659 - std::sys::backtrace::__rust_end_short_backtrace::h7d7e47ef99abf6aa
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:168:18
+  13:     0x564e0568afed - rust_begin_unwind
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:692:5
+  14:     0x564e04a06a20 - core::panicking::panic_fmt::hf8ffc7c15bfb58a0
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/panicking.rs:75:14
+  15:     0x564e04a06810 - alloc::vec::Vec<T,A>::remove::assert_failed::h6a88dc80eefe1dfe
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/alloc/src/vec/mod.rs:2045:13
+  16:     0x564e04a5c1f3 - alloc::vec::Vec<T,A>::remove::heaa6ec281b0a5448
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/alloc/src/vec/mod.rs:2050:13
+  17:     0x564e04ad1438 - trustworthiness_checker::runtime::asynchronous::VarManager<V>::tick::{{closure}}::h435d143f0d29e622
+                               at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:261:25
+  18:     0x564e04b11172 - <core::pin::Pin<P> as core::future::future::Future>::poll::h63f8c0678cda3faa
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/future/future.rs:124:9
+  19:     0x564e04acc353 - trustworthiness_checker::runtime::asynchronous::VarManager<V>::run::{{closure}}::hebc280c0d82a4bd7
+                               at /opt/trustworthiness-checker/src/runtime/asynchronous.rs:286:49
+  20:     0x564e04e3f353 - <core::pin::Pin<P> as core::future::future::Future>::poll::h5c23629b62b887ad
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/future/future.rs:124:9
+  21:     0x564e04a674b6 - async_executor::Executor::spawn_inner::{{closure}}::hafa05bbf6953c9eb
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:250:20
+  22:     0x564e04a8d2b0 - async_task::raw::RawTask<F,T,S,M>::run::{{closure}}::h0d06007ad39ac3fa
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/raw.rs:550:21
+  23:     0x564e04ab1ef8 - core::ops::function::FnOnce::call_once::h87894b1d0367be45
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:250:5
+  24:     0x564e04ad9853 - <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once::he4e02c756019ef7c
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/panic/unwind_safe.rs:272:9
+  25:     0x564e04a4f6d0 - std::panicking::try::do_call::hf625611bcbf44e36
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  26:     0x564e04aab46b - __rust_try
+  27:     0x564e04aaaa94 - std::panicking::try::h8602fbfe315ea191
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  28:     0x564e04aaaa94 - std::panic::catch_unwind::h4b0076ceb9d4fd9e
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  29:     0x564e04a87ee3 - async_task::raw::RawTask<F,T,S,M>::run::h775d06bf88912ea0
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/raw.rs:549:23
+  30:     0x564e0555345f - async_task::runnable::Runnable<M>::run::h090ddbd26ded40c8
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-task-4.7.1/src/runnable.rs:781:18
+  31:     0x564e04a6514b - async_executor::State::run::{{closure}}::{{closure}}::h0b40403d6be8b7dc
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:741:21
+  32:     0x564e04a1e75f - <futures_lite::future::Or<F1,F2> as core::future::future::Future>::poll::h8c1c6ceb0bba725d
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-lite-2.6.0/src/future.rs:457:33
+  33:     0x564e04a64d59 - async_executor::State::run::{{closure}}::h61be7c6891dcdea4
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:748:32
+  34:     0x564e04a6808e - async_executor::Executor::run::{{closure}}::h57c44483bed51611
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:344:34
+  35:     0x564e04a638f2 - async_executor::LocalExecutor::run::{{closure}}::h7b51ac46e52a3753
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-executor-1.13.1/src/lib.rs:648:34
+  36:     0x564e04a2ff71 - async_io::driver::block_on::{{closure}}::h981f32fcc983b78e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-io-2.4.0/src/driver.rs:199:37
+  37:     0x564e04ad7f5d - std::thread::local::LocalKey<T>::try_with::h1b79ff58667ad140
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/thread/local.rs:308:12
+  38:     0x564e04ad7dba - std::thread::local::LocalKey<T>::with::h96651f024913d803
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/thread/local.rs:272:9
+  39:     0x564e04a2fba7 - async_io::driver::block_on::h3a4bc03f1a4e41f8
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/async-io-2.4.0/src/driver.rs:175:5
+  40:     0x564e04a9fef5 - trustworthiness_checker::main::{{closure}}::h37ba9f20c827b63e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:153:17
+  41:     0x564e04ad5d5a - <alloc::rc::Rc<async_executor::LocalExecutor> as smol_macros::__private::MainExecutor>::with_main::h1496905cc5de6d1e
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:256:13
+  42:     0x564e04ad8506 - trustworthiness_checker::main::hf2c96597b2a05b1c
+                               at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/smol-macros-0.1.1/src/lib.rs:152:13
+  43:     0x564e04ab1c2b - core::ops::function::FnOnce::call_once::h2563a0c0c3892de7
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:250:5
+  44:     0x564e04a78f7e - std::sys::backtrace::__rust_begin_short_backtrace::h0eb626bb62882180
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/sys/backtrace.rs:152:18
+  45:     0x564e04a18f51 - std::rt::lang_start::{{closure}}::h5b6ec8792af87fee
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:195:18
+  46:     0x564e05682187 - core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once::h6889704b556d4c77
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/core/src/ops/function.rs:284:13
+  47:     0x564e05682187 - std::panicking::try::do_call::hb54df035e1ac8c92
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  48:     0x564e05682187 - std::panicking::try::h58823af4bcc61a96
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  49:     0x564e05682187 - std::panic::catch_unwind::hc30ff8fe04ef2371
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  50:     0x564e05682187 - std::rt::lang_start_internal::{{closure}}::h527f54f1892dcb9b
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:174:48
+  51:     0x564e05682187 - std::panicking::try::do_call::h41aaba5fff752501
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:584:40
+  52:     0x564e05682187 - std::panicking::try::hf0596d206f5fce25
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panicking.rs:547:19
+  53:     0x564e05682187 - std::panic::catch_unwind::h5a2061dbbb8ffdf4
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/panic.rs:358:14
+  54:     0x564e05682187 - std::rt::lang_start_internal::heee0af441e41a6d2
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:174:20
+  55:     0x564e04a18f2a - std::rt::lang_start::h5db9349051e100bc
+                               at /rustc/4eb161250e340c8f48f66e2b929ef4a5bed7c181/library/std/src/rt.rs:194:17
+  56:     0x564e04ad852e - main
+  57:     0x7f170005e24a - <unknown>
+  58:     0x7f170005e305 - __libc_start_main
+  59:     0x564e04a07321 - _start
+  60:                0x0 - <unknown>

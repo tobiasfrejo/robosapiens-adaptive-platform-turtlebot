@@ -1,21 +1,35 @@
-in Pos
+in Odometry
 out x
 out y
 out a
-out seenwalls
-out collision
-out RC0X
-out RC0Y
-out insideRC0
-out RC1X
-out RC1Y
-out insideRC1
-out RC2X
-out RC2Y
-out insideRC2
-out RC3X
-out RC3Y
-out insideRC3
+out RC0X // MQTT out
+out RC0Y // MQTT out
+out RC1X // MQTT out
+out RC1Y // MQTT out
+out RC2X // MQTT out
+out RC2Y // MQTT out
+out RC3X // MQTT out
+out RC3Y // MQTT out
+out insidec0 // MQTT out
+out insidec1 // MQTT out
+out insidec2 // MQTT out
+out insidec3 // MQTT out
+out insidec4 // MQTT out
+out insidec5 // MQTT out
+out insidec6 // MQTT out
+out insidec7 // MQTT out
+out insidec8 // MQTT out
+out insidec9 // MQTT out
+out insidec10 // MQTT out
+out insidec11 // MQTT out
+out insidec12 // MQTT out
+out insidec13 // MQTT out
+out insidec14 // MQTT out
+out insidec15 // MQTT out
+out insidec16 // MQTT out
+out insidec17 // MQTT out
+out insidec18 // MQTT out
+out insidec19 // MQTT out
 out c0w0
 out c0w1
 out c0w2
@@ -80,9 +94,26 @@ out c15w0
 out c15w1
 out c15w2
 out c15w3
-x = List.get(Pos, 0)
-y = List.get(Pos, 1)
-a = List.get(Pos, 2)
+out c16w0
+out c16w1
+out c16w2
+out c16w3
+out c17w0
+out c17w1
+out c17w2
+out c17w3
+out c18w0
+out c18w1
+out c18w2
+out c18w3
+out c19w0
+out c19w1
+out c19w2
+out c19w3
+out collision // MQTT out
+x = List.get(Odometry, 0)
+y = List.get(Odometry, 1)
+a = List.get(Odometry, 2)
 RC0X = (((0.1) * cos(a)) - ((0.153) * sin(a))) + x
 RC0Y =   (0.1) * sin(a)  +  (0.153) * cos(a)   + y
 RC1X = (((0.1) * cos(a)) - ((-0.153) * sin(a))) + x
@@ -155,6 +186,22 @@ c15w0 = if !(!(RC0Y <= 2.0125) == !(RC1Y <= 2.0125)) && !(RC1Y == RC0Y) && !((((
 c15w1 = if !(!(RC1Y <= 2.0125) == !(RC2Y <= 2.0125)) && !(RC2Y == RC1Y) && !((((RC2X) - (RC1X)) * ((2.0125) - (RC1Y)) / ((RC2Y) - (RC1Y)) + (RC1X)) <= (-1.7248)) then 1 else 0 
 c15w2 = if !(!(RC2Y <= 2.0125) == !(RC3Y <= 2.0125)) && !(RC3Y == RC2Y) && !((((RC3X) - (RC2X)) * ((2.0125) - (RC2Y)) / ((RC3Y) - (RC2Y)) + (RC2X)) <= (-1.7248)) then 1 else 0 
 c15w3 = if !(!(RC3Y <= 2.0125) == !(RC0Y <= 2.0125)) && !(RC0Y == RC3Y) && !((((RC0X) - (RC3X)) * ((2.0125) - (RC3Y)) / ((RC0Y) - (RC3Y)) + (RC3X)) <= (-1.7248)) then 1 else 0 
+c16w0 = if !(!(RC0Y <= -0.01) == !(RC1Y <= -0.01)) && !(RC1Y == RC0Y) && !((((RC1X) - (RC0X)) * ((-0.01) - (RC0Y)) / ((RC1Y) - (RC0Y)) + (RC0X)) <= (-2.01)) then 1 else 0 
+c16w1 = if !(!(RC1Y <= -0.01) == !(RC2Y <= -0.01)) && !(RC2Y == RC1Y) && !((((RC2X) - (RC1X)) * ((-0.01) - (RC1Y)) / ((RC2Y) - (RC1Y)) + (RC1X)) <= (-2.01)) then 1 else 0 
+c16w2 = if !(!(RC2Y <= -0.01) == !(RC3Y <= -0.01)) && !(RC3Y == RC2Y) && !((((RC3X) - (RC2X)) * ((-0.01) - (RC2Y)) / ((RC3Y) - (RC2Y)) + (RC2X)) <= (-2.01)) then 1 else 0 
+c16w3 = if !(!(RC3Y <= -0.01) == !(RC0Y <= -0.01)) && !(RC0Y == RC3Y) && !((((RC0X) - (RC3X)) * ((-0.01) - (RC3Y)) / ((RC0Y) - (RC3Y)) + (RC3X)) <= (-2.01)) then 1 else 0 
+c17w0 = if !(!(RC0Y <= -0.01) == !(RC1Y <= -0.01)) && !(RC1Y == RC0Y) && !((((RC1X) - (RC0X)) * ((-0.01) - (RC0Y)) / ((RC1Y) - (RC0Y)) + (RC0X)) <= (-1.99)) then 1 else 0 
+c17w1 = if !(!(RC1Y <= -0.01) == !(RC2Y <= -0.01)) && !(RC2Y == RC1Y) && !((((RC2X) - (RC1X)) * ((-0.01) - (RC1Y)) / ((RC2Y) - (RC1Y)) + (RC1X)) <= (-1.99)) then 1 else 0 
+c17w2 = if !(!(RC2Y <= -0.01) == !(RC3Y <= -0.01)) && !(RC3Y == RC2Y) && !((((RC3X) - (RC2X)) * ((-0.01) - (RC2Y)) / ((RC3Y) - (RC2Y)) + (RC2X)) <= (-1.99)) then 1 else 0 
+c17w3 = if !(!(RC3Y <= -0.01) == !(RC0Y <= -0.01)) && !(RC0Y == RC3Y) && !((((RC0X) - (RC3X)) * ((-0.01) - (RC3Y)) / ((RC0Y) - (RC3Y)) + (RC3X)) <= (-1.99)) then 1 else 0 
+c18w0 = if !(!(RC0Y <= 0.01) == !(RC1Y <= 0.01)) && !(RC1Y == RC0Y) && !((((RC1X) - (RC0X)) * ((0.01) - (RC0Y)) / ((RC1Y) - (RC0Y)) + (RC0X)) <= (-1.99)) then 1 else 0 
+c18w1 = if !(!(RC1Y <= 0.01) == !(RC2Y <= 0.01)) && !(RC2Y == RC1Y) && !((((RC2X) - (RC1X)) * ((0.01) - (RC1Y)) / ((RC2Y) - (RC1Y)) + (RC1X)) <= (-1.99)) then 1 else 0 
+c18w2 = if !(!(RC2Y <= 0.01) == !(RC3Y <= 0.01)) && !(RC3Y == RC2Y) && !((((RC3X) - (RC2X)) * ((0.01) - (RC2Y)) / ((RC3Y) - (RC2Y)) + (RC2X)) <= (-1.99)) then 1 else 0 
+c18w3 = if !(!(RC3Y <= 0.01) == !(RC0Y <= 0.01)) && !(RC0Y == RC3Y) && !((((RC0X) - (RC3X)) * ((0.01) - (RC3Y)) / ((RC0Y) - (RC3Y)) + (RC3X)) <= (-1.99)) then 1 else 0 
+c19w0 = if !(!(RC0Y <= 0.01) == !(RC1Y <= 0.01)) && !(RC1Y == RC0Y) && !((((RC1X) - (RC0X)) * ((0.01) - (RC0Y)) / ((RC1Y) - (RC0Y)) + (RC0X)) <= (-2.01)) then 1 else 0 
+c19w1 = if !(!(RC1Y <= 0.01) == !(RC2Y <= 0.01)) && !(RC2Y == RC1Y) && !((((RC2X) - (RC1X)) * ((0.01) - (RC1Y)) / ((RC2Y) - (RC1Y)) + (RC1X)) <= (-2.01)) then 1 else 0 
+c19w2 = if !(!(RC2Y <= 0.01) == !(RC3Y <= 0.01)) && !(RC3Y == RC2Y) && !((((RC3X) - (RC2X)) * ((0.01) - (RC2Y)) / ((RC3Y) - (RC2Y)) + (RC2X)) <= (-2.01)) then 1 else 0 
+c19w3 = if !(!(RC3Y <= 0.01) == !(RC0Y <= 0.01)) && !(RC0Y == RC3Y) && !((((RC0X) - (RC3X)) * ((0.01) - (RC3Y)) / ((RC0Y) - (RC3Y)) + (RC3X)) <= (-2.01)) then 1 else 0 
 insidec0 = ((c0w0 + c0w1 + c0w2 + c0w3) % 2) == 1
 insidec1 = ((c1w0 + c1w1 + c1w2 + c1w3) % 2) == 1
 insidec2 = ((c2w0 + c2w1 + c2w2 + c2w3) % 2) == 1
@@ -171,5 +218,9 @@ insidec12 = ((c12w0 + c12w1 + c12w2 + c12w3) % 2) == 1
 insidec13 = ((c13w0 + c13w1 + c13w2 + c13w3) % 2) == 1
 insidec14 = ((c14w0 + c14w1 + c14w2 + c14w3) % 2) == 1
 insidec15 = ((c15w0 + c15w1 + c15w2 + c15w3) % 2) == 1
-collision = (insidec0 || insidec1 || insidec2 || insidec3 || insidec4 || insidec5 || insidec6 || insidec7 || insidec8 || insidec9 || insidec10 || insidec11 || insidec12 || insidec13 || insidec14 || insidec15)
+insidec16 = ((c16w0 + c16w1 + c16w2 + c16w3) % 2) == 1
+insidec17 = ((c17w0 + c17w1 + c17w2 + c17w3) % 2) == 1
+insidec18 = ((c18w0 + c18w1 + c18w2 + c18w3) % 2) == 1
+insidec19 = ((c19w0 + c19w1 + c19w2 + c19w3) % 2) == 1
+collision = (insidec0 || insidec1 || insidec2 || insidec3 || insidec4 || insidec5 || insidec6 || insidec7 || insidec8 || insidec9 || insidec10 || insidec11 || insidec12 || insidec13 || insidec14 || insidec15 || insidec16 || insidec17 || insidec18 || insidec19)
 

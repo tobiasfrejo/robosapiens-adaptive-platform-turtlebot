@@ -88,7 +88,7 @@ for n, (x, y) in enumerate(robot_corners_offsets):
     rc = 'RC'+str(n)
     robot_corners_names.append(rc)
     declarations.append(f'{rc}X = ((({x}) * cos(a)) - (({y}) * sin(a))) + x')
-    declarations.append(f'{rc}Y = ({x}) * sin(a) + ({y}) * cos(a) + y')
+    declarations.append(f'{rc}Y =   ({x}) * sin(a) +   ({y}) * cos(a)   + y')
 
 """
 https://wrfranklin.org/Research/Short_Notes/pnpoly.html
