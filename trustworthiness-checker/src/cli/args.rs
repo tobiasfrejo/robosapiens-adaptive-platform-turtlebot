@@ -1,4 +1,4 @@
-use clap::{Args, Parser, ValueEnum};
+use clap::{Args, ArgGroup, Parser, ValueEnum};
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum Language {
@@ -44,13 +44,26 @@ pub struct InputMode {
 }
 
 #[derive(Args)]
-#[group(required = false, multiple = false)]
+#[command(group(
+    ArgGroup::new("output_mode")
+    .required(false)
+    .multiple(false)
+    .args([
+        "output_stdout",
+        "output_mqtt_topics",
+        "mqtt_output",
+        "output_ros_topics",
+    ])
+))]
 pub struct OutputMode {
     #[clap(long)]
     pub output_stdout: bool,
 
     #[clap(long, value_delimiter = ' ', num_args = 1..)]
     pub output_mqtt_topics: Option<Vec<String>>,
+
+    #[clap(long, requires = "output_mqtt_topics")]
+    pub output_mqtt_topic_prefix: Option<String>,
 
     #[clap(long)]
     pub mqtt_output: bool,

@@ -191,6 +191,7 @@ async fn main(executor: Rc<LocalExecutor<'static>>) {
         trustworthiness_checker::cli::args::OutputMode {
             output_stdout: true,
             output_mqtt_topics: None,
+            output_mqtt_topic_prefix: None,
             mqtt_output: false,
             output_ros_topics: None,
         } => Box::new(StdoutOutputHandler::<tc::Value>::new(
@@ -200,6 +201,7 @@ async fn main(executor: Rc<LocalExecutor<'static>>) {
         trustworthiness_checker::cli::args::OutputMode {
             output_stdout: false,
             output_mqtt_topics: Some(topics),
+            output_mqtt_topic_prefix: None,
             mqtt_output: false,
             output_ros_topics: None,
         } => {
@@ -217,7 +219,27 @@ async fn main(executor: Rc<LocalExecutor<'static>>) {
         }
         trustworthiness_checker::cli::args::OutputMode {
             output_stdout: false,
+            output_mqtt_topics: Some(topics),
+            output_mqtt_topic_prefix: Some(prefix),
+            mqtt_output: false,
+            output_ros_topics: None,
+        } => {
+            let topics = topics
+                .into_iter()
+                // Only include topics that are in the output_vars
+                // this is necessary for localisation support
+                .filter(|topic| model.output_vars.contains(&VarName::new(topic.as_str())))
+                .map(|topic| (topic.clone().into(), prefix.clone() + &topic))
+                .collect();
+            Box::new(
+                MQTTOutputHandler::new(executor.clone(), output_var_names, MQTT_HOSTNAME, topics)
+                    .expect("MQTT output handler could not be created"),
+            )
+        }
+        trustworthiness_checker::cli::args::OutputMode {
+            output_stdout: false,
             output_mqtt_topics: None,
+            output_mqtt_topic_prefix: None,
             mqtt_output: true,
             output_ros_topics: None,
         } => {
@@ -235,6 +257,7 @@ async fn main(executor: Rc<LocalExecutor<'static>>) {
             output_stdout: false,
             mqtt_output: false,
             output_mqtt_topics: None,
+            output_mqtt_topic_prefix: None,
             output_ros_topics: Some(_),
         } => unimplemented!("ROS output not implemented"),
         // Default to stdout

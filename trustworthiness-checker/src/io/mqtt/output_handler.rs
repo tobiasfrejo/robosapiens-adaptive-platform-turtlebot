@@ -73,7 +73,7 @@ impl OutputHandler for MQTTOutputHandler {
 
     fn provide_streams(&mut self, streams: Vec<OutputStream<Value>>) {
         for (var, stream) in self.var_names().iter().zip(streams.into_iter()) {
-            let var_data = self.var_map.get_mut(var).expect("Variable not found");
+            let var_data = self.var_map.get_mut(var).expect(&format!("Variable {} not found", var.name()));
             var_data.stream = Some(stream);
         }
     }
