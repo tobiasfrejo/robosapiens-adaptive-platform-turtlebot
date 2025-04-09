@@ -161,3 +161,4 @@ cython_debug/
 
 maple-loops/HelloWorld/LOLA_specs/**/Logs/
 prob_lidar_mask.png
+.DS_Store
