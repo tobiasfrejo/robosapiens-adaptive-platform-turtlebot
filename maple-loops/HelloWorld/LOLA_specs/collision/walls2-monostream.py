@@ -1,16 +1,17 @@
 from itertools import chain
-from DynamicLolaSpecGeneration.lola import LolaSpecification, LolaStream, lola_chain, lnot, Expression
-from DynamicLolaSpecGeneration.turtlebot import tb3_corners, turtle_map, turtle_map_pillars
-from DynamicLolaSpecGeneration.geometry import rotate_polygon, connect_polygon, circle_line_overlap, test_points_in_circles
-from DynamicLolaSpecGeneration.pnpoly import pnpoly
+from dyn_lola.lola import LolaSpecification, LolaStream, lola_chain, lnot, Expression
+from dyn_lola.shapes.turtlebot import tb3_corners, turtle_map, turtle_map_pillars
+from dyn_lola.geometry import rotate_polygon, connect_polygon, circle_line_overlap, test_points_in_circles
+from dyn_lola.pnpoly import pnpoly
 
 spec = LolaSpecification()
+
+spec.inputs.append(LolaStream('Odometry'))
 
 x = LolaStream('x')
 y = LolaStream('y')
 a = LolaStream('a')
 
-spec.inputs.append(LolaStream('Odometry'))
 spec.add_expression(x, Expression('List.get(Odometry, 0)'), keep_on_prune=True)
 spec.add_expression(y, Expression('List.get(Odometry, 1)'), keep_on_prune=True)
 spec.add_expression(a, Expression('List.get(Odometry, 2)'), keep_on_prune=True)
