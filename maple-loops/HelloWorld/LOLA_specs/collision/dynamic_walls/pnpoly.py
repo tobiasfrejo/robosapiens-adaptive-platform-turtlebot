@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from .lola import LolaStream, lola_chain
+from .lola import LolaStream, lola_chain, Expression
 from .geometry import Point
 
 def pnpoly_check_wall(test_point: Point, wall: tuple[Point, Point]) -> str:
@@ -14,19 +14,27 @@ def pnpoly_check_wall(test_point: Point, wall: tuple[Point, Point]) -> str:
     PosX, PosY = test_point
     Ax, Ay = wall[0]
     Bx, By = wall[1]
+    stream_dict = {
+        'PosX': PosX,
+        'PosY': PosY,
+        'Ax': Ax,
+        'Ay': Ay,
+        'Bx': Bx,
+        'By': By
+    }
 
-    return f"""\
+    return Expression("""\
 if !(\
-!({Ay} <= {PosY}) == !({By} <= {PosY})\
-) && !({By} == {Ay}) \
+!(›Ay‹ <= ›PosY‹) == !(›By‹ <= ›PosY‹)\
+) && !(›By‹ == ›Ay‹) \
 && !(\
-((({Bx}) - ({Ax})) * (({PosY}) - ({Ay})) / (({By}) - ({Ay})) + ({Ax})) <= ({PosX})) \
+(((›Bx‹) - (›Ax‹)) * ((›PosY‹) - (›Ay‹)) / ((›By‹) - (›Ay‹)) + (›Ax‹)) <= (›PosX‹)) \
 then 1 \
 else 0 \
-"""
+""", stream_dict)
 
 def pnpoly_check_walls(test_points: Iterable[Point], walls: Iterable[tuple[Point, Point]]):    
-    expressions: dict[LolaStream, str] = {}
+    expressions: dict[LolaStream, Expression] = {}
     point_streams: dict[int, list[LolaStream]] = {}
 
     for m, P in enumerate(test_points):
@@ -45,7 +53,8 @@ def pnpoly(test_points: Iterable[Point], walls: Iterable[tuple[Point, Point]]):
     points_in_polygon: list[LolaStream] = []
     for m,ps in point_streams.items():
         named_point_inside_polygon_stream = LolaStream(f'P{m}InPoly')
-        expressions[named_point_inside_polygon_stream] = f"(({lola_chain(ps, '+')}) % 2) == 1"
+        mod_exp = Expression(['((', lola_chain(ps, '+'), ') % 2) == 1'])
+        expressions[named_point_inside_polygon_stream] = mod_exp
         points_in_polygon.append(named_point_inside_polygon_stream)
     
     return expressions, points_in_polygon
