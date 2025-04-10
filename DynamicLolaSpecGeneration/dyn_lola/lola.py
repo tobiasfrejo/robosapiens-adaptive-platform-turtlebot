@@ -166,6 +166,9 @@ class LolaSpecification:
         self.expressions[stream] = collapsed
         for no_longer_depend in collapsed_streams:
                 self.dependency_graph.remove_edge(stream, no_longer_depend)
+        for new_dep in collapsed.active_dependencies:
+            if new_dep not in collapsed_streams:
+                self.dependency_graph.add_edge(stream, new_dep)
       
     def prune(self):
         def root_node_filter(in_degree_view):
