@@ -1,0 +1,5 @@
+in a
+in b
+in c
+out z
+z = c + (2 * b) * ((2 * b) + a)

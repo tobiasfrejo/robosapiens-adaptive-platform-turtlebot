@@ -1,8 +1,8 @@
 from itertools import chain
-from dynamic_walls.lola import LolaSpecification, LolaStream, lola_chain, lnot, Expression
-from dynamic_walls.turtlebot import tb3_corners, turtle_map, turtle_map_pillars
-from dynamic_walls.geometry import rotate_polygon, connect_polygon, circle_line_overlap, test_points_in_circles
-from dynamic_walls.pnpoly import pnpoly
+from DynamicLolaSpecGeneration.lola import LolaSpecification, LolaStream, lola_chain, lnot, Expression
+from DynamicLolaSpecGeneration.turtlebot import tb3_corners, turtle_map, turtle_map_pillars
+from DynamicLolaSpecGeneration.geometry import rotate_polygon, connect_polygon, circle_line_overlap, test_points_in_circles
+from DynamicLolaSpecGeneration.pnpoly import pnpoly
 
 spec = LolaSpecification()
 

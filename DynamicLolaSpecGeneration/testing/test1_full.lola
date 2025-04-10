@@ -1,0 +1,9 @@
+in a
+in b
+in c
+out x
+out y
+out z
+x = 2 * b
+y = x + a
+z = c + x * y

@@ -1,4 +1,4 @@
-import lola
+import dyn_lola.lola as lola
 
 spec = lola.LolaSpecification()
 
