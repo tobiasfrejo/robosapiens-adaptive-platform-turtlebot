@@ -1,0 +1,4 @@
+[submodule "HelloWorldv5/Realization"]
+	path = HelloWorldv5/Realization
+	url = https://github.com/saharnn96/rpio-HelloWorldv5.git
+	branch = main
