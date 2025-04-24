@@ -5,16 +5,44 @@ import dataclasses
 import datetime
 import json
 
+PREFIX='lola/walls2-redux.lola/'
+
 @dataclass
 class XYCoord:
     x: float
     y: float
+
+    def as_list(self):
+        return [self.x, self.y]
 
 @dataclass
 class RobotPosition:
     Center: XYCoord
     Corners: dict[str, XYCoord]
     Collisions: dict[str, bool]
+    Obstacle: list[XYCoord]
+
+    def test_dict(self):
+        colors = {
+            'center': 0,
+            'corner_no_collision': 1,
+            'corner_collision': 2,
+            'obstacle': 3
+        }
+
+        corners = []
+        for corner, collision in zip(self.Corners.values(), self.Collisions.values()):
+            corners.append(corner.as_list())
+            if collision:
+                corners[-1] += [colors['corner_collision']]
+            else:
+                corners[-1] += [colors['corner_no_collision']]
+
+        return {
+            'center': [self.Center.as_list() + [colors['center']]],
+            'corners': corners,
+            'obstacles': [obst.as_list() + [colors['obstacle']] for obst in self.Obstacle]
+        }
 
 def encode_value(x):
     if dataclasses.is_dataclass(x):
@@ -26,9 +54,30 @@ def encode_value(x):
     return x
 
 
-latest_telemetry = RobotPosition(XYCoord(0,0), Corners=dict(), Collisions=dict())
+latest_telemetry = RobotPosition(XYCoord(0,0), Corners=dict(), Collisions=dict(), Obstacle=[
+    XYCoord(-0.1, 2.1),
+    XYCoord(-0.1, 1.9),
+    XYCoord( 0.1, 1.9),
+    XYCoord( 0.1, 2.1),
+    XYCoord(-2.8868,  0.0),
+    XYCoord(-1.7248, -2.0125),
+    XYCoord(-1.4031, -2.0125),
+    XYCoord(-1.1216, -2.5),
+    XYCoord( 1.1216, -2.5),
+    XYCoord( 1.4031, -2.0125),
+    XYCoord( 1.7248, -2.0125),
+    XYCoord( 2.616,  -0.4689),
+    XYCoord( 2.3453,  0.0),
+    XYCoord( 2.616,   0.4689),
+    XYCoord( 1.7248,  2.0125),
+    XYCoord( 1.4031,  2.0125),
+    XYCoord( 1.1216,  2.5),
+    XYCoord(-1.1216,  2.5),
+    XYCoord(-1.4031,  2.0125),
+    XYCoord(-1.7248,  2.0125),
+])
 last_tx = 0
-update_period = 0.100 #s
+update_period = 0.50 #s
 
 def on_subscribe(client, userdata, mid, reason_code_list, properties):
     # Since we subscribed only for a single channel, reason_code_list contains
@@ -59,6 +108,8 @@ def on_message(client, userdata, message):
     
     # print(f'Got {msg} on {topic} at {current_time} (last update: {last_tx})')
 
+    topic = topic.removeprefix(PREFIX)
+
     match topic:
         case "x":
             latest_telemetry.Center.x = msg.get('Float')
@@ -66,15 +117,17 @@ def on_message(client, userdata, message):
             latest_telemetry.Center.y = msg.get('Float')
         
     for x in range(4):
-        if topic == f"RC{x}X":
+        if topic == f"C{x}X":
             latest_telemetry.Corners[x].x = msg.get('Float')
-        elif topic == f"RC{x}Y":
+        elif topic == f"C{x}Y":
             latest_telemetry.Corners[x].y = msg.get('Float')
-        elif topic == f"insideRC{x}":
-            latest_telemetry.Collisions[x] = not msg.get('Bool')
+        elif topic == f"Corner{x}Collision":
+            latest_telemetry.Collisions[x] = msg.get('Bool')
 
     if last_tx + update_period < current_time:
         client.publish('telemetry/collision', json.dumps(latest_telemetry, default=encode_value))
+        for k,v in latest_telemetry.test_dict().items():
+            client.publish(f'telemetry/collision2/{k}', json.dumps(v, default=encode_value))
         last_tx = current_time
 
 
@@ -84,14 +137,14 @@ def on_connect(client, userdata, flags, reason_code, properties):
     else:
         # we should always subscribe from on_connect callback to be sure
         # our subscribed is persisted across reconnections.
-        client.subscribe("x")
-        client.subscribe("y")
+        client.subscribe(PREFIX+"x")
+        client.subscribe(PREFIX+"y")
         for x in range(4):
             latest_telemetry.Corners[x] = XYCoord(0,0)
             latest_telemetry.Collisions[x] = False
-            client.subscribe(f'RC{x}X')
-            client.subscribe(f'RC{x}Y')
-            client.subscribe(f'insideRC{x}')
+            client.subscribe(PREFIX+f'C{x}X')
+            client.subscribe(PREFIX+f'C{x}Y')
+            client.subscribe(PREFIX+f'Corner{x}Collision')
 
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
