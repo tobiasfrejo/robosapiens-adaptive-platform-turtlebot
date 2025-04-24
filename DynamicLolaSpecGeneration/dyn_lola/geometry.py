@@ -13,15 +13,15 @@ def connect_polygon(corners):
         # warn(f'({i}, {j}): {corners[i]}, {corners[j]}')
     return walls
 
-def rotate_polygon(polygon:Iterable[Point], center_of_rotation:Point, angle:Stream_or_float):
+def rotate_polygon(polygon:Iterable[Point], center_of_rotation:Point, angle:Stream_or_float, stream_prefix:str=""):
     expressions: dict[LolaStream, Expression] = dict()
     corner_points = []
 
     for n, (x, y) in enumerate(polygon):
         stream_dict = {'x': x, 'y': y, 'angle': angle, 'center_of_rotation0': center_of_rotation[0], 'center_of_rotation1': center_of_rotation[1]}
         rc = str(n)
-        px = LolaStream(f'C{rc}X')
-        py = LolaStream(f'C{rc}Y')
+        px = LolaStream(f'{stream_prefix}C{rc}X')
+        py = LolaStream(f'{stream_prefix}C{rc}Y')
         expressions[px] = Expression('(((›x‹) * cos(›angle‹)) - ((›y‹) * sin(›angle‹))) + ›center_of_rotation0‹',stream_dict)
         expressions[py] = Expression('(((›x‹) * sin(›angle‹)) + ((›y‹) * cos(›angle‹))) + ›center_of_rotation1‹',stream_dict)
         corner_points.append((px, py))
@@ -54,7 +54,7 @@ def circle_line_overlap(c: Circle, wall: tuple[Point, Point]):
         lt(t2, Expression(f'(›r‹)*(›r‹)',stream_dict)),
     ], '&&')
 
-def test_circles_walls_overlaps(cs: Iterable[Circle], ws: Iterable[tuple[Point, Point]]):
+def test_circles_walls_overlaps(cs: Iterable[Circle], ws: Iterable[tuple[Point, Point]], stream_prefix:str=""):
     wall_streams: dict[int, list[LolaStream]] = dict()
     circle_streams: dict[int, list[LolaStream]] = dict()
     expressions: dict[LolaStream, Expression] = dict()
@@ -66,7 +66,7 @@ def test_circles_walls_overlaps(cs: Iterable[Circle], ws: Iterable[tuple[Point, 
             if wn not in wall_streams:
                 wall_streams[wn] = list()
             
-            stream = LolaStream(f'Circle{cn}CollidesWall{wn}')
+            stream = LolaStream(f'{stream_prefix}Circle{cn}CollidesWall{wn}')
             wall_streams[wn].append(stream)
             circle_streams[cn].append(stream)
 
@@ -94,7 +94,7 @@ def point_in_circle(p: Point, c: Circle):
 
     return leq(Expression(f"({dx}*{dx}) + ({dy}*{dy})", stream_dict), Expression(r2, stream_dict))
 
-def test_points_in_circles(ps: Iterable[Point], cs: Iterable[Circle]):
+def test_points_in_circles(ps: Iterable[Point], cs: Iterable[Circle], stream_prefix:str=""):
     point_streams: dict[int, list[LolaStream]] = dict()
     circle_streams: dict[int, list[LolaStream]] = dict()
     expressions: dict[LolaStream, Expression] = dict()
@@ -106,7 +106,7 @@ def test_points_in_circles(ps: Iterable[Point], cs: Iterable[Circle]):
             if cn not in circle_streams:
                 circle_streams[cn] = list()
 
-            stream = LolaStream(f'Point{pn}InCircle{cn}')
+            stream = LolaStream(f'{stream_prefix}Point{pn}InCircle{cn}')
             point_streams[pn].append(stream)
             circle_streams[cn].append(stream)
 
