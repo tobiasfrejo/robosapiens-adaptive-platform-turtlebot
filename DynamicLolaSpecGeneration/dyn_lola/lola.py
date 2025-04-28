@@ -120,7 +120,7 @@ class LolaSpecification:
     def collapse_expression_recur(self, stream : LolaStream):
         if stream in self.inputs:
             x = str(stream)
-            return Expression(x)
+            return Expression(x), set()
         if stream not in self.expressions:
             raise ValueError(f'No expression found for {stream}')
         
