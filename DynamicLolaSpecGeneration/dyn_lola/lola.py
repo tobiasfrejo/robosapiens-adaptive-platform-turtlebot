@@ -246,3 +246,20 @@ def lnot(exp:Expression_type):
     new_expression.append(exp)
     new_expression.append(")")
     return new_expression
+
+def not_eq(exp1:Expression_type, exp2:Expression_type):
+    new_expression = Expression('!(')
+    new_expression.append(exp1)
+    new_expression.append(' == ')
+    new_expression.append(exp2)
+    new_expression.append(")")
+    return new_expression
+
+def lif(condition:Expression_type, then_exp:Expression_type, else_exp:Expression_type):
+    new_expression = Expression('if ')
+    new_expression.append(condition)
+    new_expression.append(' then ')
+    new_expression.append(then_exp)
+    new_expression.append(" else ")
+    new_expression.append(else_exp)
+    return new_expression

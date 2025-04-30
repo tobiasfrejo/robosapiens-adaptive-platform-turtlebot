@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from .lola import LolaStream, lola_chain, Expression
+from .lola import LolaStream, lola_chain, Expression, gt, lif, not_eq
 from .geometry import Point
 
 def pnpoly_check_wall(test_point: Point, wall: tuple[Point, Point]) -> str:
@@ -23,15 +23,20 @@ def pnpoly_check_wall(test_point: Point, wall: tuple[Point, Point]) -> str:
         'By': By
     }
 
-    return Expression("""\
-if !(\
-!(›Ay‹ <= ›PosY‹) == !(›By‹ <= ›PosY‹)\
-) && !(›By‹ == ›Ay‹) \
-&& !(\
-(((›Bx‹) - (›Ax‹)) * ((›PosY‹) - (›Ay‹)) / ((›By‹) - (›Ay‹)) + (›Ax‹)) <= (›PosX‹)) \
-then 1 \
-else 0 \
-""", stream_dict)
+    return Expression([
+        lif(
+            lola_chain([
+                not_eq(
+                    gt(Ay, PosY),
+                    gt(By, PosY)
+                ),
+                not_eq(By, Ay),
+                Expression("(((›Bx‹) - (›Ax‹)) * ((›PosY‹) - (›Ay‹)) / ((›By‹) - (›Ay‹)) + (›Ax‹)) <= (›PosX‹)", stream_dict)
+            ], '&&'),
+            Expression('1'),
+            Expression('0')
+        )
+    ])
 
 def pnpoly_check_walls(test_points: Iterable[Point], walls: Iterable[tuple[Point, Point]], stream_prefix:str=""):    
     expressions: dict[LolaStream, Expression] = {}
