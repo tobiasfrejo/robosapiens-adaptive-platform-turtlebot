@@ -25,27 +25,37 @@ obstacle_wall = connect_polygon([
     ( 0.1, 2.1),
 ])
 
-wall_exprs, pnp = pnpoly(tb3_rotated_corners, map_walls + obstacle_wall)
+wall_exprs, pnp_walls = pnpoly(tb3_rotated_corners, map_walls, 'Wall')
+obstacle_exprs, pnp_obstacles = pnpoly(tb3_rotated_corners, obstacle_wall, 'Obstacle')
 pillars_expressions, pillar_point_streams, _ = test_points_in_circles(tb3_rotated_corners, turtlebot.turtle_map_pillars)
 
-for k,v in chain.from_iterable((tb3_exprs.items(), wall_exprs.items(), pillars_expressions.items())):
+for k,v in tb3_exprs.items():
+    spec.add_expression(k,v, keep_on_prune=True)
+
+for k,v in chain.from_iterable((wall_exprs.items(), pillars_expressions.items(), obstacle_exprs.items())):
     spec.add_expression(k,v)
 
-in_map = LolaStream('InMap')
-spec.add_expression(in_map, lola_chain(pnp, '&&'), keep_on_prune=True)
-spec.collapse_expression(in_map)
+
+# For every corner:
+# - InMap - we have this from pnp
+# - CornerCollision
+# - ObstacleCollision we have this from pnp
 
 corner_collision_streams = []
-for n,streams in pillar_point_streams.items():
-    s = LolaStream(f'Corner{n}Collision')
-    spec.add_expression(s, lola_chain(streams, '||'), keep_on_prune=True)
+for corner_index in range(len(tb3_rotated_corners)):
+    in_map = pnp_walls[corner_index]
+    pillar_collision = lola_chain(pillar_point_streams[corner_index], '||')
+    obstacle_collision = pnp_obstacles[corner_index]
+
+    exp = lola_chain([lnot(in_map), pillar_collision, obstacle_collision], '||')
+
+    s = LolaStream(f'Corner{corner_index}Collision')
+    spec.add_expression(s, exp, keep_on_prune=True)
     corner_collision_streams.append(s)
     spec.collapse_expression(s)
 
-any_pillar_collision = lola_chain(corner_collision_streams, '||')
-
 collision_stream = LolaStream('Collision')
-collision_exp = lola_chain([lnot(in_map),any_pillar_collision], '||')
+collision_exp = lola_chain(corner_collision_streams, '||')
 spec.add_expression(collision_stream, collision_exp, keep_on_prune=True)
 spec.collapse_expression(collision_stream)
 

@@ -33,30 +33,30 @@ then 1 \
 else 0 \
 """, stream_dict)
 
-def pnpoly_check_walls(test_points: Iterable[Point], walls: Iterable[tuple[Point, Point]]):    
+def pnpoly_check_walls(test_points: Iterable[Point], walls: Iterable[tuple[Point, Point]], stream_prefix:str=""):    
     expressions: dict[LolaStream, Expression] = {}
     point_streams: dict[int, list[LolaStream]] = {}
 
     for m, P in enumerate(test_points):
         wall_streams: list[LolaStream] = []
         for n, wall in enumerate(walls):
-            stream = LolaStream(f'w{n}p{m}')
+            stream = LolaStream(f'{stream_prefix}w{n}p{m}')
             wall_streams.append(stream)
             expressions[stream] = pnpoly_check_wall(P, wall)
         point_streams[m] = wall_streams
         
     return expressions, point_streams
 
-def pnpoly(test_points: Iterable[Point], walls: Iterable[tuple[Point, Point]]):
-    expressions, point_streams = pnpoly_check_walls(test_points, walls)
+def pnpoly(test_points: Iterable[Point], walls: Iterable[tuple[Point, Point]], stream_prefix:str=""):
+    expressions, point_streams = pnpoly_check_walls(test_points, walls, stream_prefix)
+    pnp_streams: dict[int, LolaStream] = {}
 
-    points_in_polygon: list[LolaStream] = []
     for m,ps in point_streams.items():
-        named_point_inside_polygon_stream = LolaStream(f'P{m}InPoly')
+        named_point_inside_polygon_stream = LolaStream(f'{stream_prefix}P{m}InPoly')
         mod_exp = Expression(['((', lola_chain(ps, '+'), ') % 2) == 1'])
         expressions[named_point_inside_polygon_stream] = mod_exp
-        points_in_polygon.append(named_point_inside_polygon_stream)
+        pnp_streams[m] = named_point_inside_polygon_stream
     
-    return expressions, points_in_polygon
+    return expressions, pnp_streams
 
 

@@ -25,4 +25,4 @@ echo ""
 echo ""
 echo "======== TRUSTWORTHINESS OUTPUT ======="
 $CMD 2>&1
-} | tee -a "$LOGFILE"
+} | ts -i " (%.S)]" | ts "[%H:%M:%.S" |  tee -a "$LOGFILE" | sed -u -e "s/$/\r/g"

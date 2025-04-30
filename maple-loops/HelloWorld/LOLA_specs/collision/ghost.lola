@@ -1,0 +1,10 @@
+in Odometry
+in GhostCollide3
+out a
+out x
+out y
+out GhostCollision
+x = List.get(Odometry, 0)
+y = List.get(Odometry, 1)
+a = List.get(Odometry, 2)
+GhostCollision = eval(GhostCollide3)

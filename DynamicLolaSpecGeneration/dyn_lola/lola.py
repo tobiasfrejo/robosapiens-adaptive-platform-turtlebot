@@ -118,51 +118,35 @@ class LolaSpecification:
             self.dependency_graph.add_edge(stream, dep_stream)
         
     def collapse_expression_recur(self, stream : LolaStream):
-        if stream not in self.expressions:
-            raise ValueError(f'No expression found for {stream}')
-        
-        collapsed = Expression()
-        exp = self.expressions[stream]
-        if not isinstance(exp, Expression):
-            exp = Expression(str(exp))
-        exp_list = exp.get_exp_list()
-        for sub_exp in exp_list:
-            if isinstance(sub_exp, LolaStream):
-                if sub_exp not in self.expressions:
-                    raise ValueError(f'No expression found for substream {stream}')
-                if not self.dependency_graph.nodes[sub_exp].get('output_stream', False):
-                    collapsed_sub_exp = self.collapse_expression_recur(sub_exp)                
-                    collapsed.append(collapsed_sub_exp)
-                else: 
-                    collapsed.append(sub_exp)
-            else:
-                collapsed.append(sub_exp)
-                #raise TypeError(f'Sub expression is not of type LolaStream or str. Found type {type(sub_exp)}')
-        return collapsed # expression
-        
-    def collapse_expression(self, stream: LolaStream):
+        if stream in self.inputs:
+            x = str(stream)
+            return Expression(x)
         if stream not in self.expressions:
             raise ValueError(f'No expression found for {stream}')
         
         collapsed_streams = set()
-        collapsed = Expression()
         exp = self.expressions[stream]
         if not isinstance(exp, Expression):
             exp = Expression(str(exp))
         exp_list = exp.get_exp_list()
+        collapsed = Expression()
         for sub_exp in exp_list:
             if isinstance(sub_exp, LolaStream):
-                if sub_exp not in self.expressions:
-                    raise ValueError(f'No expression found for substream {stream}')
+                if sub_exp not in self.expressions and sub_exp not in self.inputs:
+                    raise ValueError(f'No expression found for {sub_exp} in stream {stream}')
                 if not self.dependency_graph.nodes[sub_exp].get('output_stream', False):
-                    collapsed_sub_exp = self.collapse_expression_recur(sub_exp)
-                    collapsed_streams.add(sub_exp)
+                    collapsed_sub_exp,_ = self.collapse_expression_recur(sub_exp)                
                     collapsed.append(collapsed_sub_exp)
+                    collapsed_streams.add(sub_exp)
                 else: 
                     collapsed.append(sub_exp)
             else:
                 collapsed.append(sub_exp)
-                #raise TypeError(f'Sub expression is not of type LolaStream or str. Found type {type(sub_exp)}')
+        return collapsed, collapsed_streams # expression
+        
+    def collapse_expression(self, stream: LolaStream):
+        collapsed, collapsed_streams = self.collapse_expression_recur(stream)
+
         self.expressions[stream] = collapsed
         for no_longer_depend in collapsed_streams:
                 self.dependency_graph.remove_edge(stream, no_longer_depend)
@@ -179,7 +163,8 @@ class LolaSpecification:
         
         def prune_traverse(stream):
             is_output_stream = self.dependency_graph.nodes[stream].get('output_stream', False)
-            if is_output_stream:
+            is_input_stream = stream in self.inputs
+            if is_output_stream or is_input_stream:
                 return
             for _, dest_node in list(self.dependency_graph.out_edges(stream)): 
                 prune_traverse(dest_node)
