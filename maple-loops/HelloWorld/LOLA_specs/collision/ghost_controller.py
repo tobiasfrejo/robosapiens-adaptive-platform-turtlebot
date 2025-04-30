@@ -32,7 +32,7 @@ def get_ghost_spec(pos):
         spec.add_expression(k,v)
 
     ghost_collision = LolaStream('GhostCollision')
-    spec.add_expression(ghost_collision, lola_chain(pnp, '||'), keep_on_prune=True)
+    spec.add_expression(ghost_collision, lola_chain(list(pnp.values()), '||'), keep_on_prune=True)
     # print(spec.expressions.keys())
     # print(spec.get_specification_string())
 
