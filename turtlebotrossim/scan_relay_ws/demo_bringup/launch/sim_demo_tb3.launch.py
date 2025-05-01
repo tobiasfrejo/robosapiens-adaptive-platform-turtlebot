@@ -1,7 +1,8 @@
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
+from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
+from launch.conditions import IfCondition, UnlessCondition
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
@@ -10,6 +11,16 @@ TURTLEBOT3_SIM_SCAN_SIZE = 360
 
 
 def generate_launch_description():
+    declare_autostart_cmd = DeclareLaunchArgument(
+        'autostart',
+        default_value='true',
+        description='Automatically startup the nav2 stack',
+    )
+
+    declare_slam_cmd = DeclareLaunchArgument(
+        'slam', default_value='False', description='Whether run a SLAM'
+    )
+
     ld = LaunchDescription(
         [
             SetEnvironmentVariable(name="TURTLEBOT3_MODEL", value="waffle"),
@@ -20,7 +31,8 @@ def generate_launch_description():
         ]
     )
     demo_bringup_dir = get_package_share_directory("demo_bringup")
-    params_path = PathJoinSubstitution([demo_bringup_dir, "config", "tb3_nav2.yaml"])
+    localization_params = PathJoinSubstitution([demo_bringup_dir, "config", "tb3_nav2.yaml"])
+    slam_params = PathJoinSubstitution([demo_bringup_dir, "config", "tb3_slam.yaml"])
     rviz_path = PathJoinSubstitution(
         [demo_bringup_dir, "launch", "other", "nav2_default_view.rviz"]
     )
@@ -30,13 +42,24 @@ def generate_launch_description():
         "launch/tb3_simulation_launch.py",
     )
 
-    nav2_ld = IncludeLaunchDescription(
+    localization_ld = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(nav2_launch_file),
         launch_arguments=[
             ("headless", "False"),
-            ("params_file", params_path),
+            ("params_file", localization_params),
             ("rviz_config_file", rviz_path),
         ],
+        condition=UnlessCondition(LaunchConfiguration("slam"))
+    )
+
+    slam_ld = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(nav2_launch_file),
+        launch_arguments=[
+            ("headless", "False"),
+            ("params_file", slam_params),
+            ("rviz_config_file", rviz_path),
+        ],
+        condition=IfCondition(LaunchConfiguration("slam"))
     )
 
     scan_node = Node(
@@ -50,7 +73,11 @@ def generate_launch_description():
         executable="param_bridge",
     )
 
-    ld.add_action(nav2_ld)
+    ld.add_action(declare_slam_cmd)
+    ld.add_action(declare_autostart_cmd)
+
+    ld.add_action(localization_ld)
+    ld.add_action(slam_ld)
     ld.add_action(scan_node)
     ld.add_action(spin_config_node)
 

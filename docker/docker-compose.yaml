@@ -98,6 +98,16 @@ services:
   devfullnvidiatb4:
     extends: rapdevnvidia
     depends_on: [ simdeploynvidiatb4, rosmqttbridge, redis, emqx ]
+
+  simdeploymesatb3slam:
+    extends: 
+      file: ../turtlebotrossim/docker/docker-compose.yaml
+      service: simdeploymesatb3
+    command: ros2 launch demo_bringup sim_demo_tb3.launch.py slam:=True autostart:=false
+  devfullmesatb3slam:
+    extends: rapdevmesa
+    depends_on: [ simdeploymesatb3slam, rosmqttbridge, redis, emqx ]
+
   trustworthiness-checker:
     build:
       context: ../trustworthiness-checker
