@@ -39,11 +39,11 @@ services:
       args:
         - UID=${UID:-1000}
         - GID=${UID:-1000}
-        - USERNAME=${USERNAME:-devuser}
-    user: ${USERNAME:-devuser}
+        - USERNAME=devuser
+    user: devuser
     command: sleep infinity
     volumes:
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/${USERNAME:-devuser}/.Xauthority
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/devuser/.Xauthority
       - /dev/shm:/dev/shm
   devnogpu:
     extends: dev
@@ -61,7 +61,7 @@ services:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [ gpu ]
+              capabilities: [gpu]
     environment:
       - NVIDIA_DRIVER_CAPABILITIES=all
 volumes:

@@ -10,7 +10,7 @@ services:
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/devuser/.Xauthority
       - /dev/shm:/dev/shm
     environment:
       - DISPLAY=${DISPLAY}
@@ -25,17 +25,12 @@ services:
       args:
         - UID=${UID:-1000}
         - GID=${UID:-1000}
-        - USERNAME=${USERNAME:-devuser}
-    user: ${USERNAME:-devuser}
+        - USERNAME=devuser
+    user: devuser
     command: sleep infinity
     volumes:
-      # - ignitionuserdata:/home/${USERNAME:-devuser}/.ignition
-      # - rosuserdata:/home/${USERNAME:-devuser}/.ros
-      # - ignitiondata:/root/.ignition
-      # - rosdata:/root/.ros
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/${USERNAME:-devuser}/.Xauthority
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/devuser/.Xauthority
       - /dev/shm:/dev/shm
-      # - /dev/dri:/dev/dri
   devnogpu:
     extends: dev
     environment:
@@ -52,7 +47,7 @@ services:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [ gpu ]
+              capabilities: [gpu]
     environment:
       - NVIDIA_DRIVER_CAPABILITIES=all
   simnogpu:
@@ -74,8 +69,8 @@ services:
       args:
         - UID=${UID:-1000}
         - GID=${UID:-1000}
-        - USERNAME=${USERNAME:-devuser}
-    user: ${USERNAME:-devuser}
+        - USERNAME=devuser
+    user: devuser
     command: sleep infinity
   deploynogpu:
     extends: deploy
@@ -93,7 +88,7 @@ services:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [ gpu ]
+              capabilities: [gpu]
     environment:
       - NVIDIA_DRIVER_CAPABILITIES=all
   simdeploynogputb4:

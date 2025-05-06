@@ -29,7 +29,7 @@ services:
     network_mode: host
   dev:
     extends: base
-    depends_on: [ emqx ]
+    depends_on: [emqx]
     network_mode: host
     image: trustworthiness-checker:dev
     build:
@@ -40,11 +40,11 @@ services:
         - ROS_DISTRO=humble
         - UID=${UID:-1000}
         - GID=${UID:-1000}
-        - USERNAME=${USERNAME:-devuser}
-    user: ${USERNAME:-devuser}
+        - USERNAME=devuser
+    user: devuser
     command: sleep infinity
     volumes:
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/${USERNAME:-devuser}/.Xauthority
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/devuser/.Xauthority
       - /dev/shm:/dev/shm
 volumes:
   vol-emqx-data:
