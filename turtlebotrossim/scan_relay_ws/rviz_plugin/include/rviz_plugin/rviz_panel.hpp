@@ -40,6 +40,8 @@ namespace spin_panel
     NE,
     SW,
     SE,
+    N90,
+    N120,
     None,
     Entire,
   };
@@ -68,13 +70,24 @@ namespace spin_panel
       {bot_variant::TB4_Real, 90_u},
   };
 
-  static constexpr std::array<occlusion_direction, 6> DIRECTIONS = {occlusion_direction::NW, occlusion_direction::NE, occlusion_direction::SW, occlusion_direction::SE, occlusion_direction::None, occlusion_direction::Entire};
+  static constexpr std::array<occlusion_direction, 8> DIRECTIONS = {
+    occlusion_direction::NW, 
+    occlusion_direction::NE, 
+    occlusion_direction::SW, 
+    occlusion_direction::SE, 
+    occlusion_direction::N90,
+    occlusion_direction::N120,
+    occlusion_direction::None, 
+    occlusion_direction::Entire
+  };
 
-  static constexpr frozen::unordered_map<occlusion_direction, frozen::string, 6> DIRECTION_NAMES = {
+  static constexpr frozen::unordered_map<occlusion_direction, frozen::string, 8> DIRECTION_NAMES = {
       {occlusion_direction::NW, "Northwest"},
       {occlusion_direction::NE, "Northeast"},
       {occlusion_direction::SW, "Southwest"},
       {occlusion_direction::SE, "Southeast"},
+      {occlusion_direction::N90, "North 90º"},
+      {occlusion_direction::N120, "North 120º"},
       {occlusion_direction::None, "No occlusion"},
       {occlusion_direction::Entire, "Entire lidar"},
   };
@@ -100,13 +113,15 @@ namespace spin_panel
     static constexpr auto DONT_CARE = std::make_pair(std::numeric_limits<uint16_t>::max(), std::numeric_limits<uint16_t>::max());
 
     static constexpr frozen::unordered_map<occlusion_direction,
-                                           std::array<std::pair<uint16_t, uint16_t>, 2>, 6>
+                                           std::array<std::pair<uint16_t, uint16_t>, 2>, 8>
         DIRECTION_OCCLUSIONS = {
             // Pairs represent a base-angle and a width.
-            {occlusion_direction::NW, {{{90_u, 270}, DONT_CARE}}},
+            {occlusion_direction::NW, {{{90_u, 270_u}, DONT_CARE}}},
             {occlusion_direction::NE, {{{0_u, 270_u}, DONT_CARE}}},
             {occlusion_direction::SW, {{{0_u, 90_u}, {180_u, 180_u}}}},
             {occlusion_direction::SE, {{{0_u, 180_u}, {270_u, 90_u}}}},
+            {occlusion_direction::N90, {{{45_u, 270_u}, DONT_CARE}}},
+            {occlusion_direction::N120, {{{60_u, 240_u}, DONT_CARE}}},
             {occlusion_direction::None, {{{0_u, 360_u}, DONT_CARE}}},
             {occlusion_direction::Entire, {{DONT_CARE, DONT_CARE}}},
     };

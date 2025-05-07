@@ -31,8 +31,7 @@ def generate_launch_description():
         ]
     )
     demo_bringup_dir = get_package_share_directory("demo_bringup")
-    localization_params = PathJoinSubstitution([demo_bringup_dir, "config", "tb3_nav2.yaml"])
-    slam_params = PathJoinSubstitution([demo_bringup_dir, "config", "tb3_slam.yaml"])
+    params = PathJoinSubstitution([demo_bringup_dir, "config", "tb3_nav2.yaml"])
     rviz_path = PathJoinSubstitution(
         [demo_bringup_dir, "launch", "other", "nav2_default_view.rviz"]
     )
@@ -42,24 +41,13 @@ def generate_launch_description():
         "launch/tb3_simulation_launch.py",
     )
 
-    localization_ld = IncludeLaunchDescription(
+    params_ld = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(nav2_launch_file),
         launch_arguments=[
             ("headless", "False"),
-            ("params_file", localization_params),
+            ("params_file", params),
             ("rviz_config_file", rviz_path),
-        ],
-        condition=UnlessCondition(LaunchConfiguration("slam"))
-    )
-
-    slam_ld = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(nav2_launch_file),
-        launch_arguments=[
-            ("headless", "False"),
-            ("params_file", slam_params),
-            ("rviz_config_file", rviz_path),
-        ],
-        condition=IfCondition(LaunchConfiguration("slam"))
+        ]
     )
 
     scan_node = Node(
@@ -76,8 +64,7 @@ def generate_launch_description():
     ld.add_action(declare_slam_cmd)
     ld.add_action(declare_autostart_cmd)
 
-    ld.add_action(localization_ld)
-    ld.add_action(slam_ld)
+    ld.add_action(params_ld)
     ld.add_action(scan_node)
     ld.add_action(spin_config_node)
 
