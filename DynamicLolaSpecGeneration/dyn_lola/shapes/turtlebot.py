@@ -1,10 +1,18 @@
 tb3_corners = [
-    ( 0.1,   0.153),
-    ( 0.1,  -0.153),
-    (-0.181, 0.153),
-    (-0.181,-0.153),
+    ( 0.0685, 0.153),
+    ( 0.0685,-0.153),
+    (-0.1965, 0.153),
+    (-0.1965,-0.153),
 ]
 
+def tb3_corners_offset(offset_value:float):
+    def offset(v, n):
+        return v+n if v < 0 else v-n
+
+    return [
+        (offset(x, offset_value), offset(y, offset_value))
+        for x, y in tb3_corners
+    ]
 
 turtle_map = [
     (-2.8868,  0.0),

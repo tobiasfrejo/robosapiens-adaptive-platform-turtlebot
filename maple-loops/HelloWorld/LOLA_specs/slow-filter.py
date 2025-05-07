@@ -8,20 +8,21 @@ import sys
 
 argc = len(sys.argv)
 if argc != 4:
-    print(f'Usage: {sys.argv[0]} [source_topic] [output_topic] [input_topic]')
+    print(f'Usage: {sys.argv[0]} [source_topic] [output_topic] [max_rate]')
     sys.exit(1)
 
 SYNC_SOURCE_TOPIC=sys.argv[1]
 SYNC_OUTPUT_TOPIC=sys.argv[2]
-SYNC_INPUT_TOPIC=sys.argv[3]
+SYNC_RATE=float(sys.argv[3])
 
-print(f'{SYNC_SOURCE_TOPIC=} {SYNC_OUTPUT_TOPIC=} {SYNC_INPUT_TOPIC=}')
+print(f'{SYNC_SOURCE_TOPIC=} {SYNC_OUTPUT_TOPIC=} {SYNC_RATE=}')
 
-last_input = None
-last_tx = None
-skip_sync = False
-equal_tx = 0
-queued_message = None
+time_func = time.time
+
+last_tx = 0
+ignored = 0
+
+
 
 def encode_value(x):
     if dataclasses.is_dataclass(x):
@@ -50,46 +51,23 @@ def on_unsubscribe(client, userdata, mid, reason_code_list, properties):
     client.disconnect()
 
 def on_message(client, userdata, message):
-    global skip_sync
     global last_tx
-    global equal_tx
-    global queued_message
+    global ignored
 
     topic = str(message.topic)
+    
+    if topic == SYNC_SOURCE_TOPIC:
+        now = time_func()
 
-    if topic == SYNC_INPUT_TOPIC:
-        msg = json.dumps({'Str': message.payload.decode('UTF-8')})
-        if queued_message:
-            print(datetime.datetime.now().isoformat(), '❗ Overwriting queued message')
-        else:
-            print(datetime.datetime.now().isoformat(), '➕ New queued message')
-
-        queued_message = msg
-        # client.publish(SYNC_OUTPUT_TOPIC, msg)
-        # skip_sync = True
-    elif topic == SYNC_SOURCE_TOPIC:
-        if queued_message:
-            client.publish(SYNC_OUTPUT_TOPIC, queued_message)
-            msg = queued_message
-            queued_message = None
-            print(datetime.datetime.now().isoformat(), '⏩ Forwarded message')
-        else:
-            msg = json.dumps("Unknown")
+        if now - last_tx >= SYNC_RATE:
+            msg = message.payload
             client.publish(SYNC_OUTPUT_TOPIC, msg)
-            print(datetime.datetime.now().isoformat(), '❌ No new message in queue')
-    
-
-
-    # if last_tx == msg:
-    #     equal_tx += 1
-    #     print("\r" + msg + f' ({equal_tx+1})', end='')
-    # else:
-    #     print('\n'+msg[:30], end='')
-    #     equal_tx = 0
-    #     last_tx = msg
-    
-
-    
+            last_tx = now
+            print("\n" + str(msg))
+            ignored = 0
+        else:
+            print(f'\rSkipped ({ignored+1})', end='')
+            ignored += 1
 
 
 def on_connect(client, userdata, flags, reason_code, properties):
@@ -99,7 +77,6 @@ def on_connect(client, userdata, flags, reason_code, properties):
         # we should always subscribe from on_connect callback to be sure
         # our subscribed is persisted across reconnections.
         client.subscribe(SYNC_SOURCE_TOPIC)
-        client.subscribe(SYNC_INPUT_TOPIC)
 
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)

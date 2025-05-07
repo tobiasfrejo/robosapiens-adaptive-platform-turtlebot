@@ -15,7 +15,7 @@ spec.add_expression(x, Expression('List.get(Odometry, 0)'), keep_on_prune=True)
 spec.add_expression(y, Expression('List.get(Odometry, 1)'), keep_on_prune=True)
 spec.add_expression(a, Expression('List.get(Odometry, 2)'), keep_on_prune=True)
 
-tb3_exprs, tb3_rotated_corners = rotate_polygon(turtlebot.tb3_corners, (x,y), a)
+tb3_exprs, tb3_rotated_corners = rotate_polygon(turtlebot.tb3_corners_offset(0.01), (x,y), a)
 
 # map_walls = connect_polygon(turtle_map)
 # obstacle_wall = connect_polygon([

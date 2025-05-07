@@ -41,30 +41,6 @@ def get_ghost_spec(pos):
 
     return str(spec.expressions.get(ghost_collision))
 
-"""
-in x
-in y
-in a
-collision = f(x,y,a)
-
-dynamicwalls = {Str: f(x,y,a)}
-
-
-in Odometry
-in dynamicwalls
-out a
-out x
-out y
-...
-
-collision = corner0collision || ... || eval(dynamicwalls)
-
-"""
-
-
-
-
-
 ghost_sequence = [
     {
         'x': 1.0,
@@ -110,7 +86,7 @@ def on_connect(client, userdata, flags, reason_code, properties):
         pass
 
 
-print(get_ghost_spec(ghost_sequence[0]))
+print(get_ghost_spec(ghost_sequence[-2]))
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.connect("localhost")
@@ -123,7 +99,7 @@ try:
             mqttc.publish('GhostCollide3_raw', spec)
             mqttc.publish('telemetry/ghost/pos', json.dumps(step))
             print('new step: ', step)
-            sleep(10)
+            sleep(4)
 except KeyboardInterrupt:
     print('Stopping...')
 finally:
