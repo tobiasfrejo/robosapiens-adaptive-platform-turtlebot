@@ -24,8 +24,8 @@ services:
       args:
         - UID=${UID:-1000}
         - GID=${UID:-1000}
-        - USERNAME=${USERNAME:-devuser}
-    user: ${USERNAME:-devuser}
+        - USERNAME=devuser
+    user: devuser
     depends_on:
       - emqx
       - redis
@@ -33,7 +33,7 @@ services:
     network_mode: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/${USERNAME:-devuser}/.Xauthority
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/devuser/.Xauthority
     environment:
       - DISPLAY=${DISPLAY}
   rapdevnogpu:
@@ -52,7 +52,7 @@ services:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [ gpu ]
+              capabilities: [gpu]
   rosmqttbridge:
     build:
       context: ../ros2mqttbridge/
@@ -79,25 +79,25 @@ services:
       - /dev/shm:/dev/shm
   devfullnogputb3:
     extends: rapdevnogpu
-    depends_on: [ simdeploynogputb3, rosmqttbridge, redis, emqx ]
+    depends_on: [simdeploynogputb3, rosmqttbridge, redis, emqx]
   devfullmesatb3:
     extends: rapdevmesa
-    depends_on: [ simdeploymesatb3, rosmqttbridge, redis, emqx ]
+    depends_on: [simdeploymesatb3, rosmqttbridge, redis, emqx]
   devfullmesatb3monitor:
     extends: rapdevmesa
-    depends_on: [ simdeploymesatb3monitor, rosmqttbridge, redis, emqx ]
+    depends_on: [simdeploymesatb3monitor, rosmqttbridge, redis, emqx]
   devfullnvidiatb3:
     extends: rapdevnvidia
-    depends_on: [ simdeploynvidiatb3, rosmqttbridge, redis, emqx ]
+    depends_on: [simdeploynvidiatb3, rosmqttbridge, redis, emqx]
   devfullnogputb4:
     extends: rapdevnogpu
-    depends_on: [ simdeploynogputb4, rosmqttbridge, redis, emqx ]
+    depends_on: [simdeploynogputb4, rosmqttbridge, redis, emqx]
   devfulldevmesatb4:
     extends: rapdevmesa
-    depends_on: [ simdeploymesatb4, rosmqttbridge, redis, emqx ]
+    depends_on: [simdeploymesatb4, rosmqttbridge, redis, emqx]
   devfullnvidiatb4:
     extends: rapdevnvidia
-    depends_on: [ simdeploynvidiatb4, rosmqttbridge, redis, emqx ]
+    depends_on: [simdeploynvidiatb4, rosmqttbridge, redis, emqx]
 
   simdeploymesatb3slam:
     extends: 
@@ -106,7 +106,7 @@ services:
     command: ros2 launch demo_bringup sim_demo_tb3.launch.py slam:=True autostart:=false
   devfullmesatb3slam:
     extends: rapdevmesa
-    depends_on: [ simdeploymesatb3slam, rosmqttbridge, redis, emqx ]
+    depends_on: [simdeploymesatb3slam, rosmqttbridge, redis, emqx]
 
   trustworthiness-checker:
     build:
