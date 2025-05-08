@@ -52,15 +52,18 @@ for corner_index in range(len(tb3_rotated_corners)):
     s = LolaStream(f'Corner{corner_index}Collision')
     spec.add_expression(s, exp, keep_on_prune=True)
     corner_collision_streams.append(s)
-    spec.collapse_expression(s)
 
 collision_stream = LolaStream('Collision')
 collision_exp = lola_chain(corner_collision_streams, '||')
 spec.add_expression(collision_stream, collision_exp, keep_on_prune=True)
+
+# print(spec.get_specification_string())
+spec.write_specification('walls2-redux-uncollapsed.lola')
+
+for s in corner_collision_streams:
+    spec.collapse_expression(s)
 spec.collapse_expression(collision_stream)
-
 spec.prune()
-#spec.write_specification('test2_collapsed.lola')
 
-#print(spec.get_specification_string())
+# print(spec.get_specification_string())
 spec.write_specification('walls2-redux.lola')

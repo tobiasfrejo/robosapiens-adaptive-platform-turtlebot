@@ -5,6 +5,8 @@ import dataclasses
 import datetime
 import json
 
+from dyn_lola.shapes import turtlebot
+
 PREFIX='lola/walls2-redux.lola/'
 
 @dataclass
@@ -53,29 +55,30 @@ def encode_value(x):
 
     return x
 
+from math import sqrt
+from itertools import chain, combinations_with_replacement
+r = 0.15
+r2 = r/sqrt(2)
+pillars = list(chain.from_iterable([[
+    XYCoord(i*1.1+r, j*1.1),
+    XYCoord(i*1.1-r, j*1.1),
+    XYCoord(i*1.1, j*1.1+r),
+    XYCoord(i*1.1, j*1.1-r),
+    XYCoord(i*1.1+r2, j*1.1+r2),
+    XYCoord(i*1.1+r2, j*1.1-r2),
+    XYCoord(i*1.1-r2, j*1.1-r2),
+    XYCoord(i*1.1-r2, j*1.1+r2)
+]
+for i in range(-1,2) for j in range(-1,2)
+]))
 
 latest_telemetry = RobotPosition(XYCoord(0,0), Corners=dict(), Collisions=dict(), Obstacle=[
     XYCoord(-0.1, 2.1),
     XYCoord(-0.1, 1.9),
     XYCoord( 0.1, 1.9),
-    XYCoord( 0.1, 2.1),
-    XYCoord(-2.8868,  0.0),
-    XYCoord(-1.7248, -2.0125),
-    XYCoord(-1.4031, -2.0125),
-    XYCoord(-1.1216, -2.5),
-    XYCoord( 1.1216, -2.5),
-    XYCoord( 1.4031, -2.0125),
-    XYCoord( 1.7248, -2.0125),
-    XYCoord( 2.616,  -0.4689),
-    XYCoord( 2.3453,  0.0),
-    XYCoord( 2.616,   0.4689),
-    XYCoord( 1.7248,  2.0125),
-    XYCoord( 1.4031,  2.0125),
-    XYCoord( 1.1216,  2.5),
-    XYCoord(-1.1216,  2.5),
-    XYCoord(-1.4031,  2.0125),
-    XYCoord(-1.7248,  2.0125),
-])
+    XYCoord( 0.1, 2.1)]
+    + [XYCoord(x,y) for x,y in turtlebot.turtle_map]
+    + pillars)
 last_tx = 0
 update_period = 0.50 #s
 

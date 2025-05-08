@@ -48,15 +48,20 @@ for n,streams in pillar_point_streams.items():
     s = LolaStream(f'Pillar{n}Collision')
     spec.add_expression(s, lola_chain(streams, '||'), keep_on_prune=True)
     pillar_collision_streams.append(s)
-    spec.collapse_expression(s)
 
 any_pillar_collision = lola_chain(pillar_collision_streams, '||')
 
 collision_stream = LolaStream('Collision')
 collision_exp = lola_chain([corner_collision,any_pillar_collision], '||')
 spec.add_expression(collision_stream, collision_exp, keep_on_prune=True)
+
+# print(spec.get_specification_string())
+spec.write_specification('walls3-redux-uncollapsed.lola')
+
+for s in pillar_collision_streams:
+    spec.collapse_expression(s)
 spec.collapse_expression(collision_stream)
 spec.prune()
 
-print(spec.get_specification_string())
+# print(spec.get_specification_string())
 spec.write_specification('walls3-redux.lola')
