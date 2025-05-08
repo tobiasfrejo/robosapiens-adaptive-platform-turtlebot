@@ -1,0 +1,1 @@
+find . -type f -name "*.lola" -exec sed -i -E 's/([a-zA-Z][a-zA-Z0-9]*)\[\s*(-?[0-9]+)\s*,\s*([^]]+)\]/default(\1[\2], \3)/g' {} +
