@@ -1,3 +1,5 @@
 in kLaserScan: Str
 out missed: Bool
-missed = (kLaserScan == "write" && kLaserScan[-1, ""]  == "write") || missed[-1, false]
+out globalMissed: Bool
+missed = (kLaserScan == "write" && kLaserScan[-1, ""]  == "write") 
+globalMissed = globalMissed[-1, false] || missed[-1, false]
