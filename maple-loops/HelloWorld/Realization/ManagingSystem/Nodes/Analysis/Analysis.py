@@ -73,7 +73,7 @@ class Analysis(Node):
         )
 
         # Ensure flag is reset on startup in case execution has stopped/crashed in the middle of anomaly handling 
-        knowledge_rv.write(self, 'handling_anomaly', 0)
+        self.knowledge.write('handling_anomaly', 0)
         #<!-- cc_init END--!>
 
     # -----------------------------AUTO-GEN SKELETON FOR analyse_scan_data-----------------------------
