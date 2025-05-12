@@ -54,6 +54,23 @@ def encode_value(x):
 
     return x
 
+from math import sqrt
+from itertools import chain
+r = 0.15
+r2 = r/sqrt(2)
+pillars = list(chain.from_iterable([[
+    XYCoord(i*1.1+r, j*1.1),
+    XYCoord(i*1.1-r, j*1.1),
+    XYCoord(i*1.1, j*1.1+r),
+    XYCoord(i*1.1, j*1.1-r),
+    XYCoord(i*1.1+r2, j*1.1+r2),
+    XYCoord(i*1.1+r2, j*1.1-r2),
+    XYCoord(i*1.1-r2, j*1.1-r2),
+    XYCoord(i*1.1-r2, j*1.1+r2)
+]
+for i in range(-1,2) for j in range(-1,2)
+]))
+
 turtle_map = [
     XYCoord(-2.8868,  0.0),
     XYCoord(-1.7248, -2.0125),
@@ -83,7 +100,7 @@ from dyn_lola.shapes.turtlebot import tb3_corners
 
 
 
-latest_telemetry = RobotPosition(XYCoord(0,0), Corners=dict(), Collisions=dict(), Obstacle=turtle_map+sock)
+latest_telemetry = RobotPosition(XYCoord(0,0), Corners=dict(), Collisions=dict(), Obstacle=turtle_map+pillars)
 last_tx = 0
 update_period = 0.50 #s
 latest_ghost = {
@@ -123,6 +140,10 @@ def on_message(client, userdata, message):
 
     topic = topic.removeprefix(PREFIX)
 
+    send_update = False
+    if last_tx + update_period < current_time:
+        send_update = True
+
     match topic:
         case "x":
             latest_telemetry.Center.x = msg.get('Float')
@@ -131,7 +152,7 @@ def on_message(client, userdata, message):
             latest_telemetry.Center.y = msg.get('Float')
             print('new y', latest_telemetry.Center.y)
         case "telemetry/ghost/pos":
-            print(msg)
+            print("New ghost pos:", msg)
             ghost_corners = [
                 XYCoord(
                     x*cos(msg.get('a')) - y * sin(msg.get('a')) + msg.get('x'),
@@ -139,7 +160,8 @@ def on_message(client, userdata, message):
                 )
                 for (x,y) in tb3_corners
             ]
-            latest_telemetry.Obstacle = turtle_map + sock + ghost_corners
+            latest_telemetry.Obstacle = turtle_map + pillars + ghost_corners
+            send_update = True 
         
     for x in range(4):
         if topic == f"C{x}X":
@@ -149,7 +171,14 @@ def on_message(client, userdata, message):
         elif topic == f"Corner{x}Collision":
             latest_telemetry.Collisions[x] = msg.get('Bool')
 
-    if last_tx + update_period < current_time:
+    if send_update:
+        print(f'Publishing after {msg=}')
+        try:
+            print(ghost_corners)
+            print(latest_telemetry)
+        except:
+            pass
+        client.publish('telemetry/debug', str(msg))
         client.publish('telemetry/collision', json.dumps(latest_telemetry, default=encode_value))
         for k,v in latest_telemetry.test_dict().items():
             client.publish(f'telemetry/collision2/{k}', json.dumps(v, default=encode_value))
@@ -183,7 +212,12 @@ mqttc.connect("localhost")
 
 try:
     mqttc.loop_forever()
-    pass
+    # while True:
+    #     print('Main loop publish')
+    #     for k,v in latest_telemetry.test_dict().items():
+    #         mqttc.publish(f'telemetry/collision2/{k}', json.dumps(v, default=encode_value))
+    #     time.sleep(update_period)
+    # pass
 except KeyboardInterrupt:
     stop = True
 finally:
