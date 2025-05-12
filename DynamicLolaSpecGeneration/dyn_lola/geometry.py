@@ -20,8 +20,8 @@ def rotate_polygon(polygon:Iterable[Point], center_of_rotation:Point, angle:Stre
     for n, (x, y) in enumerate(polygon):
         stream_dict = {'x': x, 'y': y, 'angle': angle, 'center_of_rotation0': center_of_rotation[0], 'center_of_rotation1': center_of_rotation[1]}
         rc = str(n)
-        px = LolaStream(f'{stream_prefix}C{rc}X')
-        py = LolaStream(f'{stream_prefix}C{rc}Y')
+        px = LolaStream(f'{stream_prefix}P{rc}X')
+        py = LolaStream(f'{stream_prefix}P{rc}Y')
         expressions[px] = Expression('(((›x‹) * cos(›angle‹)) - ((›y‹) * sin(›angle‹))) + ›center_of_rotation0‹',stream_dict)
         expressions[py] = Expression('(((›x‹) * sin(›angle‹)) + ((›y‹) * cos(›angle‹))) + ›center_of_rotation1‹',stream_dict)
         corner_points.append((px, py))

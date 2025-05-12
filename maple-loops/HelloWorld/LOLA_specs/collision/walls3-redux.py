@@ -40,19 +40,17 @@ pillars_expressions, _, pillar_point_streams = test_circles_walls_overlaps(turtl
 for k,v in chain.from_iterable((tb3_exprs.items(), wall_exprs.items(), pillars_expressions.items())):
     spec.add_expression(k,v)
 
-corner_collision = LolaStream('PointCollision')
-spec.add_expression(corner_collision, lola_chain(pnp, '||'))
-
 pillar_collision_streams = []
 for n,streams in pillar_point_streams.items():
     s = LolaStream(f'Pillar{n}Collision')
     spec.add_expression(s, lola_chain(streams, '||'), keep_on_prune=True)
     pillar_collision_streams.append(s)
 
+any_corner_collision = lola_chain(pnp, '||')
 any_pillar_collision = lola_chain(pillar_collision_streams, '||')
 
 collision_stream = LolaStream('Collision')
-collision_exp = lola_chain([corner_collision,any_pillar_collision], '||')
+collision_exp = lola_chain([any_corner_collision,any_pillar_collision], '||')
 spec.add_expression(collision_stream, collision_exp, keep_on_prune=True)
 
 # print(spec.get_specification_string())
