@@ -42,11 +42,11 @@ def get_ghost_spec(pos):
     return str(spec.expressions.get(ghost_collision))
 
 ghost_sequence = [
-    {
-        'x': 1.0,
-        'y': -0.5,
-        'a':  3.14,
-    },
+    # {
+    #     'x': 1.0,
+    #     'y': -0.5,
+    #     'a':  3.14,
+    # },
     {
         'x': 0.0,
         'y': -0.5,
@@ -99,7 +99,7 @@ try:
             mqttc.publish('GhostCollide3_raw', spec)
             mqttc.publish('telemetry/ghost/pos', json.dumps(step))
             print('new step: ', step)
-            sleep(4)
+            sleep(20)
 except KeyboardInterrupt:
     print('Stopping...')
 finally:
