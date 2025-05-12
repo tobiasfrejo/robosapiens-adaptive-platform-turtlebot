@@ -1,16 +1,22 @@
 in ExecutePhaseWrite
 out s
 out started
-out written
-out x
-out xGlobal
+out writtenHandling
+out otherWrite
+out error
+out errorGlobal
 // This will allow S-W-S-W-W-S-E
-s = PhaseWrite
-written =   if s == "write" 
+s = ExecutePhaseWrite
+writtenHandling =   if s == "write_handling_anomaly" 
             then true
             else if s == "end"
             then false
-            else written[-1, false]
+            else writtenHandling[-1, false]
+otherWrite = if !(s == "write_handling_anomaly"  || s == "start" || s == "end")
+            then true
+            else if (s == "end")
+            then false
+            else otherWrite[-1, false]
 started =   s == "start" || (started[-1, false] && !(s == "end"))
-x = s == "write" && !started || s == "end" && !written[-1, false]
-xGlobal = x || xGlobal[-1, false]
+error = otherWrite || (writtenHandling  && !started) || (s == "end" && !writtenHandling[-1, false]) 
+errorGlobal = error || errorGlobal[-1, false]

@@ -1,16 +1,27 @@
 in PlanPhaseWrite
 out s
 out started
-out written
-out x
-out xGlobal
+out writtenPlan
+out writtenDirection
+out otherWrite
+out error
+out errorGlobal
 // This will allow S-W-S-W-W-S-E
-s = PhaseWrite
-written =   if s == "write" 
+s = PlanPhaseWrite
+writtenPlan =   if s == "write_planned_lidar_mask" 
             then true
             else if s == "end"
             then false
-            else written[-1, false]
+            else writtenPlan[-1, false]
+writtenDirection =   if s == "write_directions" 
+            then true
+            else if s == "end"
+            then false
+            else writtenDirection[-1, false]
+otherWrite = if !(s == "write_planned_lidar_mask" || s == "write_directions" || s == "start" || s == "end")
+            then true
+            else if (s == "end")
+            then false
+            else otherWrite[-1, false]
 started =   s == "start" || (started[-1, false] && !(s == "end"))
-x = s == "write" && !started || s == "end" && !written[-1, false]
-xGlobal = x || xGlobal[-1, false]
+error = otherWrite || ((writtenPlan || writtenDirection ) && !started) || (s == "end" && !(writtenPlan[-1, false] && writtenDirection[-1, false])) 

@@ -1,16 +1,28 @@
 in AnalysePhaseWrite
 out s
 out started
-out written
-out x
-out xGlobal
+out writtenMask
+out writtenHandling
+out otherWrite
+out error
+out errorGlobal
 // This will allow S-W-S-W-W-S-E
-s = PhaseWrite
-written =   if s == "write" 
+s = AnalysePhaseWrite
+writtenMask =   if s == "write_lidar_mask" 
             then true
-            else if s == "end"
+            else if (s == "end_ok" || s == "end_nom")
             then false
-            else written[-1, false]
-started =   s == "start" || (started[-1, false] && !(s == "end"))
-x = s == "write" && !started || s == "end" && !written[-1, false]
-xGlobal = x || xGlobal[-1, false]
+            else writtenMask[-1, false]
+writtenHandling = if s == "write_handling_anomaly" 
+            then true
+            else if (s == "end_ok" || s == "end_nom")
+            then false
+            else writtenHandling[-1, false]
+otherWrite = if !(s == "write_lidar_mask" || s == "write_handling_anomaly"  || s == "start" || s == "end_ok" || s == "end_nom")
+            then true
+            else if (s == "end_ok" || s == "end_nom")
+            then false
+            else otherWrite[-1, false]
+started =   s == "start" || (started[-1, false] && !(s == "end_ok" || s == "end_nom"))
+error = otherWrite || ((writtenMask || writtenHandling ) && !started) || (s == "end_nom" && !(writtenMask[-1, false] && writtenHandling[-1, false])) || (s == "end_ok" && (writtenMask[-1, false] || writtenHandling[-1, false]))
+errorGlobal = error || errorGlobal[-1, false]
