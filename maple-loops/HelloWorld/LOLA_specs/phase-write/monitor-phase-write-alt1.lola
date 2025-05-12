@@ -11,12 +11,12 @@ writtenData =   if s == "write_new_data"
             then true
             else if s == "end"
             then false
-            else writtenData[-1, false]
+            else default(writtenData[-1], false)
 otherWrite = if !(s == "write_new_data" || s == "start" || s == "end")
             then true
             else if (s == "end")
             then false
-            else otherWrite[-1, false]
-started =   s == "start" || (started[-1, false] && !(s == "end"))
-error = otherWrite || (writtenData  && !started) || (s == "end" && !writtenData[-1, false]) 
-errorGlobal = error || errorGlobal[-1, false]
+            else default(otherWrite[-1], false)
+started =   s == "start" || (default(started[-1], false) && !(s == "end"))
+error = otherWrite || (writtenData  && !started) || (s == "end" && !default(writtenData[-1], false)) 
+errorGlobal = error || default(errorGlobal[-1], false)

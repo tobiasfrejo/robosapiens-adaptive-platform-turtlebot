@@ -3,5 +3,5 @@ out correctOrder : Bool
 out globalCorrectOrder : Bool
 out scanOut : Str
 scanOut = scanTrigger
-correctOrder = !(scanTrigger == scanTrigger[-1,"m"])
-globalCorrectOrder = correctOrder && globalCorrectOrder[-1,true]
+correctOrder = !(scanTrigger == default(scanTrigger[-1], "m"))
+globalCorrectOrder = correctOrder && default(globalCorrectOrder[-1], true)
