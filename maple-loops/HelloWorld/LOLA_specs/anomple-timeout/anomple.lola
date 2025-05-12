@@ -1,0 +1,10 @@
+in anompleClock: Str
+out timeout: Bool
+out acc : Int
+out t : Str
+t = anompleClock
+acc = if default(t[-1], "") == "anom" && t == "timer" then 1
+      else if !(default(acc[-1], 0) <= 0) && t == "timer" then default(acc[-1], 0) + 1
+      else if t == "end_e" then 0
+      else default(acc[-1], 0)
+timeout = !(acc <= 10)

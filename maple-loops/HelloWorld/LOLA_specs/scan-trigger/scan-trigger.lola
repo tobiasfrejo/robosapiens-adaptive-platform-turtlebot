@@ -1,0 +1,7 @@
+in scanTrigger : Str // should get s for scan and m for maple completion
+out correctOrder : Bool
+out globalCorrectOrder : Bool
+out scanOut : Str
+scanOut = scanTrigger
+correctOrder = !(scanTrigger == default(scanTrigger[-1], "m"))
+globalCorrectOrder = correctOrder && default(globalCorrectOrder[-1], true)

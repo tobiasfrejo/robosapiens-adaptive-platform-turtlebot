@@ -1,3 +1,9 @@
 in kPlannedLidarMask: Str
 out missed: Bool
+<<<<<<< HEAD
 missed = (kLaserScan == "write" && kLaserScan[-1, ""]  == "write") || missed[-1, false]
+=======
+out globalMissed: Bool
+missed = (kLaserScan == "write" && default(kLaserScan[-1], "")  == "write")
+globalMissed = default(globalMissed[-1], false) || default(missed[-1], false)
+>>>>>>> cf1394a (Update with default())
