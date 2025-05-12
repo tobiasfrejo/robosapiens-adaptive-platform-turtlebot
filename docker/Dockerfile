@@ -5,7 +5,7 @@ FROM ubuntu:22.04 AS base
 
 SHELL ["/bin/bash", "-c"]
 
-ENV DEBIAN_FRONTEND=noninteractive 
+ENV DEBIAN_FRONTEND=noninteractive
 
 ARG USERNAME=devuser
 ARG UID=1000

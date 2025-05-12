@@ -1,10 +1,10 @@
 {
-	"name": "RoboSapiens Adaptive Platform -- Full Gazebo TB3 (MESA)",
+	"name": "RoboSapiens Adaptive Platform -- Full Gazebo TB3 (MESA) with SLAM",
 	"dockerComposeFile": "../../docker/docker-compose.yaml",
-	"service": "devfullmesatb3",
+	"service": "devfullmesatb3slam",
 	"runServices": [
-		"devfullmesatb3",
-    "grafana",
+		"devfullmesatb3slam",
+		"grafana"
 	],
 	"workspaceFolder": "/ws",
 	"shutdownAction": "stopCompose",

@@ -3,12 +3,14 @@ use futures::stream::BoxStream;
 use paho_mqtt as mqtt;
 use paho_mqtt::Message;
 use r2r;
+use r2r::builtin_interfaces::msg::Time;
 use r2r::Publisher;
 use r2r::QosProfile;
 use r2r::qos::DurabilityPolicy as QosDurabilityPolicy;
 use r2r::qos::HistoryPolicy as QosHistoryPolicy;
 use r2r::qos::ReliabilityPolicy as QosReliabilityPolicy;
 use r2r::spin_interfaces::msg::SpinPeriodicCommands as MSpinCommands;
+use r2r::geometry_msgs::msg::PoseStamped as MPoseStamped;
 use serde::Deserialize;
 use serde::Serialize;
 use tokio::select;
@@ -16,6 +18,7 @@ use tokio::sync::oneshot;
 use tracing::info;
 // Removed incorrect import of std::fmt::Result.
 use serde::de::{self, Deserializer};
+use serde_json::Value;
 use std::f64::consts::PI;
 use std::time::Duration;
 use tracing::debug;
@@ -48,8 +51,13 @@ pub const ODOM_TOPIC: Topic = Topic {
     mqtt_name: "Odometry"
 };
 
+pub const GOAL_TOPIC: Topic = Topic {
+    ros_name: "/goal_pose",
+    mqtt_name: "/goal_pose"
+};
 
-pub const TOPICS: [Topic; 5] = [SCAN_TOPIC, SPIN_TOPIC, COLLISION_TOPIC, VELOCITY_TOPIC, ODOM_TOPIC];
+
+pub const TOPICS: [Topic; 6] = [SCAN_TOPIC, SPIN_TOPIC, COLLISION_TOPIC, VELOCITY_TOPIC, ODOM_TOPIC, GOAL_TOPIC];
 
 #[derive(Clone)]
 pub struct Topic {
@@ -82,6 +90,7 @@ enum ROS2MQTTData {
 #[serde(untagged)]
 enum MQTT2ROSData {
     SpinCommands(MSpinCommands),
+    PoseStamped(MPoseStamped)
 }
 
 /* Implement a custom deserializer for MQTT2ROSData
@@ -94,13 +103,35 @@ impl<'de> Deserialize<'de> for MQTT2ROSData {
     where
         D: Deserializer<'de>,
     {
-        // Deserialize into the helper struct. This will enforce that exactly
-        // the fields "commands" (an array of objects each with "omega" and "duration")
-        // and "period" are present.
-        let helper = SpinCommandsHelper::deserialize(deserializer).map_err(de::Error::custom)?;
-        // Convert the helper to your ROS message type.
-        let spin_cmds = MSpinCommands::try_from(helper).map_err(de::Error::custom)?;
-        Ok(MQTT2ROSData::SpinCommands(spin_cmds))
+        let value = Value::deserialize(deserializer)?;
+
+        // Try SpinCommandsHelper
+        if value.get("commands").is_some() && value.get("period").is_some() {
+            let helper: SpinCommandsHelper = serde_json::from_value(value.clone())
+                .map_err(de::Error::custom)?;
+            let spin_cmds = MSpinCommands::try_from(helper)
+                .map_err(de::Error::custom)?;
+            return Ok(MQTT2ROSData::SpinCommands(spin_cmds));
+        }
+
+        // Try PoseHelper
+        if value.get("position").is_some() && value.get("orientation").is_some() {
+            let helper: PoseHelper = serde_json::from_value(value.clone())
+                .map_err(de::Error::custom)?;
+            let pose = MPoseStamped::try_from(helper)
+                .map_err(de::Error::custom)?;
+            return Ok(MQTT2ROSData::PoseStamped(pose));
+        }
+
+        Err(de::Error::custom("Invalid structure for MQTT2ROSData"))
+
+        // // Deserialize into the helper struct. This will enforce that exactly
+        // // the fields "commands" (an array of objects each with "omega" and "duration")
+        // // and "period" are present.
+        // let helper = SpinCommandsHelper::deserialize(deserializer).map_err(de::Error::custom)?;
+        // // Convert the helper to your ROS message type.
+        // let spin_cmds = MSpinCommands::try_from(helper).map_err(de::Error::custom)?;
+        // Ok(MQTT2ROSData::SpinCommands(spin_cmds))
     }
 }
 
@@ -119,6 +150,29 @@ struct SpinCommandsHelper {
     commands: Vec<SpinCommandHelper>,
     period: f64,
 }
+
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+struct PosePositionHelper {
+    x: f64,
+    y: f64,
+    z: f64
+}
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+struct PoseOrientationHelper {
+    x: f64,
+    y: f64,
+    z: f64,
+    w: f64
+}
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+struct PoseHelper {
+    position: PosePositionHelper,
+    orientation: PoseOrientationHelper
+}
+
 
 // Convert the helper into the actual ROS message type.
 impl TryFrom<SpinCommandsHelper> for MSpinCommands {
@@ -139,6 +193,43 @@ impl TryFrom<SpinCommandsHelper> for MSpinCommands {
     }
 }
 
+// Convert the helper into the actual ROS message type.
+impl TryFrom<PoseHelper> for MPoseStamped {
+    type Error = &'static str;
+
+    fn try_from(helper: PoseHelper) -> Result<Self, Self::Error> {
+        match std::time::SystemTime::now().duration_since(std::time::SystemTime::UNIX_EPOCH) {
+            Ok(n) => Ok(MPoseStamped {
+                header: r2r::std_msgs::msg::Header {
+                    stamp: Time {
+                        sec: if n.as_secs() <= (std::i32::MAX as u64) {
+                            n.as_secs() as i32
+                        } else {
+                            panic!("timestamp from SystemTime overflows i32")
+                        },
+                        nanosec: n.subsec_nanos()
+                    },
+                    frame_id: "map".to_string()
+                },
+                pose: r2r::geometry_msgs::msg::Pose {
+                    position: r2r::geometry_msgs::msg::Point {
+                        x: helper.position.x,
+                        y: helper.position.y,
+                        z: helper.position.z
+                    },
+                    orientation: r2r::geometry_msgs::msg::Quaternion {
+                        x: helper.orientation.x,
+                        y: helper.orientation.y,
+                        z: helper.orientation.z,
+                        w: helper.orientation.w,
+                    }
+                }
+            }),
+            Err(_) => panic!("SystemTime before UNIX EPOCH!"),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 enum MQTT2ROSError {
     InvalidTopic,
@@ -150,6 +241,11 @@ impl TryFrom<Message> for MQTT2ROSData {
 
     fn try_from(msg: Message) -> Result<Self, Self::Error> {
         if msg.topic() == SPIN_TOPIC.mqtt_name {
+            match serde_json5::from_str::<MQTT2ROSData>(&msg.payload_str()) {
+                Ok(msg) => Ok(msg),
+                Err(e) => Err(MQTT2ROSError::DeserializationError(e)),
+            }
+        } else if msg.topic() == GOAL_TOPIC.mqtt_name {
             match serde_json5::from_str::<MQTT2ROSData>(&msg.payload_str()) {
                 Ok(msg) => Ok(msg),
                 Err(e) => Err(MQTT2ROSError::DeserializationError(e)),
@@ -247,6 +343,7 @@ async fn ros_node_actor(
         BoxStream<'static, r2r::nav_msgs::msg::Odometry>,
         // Spin command publisher
         Publisher<MSpinCommands>,
+        Publisher<MPoseStamped>,
         // Future marking the end of the actor
         impl std::future::Future<Output = ()> + Send,
     ),
@@ -287,8 +384,10 @@ async fn ros_node_actor(
         .subscribe::<r2r::nav_msgs::msg::Odometry>(ODOM_TOPIC.ros_name, sensor_qos.clone())?; 
     debug!("Subscribed to scan safe");
 
-    let publisher =
+    let pub_spin =
         node.create_publisher::<MSpinCommands>(SPIN_TOPIC.ros_name, QosProfile::default())?;
+    let pub_goal =
+        node.create_publisher::<MPoseStamped>(GOAL_TOPIC.ros_name, QosProfile::default())?;
 
     let fut = async move {
         loop {
@@ -298,7 +397,7 @@ async fn ros_node_actor(
         }
     };
 
-    Ok((Box::pin(sub_laser), Box::pin(sub_vel), Box::pin(sub_mon), Box::pin(sub_odom), publisher, fut))
+    Ok((Box::pin(sub_laser), Box::pin(sub_vel), Box::pin(sub_mon), Box::pin(sub_odom), pub_spin, pub_goal, fut))
 }
 
 // Duplicate for additional ROS streams in separate loop
@@ -495,10 +594,11 @@ async fn ros_to_mqtt_odom(
     info!("Odom input stream ended; shutting down");
 }
 
-#[instrument(level=tracing::Level::DEBUG, skip(mqtt_stream, ros_publisher))]
+#[instrument(level=tracing::Level::DEBUG, skip(mqtt_stream, ros_spin_publisher, ros_goal_publisher))]
 async fn mqtt_to_ros(
     mut mqtt_stream: BoxStream<'static, Option<Message>>,
-    ros_publisher: Publisher<MSpinCommands>,
+    ros_spin_publisher: Publisher<MSpinCommands>,
+    ros_goal_publisher: Publisher<MPoseStamped>,
 ) {
     info!("Starting MQTT to ROS bridge");
     while let Some(Some(msg)) = mqtt_stream.next().await {
@@ -522,14 +622,19 @@ async fn mqtt_to_ros(
 
         match data {
             MQTT2ROSData::SpinCommands(msg) => {
-                ros_publisher.publish(&msg).unwrap();
+                ros_spin_publisher.publish(&msg).unwrap();
                 info!("[MQTT->ROS] Forwarded SpinCommands message");
                 debug!("SpinCommands: {:?}", msg);
+            },
+            MQTT2ROSData::PoseStamped(msg) => {
+                ros_goal_publisher.publish(&msg).unwrap();
+                info!("[MQTT->ROS] Forwarded GoalPose message");
+                debug!("GoalPose: {:?}", msg);
             }
         }
     }
 
-    info!("Spin config input stream ended; shutting down");
+    info!("MQTT input stream ended; shutting down");
 }
 
 pub async fn bridge(
@@ -541,14 +646,16 @@ pub async fn bridge(
         ros_stream_velocity,
         ros_stream_monitor,
         ros_stream_odom,
-        ros_publisher, ros_fut) = ros_node_actor(ros_namespace).await.unwrap();
+        ros_publisher_spin, 
+        ros_publisher_goal, 
+        ros_fut) = ros_node_actor(ros_namespace).await.unwrap();
     let (mqtt_stream, mqtt_sender, mqtt_fut) =
-        mqtt_client_actor(mqtt_hostname, vec![SPIN_TOPIC.mqtt_name]).await?;
+        mqtt_client_actor(mqtt_hostname, vec![SPIN_TOPIC.mqtt_name, GOAL_TOPIC.mqtt_name]).await?;
     let ros_to_mqtt_laser_fut = ros_to_mqtt_laser(ros_stream_laser, &mqtt_sender);
     let ros_to_mqtt_vel_fut = ros_to_mqtt_vel(ros_stream_velocity, &mqtt_sender);
     let ros_to_mqtt_mon_fut = ros_to_mqtt_mon(ros_stream_monitor, &mqtt_sender);
     let ros_to_mqtt_odom_fut = ros_to_mqtt_odom(ros_stream_odom, &mqtt_sender);
-    let mqtt_to_ros_fut = mqtt_to_ros(mqtt_stream, ros_publisher);
+    let mqtt_to_ros_fut = mqtt_to_ros(mqtt_stream, ros_publisher_spin, ros_publisher_goal);
     // let blocking_ros_fut = tokio::task::spawn_blocking(|| ros_fut);
 
     debug!("Entering select on futures");
