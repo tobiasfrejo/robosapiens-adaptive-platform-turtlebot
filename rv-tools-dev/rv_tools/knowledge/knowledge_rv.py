@@ -10,7 +10,7 @@ def write(node:Node, key:str, value = True):
     event_key = ensure_publish_key_exist(node, 'k_' + key)
     node.knowledge.write(key, value)
     node.publish_event(event_key, message=json.dumps({"Str": "write"}))
-    node.publish_event(ensure_publish_key_exist(node, node.__class__.__name__ + WRITING_PHASE), message=json.dumps({"Str": "write"}))
+    node.publish_event(ensure_publish_key_exist(node, node.__class__.__name__ + WRITING_PHASE), message=json.dumps({"Str": f"write_{key}"}))
     # node.publish_event(ensure_publish_key_exist(node, 'any_knowledge_write', False), message=json.dumps({'Str':key}))
 
 def read(node:Node, key, queueSize = 1):
