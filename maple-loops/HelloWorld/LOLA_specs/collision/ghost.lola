@@ -1,4 +1,4 @@
-in SlowOdometry
+in Odometry
 in GhostCollide3
 out a
 out x
@@ -20,7 +20,7 @@ C2X = (((-0.181) * cos(a)) - ((0.153) * sin(a))) + x
 C2Y = (((-0.181) * sin(a)) + ((0.153) * cos(a))) + y
 C3X = (((-0.181) * cos(a)) - ((-0.153) * sin(a))) + x
 C3Y = (((-0.181) * sin(a)) + ((-0.153) * cos(a))) + y
-x = List.get(SlowOdometry, 0)
-y = List.get(SlowOdometry, 1)
-a = List.get(SlowOdometry, 2)
+x = List.get(Odometry, 0)
+y = List.get(Odometry, 1)
+a = List.get(Odometry, 2)
 GhostCollision = eval(GhostCollide3)

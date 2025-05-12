@@ -12,16 +12,16 @@ writtenPlan =   if s == "write_planned_lidar_mask"
             then true
             else if s == "end"
             then false
-            else writtenPlan[-1, false]
+            else default(writtenPlan[-1], false)
 writtenDirection =   if s == "write_directions" 
             then true
             else if s == "end"
             then false
-            else writtenDirection[-1, false]
+            else default(writtenDirection[-1], false)
 otherWrite = if !(s == "write_planned_lidar_mask" || s == "write_directions" || s == "start" || s == "end")
             then true
             else if (s == "end")
             then false
-            else otherWrite[-1, false]
-started =   s == "start" || (started[-1, false] && !(s == "end"))
-error = otherWrite || ((writtenPlan || writtenDirection ) && !started) || (s == "end" && !(writtenPlan[-1, false] && writtenDirection[-1, false])) 
+            else default(otherWrite[-1], false)
+started =   s == "start" || (default(started[-1], false) && !(s == "end"))
+error = otherWrite || ((writtenPlan || writtenDirection ) && !started) || (s == "end" && !(default(writtenPlan[-1], false) && default(writtenDirection[-1], false))) 

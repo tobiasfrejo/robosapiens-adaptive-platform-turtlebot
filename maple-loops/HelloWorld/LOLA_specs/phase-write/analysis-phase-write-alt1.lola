@@ -12,17 +12,17 @@ writtenMask =   if s == "write_lidar_mask"
             then true
             else if (s == "end_ok" || s == "end_nom")
             then false
-            else writtenMask[-1, false]
+            else default(writtenMask[-1], false)
 writtenHandling = if s == "write_handling_anomaly" 
             then true
             else if (s == "end_ok" || s == "end_nom")
             then false
-            else writtenHandling[-1, false]
+            else default(writtenHandling[-1], false)
 otherWrite = if !(s == "write_lidar_mask" || s == "write_handling_anomaly"  || s == "start" || s == "end_ok" || s == "end_nom")
             then true
             else if (s == "end_ok" || s == "end_nom")
             then false
-            else otherWrite[-1, false]
-started =   s == "start" || (started[-1, false] && !(s == "end_ok" || s == "end_nom"))
-error = otherWrite || ((writtenMask || writtenHandling ) && !started) || (s == "end_nom" && !(writtenMask[-1, false] && writtenHandling[-1, false])) || (s == "end_ok" && (writtenMask[-1, false] || writtenHandling[-1, false]))
-errorGlobal = error || errorGlobal[-1, false]
+            else default(otherWrite[-1], false)
+started =   s == "start" || (default(started[-1], false) && !(s == "end_ok" || s == "end_nom"))
+error = otherWrite || ((writtenMask || writtenHandling ) && !started) || (s == "end_nom" && !(default(writtenMask[-1], false) && default(writtenHandling[-1], false))) || (s == "end_ok" && (default(writtenMask[-1], false) || default(writtenHandling[-1], false)))
+errorGlobal = error || default(errorGlobal[-1], false)
