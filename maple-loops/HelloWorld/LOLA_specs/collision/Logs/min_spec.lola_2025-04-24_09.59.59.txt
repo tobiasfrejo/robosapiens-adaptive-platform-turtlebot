@@ -1,0 +1,10 @@
+[09:59:59.710549  (00.000007)] Command: docker run --network host -it --rm -e RUST_BACKTRACE=full -v /home/tfrejo/git/msc/robosapiens-adaptive-platform-turtlebot/maple-loops/HelloWorld/LOLA_specs/collision:/mnt/host_models trustworthiness-checker /mnt/host_models/min_spec.lola --input-mqtt-topics a
+[09:59:59.710649  (00.000053)] 
+[09:59:59.710663  (00.000005)] ========     SPECIFICATION      =======
+[09:59:59.710672  (00.000003)] Source: min_spec.lola
+[09:59:59.710680  (00.000003)] in a
+[09:59:59.710688  (00.000003)] out b
+[09:59:59.710696  (00.000003)] b = a
+[09:59:59.710704  (00.000002)] 
+[09:59:59.710713  (00.000003)] ======== TRUSTWORTHINESS OUTPUT =======
+[10:00:01.537699  (01.827515)] ^C

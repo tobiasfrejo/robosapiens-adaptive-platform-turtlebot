@@ -1,0 +1,8 @@
+[14:50:15.898441  (00.000009)] Command: docker run --network host -it --rm -v .:/mnt/host_models thomasdwright/trustworthiness-checker:latest /mnt/host_models/ --input-mqtt-topics stage
+[14:50:15.898488  (00.000063)] 
+[14:50:15.898500  (00.000007)] ========     SPECIFICATION      =======
+[14:50:15.898508  (00.000006)] Source: 
+[14:50:15.898517  (00.000004)] 
+[14:50:15.898526  (00.000005)] 
+[14:50:15.898536  (00.000005)] ======== TRUSTWORTHINESS OUTPUT =======
+[14:50:15.898545  (00.000005)] Unable to find image 'thomasdwright/trustworthiness-checker:latest' locally

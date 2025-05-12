@@ -1,0 +1,53 @@
+[00.000007] Command: docker run --network host -it --rm -e RUST_BACKTRACE=full -v /home/tfrejo/git/msc/robosapiens-adaptive-platform-turtlebot/maple-loops/HelloWorld/LOLA_specs/collision:/mnt/host_models trustworthiness-checker /mnt/host_models/ghost.lola --input-mqtt-topics Odometry GhostCollide3
+[00.000051] 
+[00.000005] ========     SPECIFICATION      =======
+[00.000003] Source: ghost.lola
+[00.000003] in Odometry
+[00.000002] in GhostCollide3
+[00.000003] out a
+[00.000002] out x
+[00.000003] out y
+[00.000002] out GhostCollision
+[00.000003] x = List.get(Odometry, 0)
+[00.000003] y = List.get(Odometry, 1)
+[00.000002] a = List.get(Odometry, 2)
+[00.000003] GhostCollision = eval(GhostCollide3)
+[00.000002] 
+[00.000003] ======== TRUSTWORTHINESS OUTPUT =======
+[00.328518] a[0] = Float(0.006303923)
+[00.000054] x[0] = Float(-1.9998133)
+[00.000008] y[0] = Float(-0.49999988)
+[00.000006] GhostCollision[0] = Unknown
+[00.101201] a[1] = Float(0.0063097184)
+[00.000048] x[1] = Float(-1.9998132)
+[00.000008] y[1] = Float(-0.49999982)
+[00.000006] GhostCollision[1] = Unknown
+[00.101894] a[2] = Float(0.0063155037)
+[00.000084] x[2] = Float(-1.9998131)
+[00.000004] y[2] = Float(-0.4999999)
+[00.000003] GhostCollision[2] = Unknown
+[00.100303] a[3] = Float(0.006321169)
+[00.000046] x[3] = Float(-1.9998128)
+[00.000008] y[3] = Float(-0.4999999)
+[00.000007] GhostCollision[3] = Unknown
+[00.100553] a[4] = Float(0.0063269944)
+[00.000094] x[4] = Float(-1.9998127)
+[00.000005] y[4] = Float(-0.49999988)
+[00.000003] GhostCollision[4] = Unknown
+[00.101008] a[5] = Float(0.0063327085)
+[00.000040] x[5] = Float(-1.9998125)
+[00.000004] y[5] = Float(-0.49999994)
+[00.000003] GhostCollision[5] = Unknown
+[00.101762] a[6] = Float(0.006338472)
+[00.000058] x[6] = Float(-1.9998124)
+[00.000005] y[6] = Float(-0.49999988)
+[00.000004] GhostCollision[6] = Unknown
+[00.099823] a[7] = Float(0.006344246)
+[00.000047] x[7] = Float(-1.9998122)
+[00.000008] y[7] = Float(-0.49999973)
+[00.000006] GhostCollision[7] = Unknown
+[00.101272] a[8] = Float(0.0063499887)
+[00.000043] x[8] = Float(-1.9998121)
+[00.000004] y[8] = Float(-0.49999997)
+[00.000003] GhostCollision[8] = Unknown
+[00.090044] ^C

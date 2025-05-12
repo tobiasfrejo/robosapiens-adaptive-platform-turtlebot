@@ -1,0 +1,26 @@
+[14:51:13.588856  (00.000005)] Command: docker run --network host -it --rm -v /var/home/tfrejo/git/msc/robosapiens-adaptive-platform-turtlebot/maple-loops/HelloWorld/LOLA_specs:/mnt/host_models localhost/trustworthiness-checker:maple-1 /mnt/host_models/maple_loopable.lola --input-mqtt-topics stage
+[14:51:13.588900  (00.000056)] 
+[14:51:13.588913  (00.000005)] ========     SPECIFICATION      =======
+[14:51:13.588922  (00.000005)] Source: maple_loopable.lola
+[14:51:13.588932  (00.000003)] in stage : Str
+[14:51:13.588941  (00.000004)] out m: Bool
+[14:51:13.588951  (00.000003)] out a: Bool
+[14:51:13.588960  (00.000004)] out p: Bool
+[14:51:13.588971  (00.000005)] out l: Bool
+[14:51:13.588983  (00.000003)] out e: Bool
+[14:51:13.588992  (00.000003)] out maple : Bool
+[14:51:13.589002  (00.000003)] out stageout : Str
+[14:51:13.589015  (00.000004)] m = (stage == "m") && (default(e[-1], true) || default(a[-1], false)) // Test for resetting on succeeding M-phase: || !default(maple[-1], false)
+[14:51:13.589026  (00.000003)] a = (stage == "a") && default(m[-1], false) 
+[14:51:13.589039  (00.000005)] p = (stage == "p") && default(a[-1], false) 
+[14:51:13.589048  (00.000004)] l = (stage == "l") && default(p[-1], false)
+[14:51:13.589058  (00.000003)] e = (stage == "e") && default(l[-1], false)
+[14:51:13.589067  (00.000005)] maple = m || a || p || l || e
+[14:51:13.589077  (00.000004)] stageout = stage
+[14:51:13.589086  (00.000016)] 
+[14:51:13.589096  (00.000003)] 
+[14:51:13.589105  (00.000004)] ======== TRUSTWORTHINESS OUTPUT =======
+[14:51:13.589116  (00.000004)] Unable to find image 'localhost/trustworthiness-checker:maple-1' locally
+[14:51:13.598236  (00.009378)] docker: Error response from daemon: Get "http://localhost/v2/": dial tcp [::1]:80: connect: connection refused
+[14:51:13.598276  (00.000047)] 
+[14:51:13.598285  (00.000006)] Run 'docker run --help' for more information

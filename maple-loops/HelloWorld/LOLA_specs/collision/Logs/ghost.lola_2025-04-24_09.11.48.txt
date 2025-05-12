@@ -1,0 +1,17 @@
+[09:11:1745478708.728056  (00.000005)] Command: docker run --network host -it --rm -e RUST_BACKTRACE=full -v /home/tfrejo/git/msc/robosapiens-adaptive-platform-turtlebot/maple-loops/HelloWorld/LOLA_specs/collision:/mnt/host_models trustworthiness-checker /mnt/host_models/ghost.lola --input-mqtt-topics Odometry GhostCollide3
+[09:11:1745478708.728098  (00.000071)] 
+[09:11:1745478708.728108  (00.000005)] ========     SPECIFICATION      =======
+[09:11:1745478708.728117  (00.000003)] Source: ghost.lola
+[09:11:1745478708.728124  (00.000003)] in Odometry
+[09:11:1745478708.728132  (00.000003)] in GhostCollide3
+[09:11:1745478708.728140  (00.000002)] out a
+[09:11:1745478708.728148  (00.000003)] out x
+[09:11:1745478708.728156  (00.000002)] out y
+[09:11:1745478708.728165  (00.000003)] out GhostCollision
+[09:11:1745478708.728175  (00.000002)] x = List.get(Odometry, 0)
+[09:11:1745478708.728184  (00.000003)] y = List.get(Odometry, 1)
+[09:11:1745478708.728192  (00.000002)] a = List.get(Odometry, 2)
+[09:11:1745478708.728199  (00.000003)] GhostCollision = eval(GhostCollide3)
+[09:11:1745478708.728208  (00.000002)] 
+[09:11:1745478708.728215  (00.000003)] ======== TRUSTWORTHINESS OUTPUT =======
+[09:11:1745478709.267049  (00.538235)] ^C

@@ -1,0 +1,23 @@
+Command: docker run --network host -it --rm -v .:/mnt/host_models thomasdwright/trustworthiness-checker:latest /mnt/host_models/ --input-mqtt-topics stage
+
+========     SPECIFICATION      =======
+Source: 
+
+
+======== TRUSTWORTHINESS OUTPUT =======
+Unable to find image 'thomasdwright/trustworthiness-checker:latest' locally
+latest: Pulling from thomasdwright/trustworthiness-checker
+b2b31b28ee3c: Already exists
+c3cc7b6f0473: Already exists
+2112e5e7c3ff: Already exists
+af247aac0764: Already exists
+d83766a9c5ba: Already exists
+3f7b696a5f4e: Pulling fs layer
+e75216296bb0: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+0137bc794427: Pulling fs layer
+0cb86a819267: Pulling fs layer
+1cd496850435: Pulling fs layer
+0cb86a819267: Waiting
+0137bc794427: Waiting
+1cd496850435: Waiting
