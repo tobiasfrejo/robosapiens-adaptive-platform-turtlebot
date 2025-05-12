@@ -24,9 +24,7 @@ def on_unsubscribe(client, userdata, mid, reason_code_list, properties):
     client.disconnect()
 
 def on_message(client, userdata, message):
-    if message.topic == "/new_data":
-        client.publish('SOLClock', '{"Str": "monitor"}')
-    elif message.topic == "/Scan":
+    if message.topic == "/Scan":
         client.publish('SOLClock', '{"Str": "scan"}')
 
 def on_connect(client, userdata, flags, reason_code, properties):
