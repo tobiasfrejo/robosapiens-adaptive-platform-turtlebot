@@ -25,21 +25,20 @@ def get_ghost_spec(pos):
     ghost_exprs, ghost_rotated_corners = rotate_polygon(turtlebot.tb3_corners, (pos['x'],pos['y']), pos['a'], 'ghost')
     tb3_exprs, tb3_rotated_corners = rotate_polygon(turtlebot.tb3_corners, (x,y), a, 'tb3')
 
+    # Treating TB3 as polygon: TB3 edge collision sub-specification
     tb3_edges = connect_polygon(tb3_rotated_corners)
     wall_exprs, pnp = pnpoly(ghost_rotated_corners, tb3_edges)
 
     for k,v in chain.from_iterable((ghost_exprs.items(), tb3_exprs.items(), wall_exprs.items())):
         spec.add_expression(k,v)
 
-    ghost_collision = LolaStream('GhostCollision')
-    spec.add_expression(ghost_collision, lola_chain(list(pnp.values()), '||'), keep_on_prune=True)
-    # print(spec.expressions.keys())
-    # print(spec.get_specification_string())
+    ghost_collide = LolaStream('GhostCollide')
+    spec.add_expression(ghost_collide, lola_chain(list(pnp.values()), '||'), keep_on_prune=True)
 
-    spec.collapse_expression(ghost_collision)
+    spec.collapse_expression(ghost_collide)
     spec.prune()
 
-    return str(spec.expressions.get(ghost_collision))
+    return str(spec.expressions.get(ghost_collide))
 
 ghost_sequence = [
     {
