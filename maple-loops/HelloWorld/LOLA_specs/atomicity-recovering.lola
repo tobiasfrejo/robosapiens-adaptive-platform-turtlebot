@@ -11,5 +11,5 @@ a = ((stage2 == "start_a") && (default(stage2[1], "end_a") == "end_a")) || ((def
 p = ((stage2 == "start_p") && (default(stage2[1], "end_p") == "end_p")) || ((default(stage2[-1], "") == "start_p") && (stage2 == "end_p")) 
 l = ((stage2 == "start_l") && (default(stage2[1], "end_l") == "end_l")) || ((default(stage2[-1], "") == "start_l") && (stage2 == "end_l")) 
 e = ((stage2 == "start_e") && (default(stage2[1], "end_e") == "end_e")) || ((default(stage2[-1], "") == "start_e") && (stage2 == "end_e")) 
-atomic = (m || a || p || l || e) && default(atomic[-1], true)
+atomic = m || a || p || l || e
 stageout = stage2
