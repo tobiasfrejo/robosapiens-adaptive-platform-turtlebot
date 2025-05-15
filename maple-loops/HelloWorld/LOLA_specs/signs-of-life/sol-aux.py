@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 import time
 
-TIMEOUT = 0.2
+TIMEOUT = 0.05
 N = 30
 stop = False
 i = 0
@@ -58,5 +58,6 @@ try:
     print(f"Received the following message: {mqttc.user_data_get()}")
 except KeyboardInterrupt:
     stop = True
+    print('\r'+(''.join([' '*N]))+'\rStopping SOLClock')
 finally:
     mqttc.loop_stop()
