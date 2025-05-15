@@ -35,7 +35,7 @@ def on_connect(client, userdata, flags, reason_code, properties):
     else:
         # we should always subscribe from on_connect callback to be sure
         # our subscribed is persisted across reconnections.
-        client.subscribe("/new_data")
+        client.subscribe("/Scan")
 
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
