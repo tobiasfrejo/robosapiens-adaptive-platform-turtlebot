@@ -1,4 +1,4 @@
-in AnalysePhaseWrite
+in AnalysisPhaseWrite
 out s
 out started
 out writtenMask
@@ -7,7 +7,7 @@ out otherWrite
 out error
 out errorGlobal
 // This will allow S-W-S-W-W-S-E
-s = AnalysePhaseWrite
+s = AnalysisPhaseWrite
 writtenMask =   if s == "write_lidar_mask" 
             then true
             else if (s == "end_ok" || s == "end_nom")

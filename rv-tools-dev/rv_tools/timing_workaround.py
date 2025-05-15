@@ -23,8 +23,7 @@ def trustworthiness_output2(node:Node, event:str, extra:str=''):
 
     messages = {
         constants.ATOMICITY: f'{event}_{short_name}{extra}',
-        node.__class__.__name__ + constants.WRITING_PHASE: event
-    }
+        node.__class__.__name__ + constants.WRITING_PHASE: f'{event}_{extra}' if extra else f'{event}'    }
 
     if event == 'start':
         pass
