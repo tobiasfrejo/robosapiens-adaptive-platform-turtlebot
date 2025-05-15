@@ -7,6 +7,7 @@
 # * permission of Bert Van Acker
 # **********************************************************************************
 from rpio.clientLibraries.rpclpy.node import Node
+from rv_tools.constants import *
 import json
 import time
 
@@ -33,6 +34,9 @@ class Trustworthiness(Node):
         #<!-- cc_init END--!>
 
     # -----------------------------AUTO-GEN SKELETON FOR planner-----------------------------
+    def t_s(self, msg):
+        self.publish_event(SCANTRIGGER, json.dumps({'Str': 's'}))
+    
     def t_ms(self, msg):
         self.publish_event('atomicstage', json.dumps({'Str': 'start_m'}))
     def t_me(self, msg):
@@ -94,7 +98,8 @@ class Trustworthiness(Node):
         # self.register_event_callback('isLegit',      self.t_le)
         # self.register_event_callback('/spin_config', self.t_ee)
 
-        self.register_event_callback('test_a',   lambda s: self.publish_event('test_a', json.dumps({'Str': str(s)})))
+        self.register_event_callback('/Scan',    self.t_s)
+        # self.register_event_callback('test_a',   lambda s: self.publish_event('test_a', json.dumps({'Str': str(s)})))
 
 def main(args=None):
 

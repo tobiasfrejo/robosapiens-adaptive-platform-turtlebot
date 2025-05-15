@@ -1,0 +1,8 @@
+0: scanTrigger = "s"
+1: scanTrigger = "m"
+2: scanTrigger = "s"
+3: scanTrigger = "m"
+4: scanTrigger = "s"
+5: scanTrigger = "s" // should fail here, m missed (delayed) an s
+6: scanTrigger = "m"
+7: scanTrigger = "m" // another instance of illegal

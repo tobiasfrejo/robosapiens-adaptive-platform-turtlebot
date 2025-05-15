@@ -19,7 +19,7 @@ import traceback
 import json
 import numpy as np
 from rv_tools.constants import *
-from rv_tools.timing_workaround import trustworthiness_output, trustworthiness_outputs
+from rv_tools.timing_workaround import trustworthiness_output2
 #<!-- cc_include END--!>
 
 #<!-- cc_code START--!>
@@ -103,7 +103,7 @@ class Plan(Node):
     # -----------------------------AUTO-GEN SKELETON FOR planner-----------------------------
     def planner(self,msg):
         # self.publish_event(event_key='start_p')
-        trustworthiness_output(self, ATOMICITY, 'start_p')
+        trustworthiness_output2(self, 'start')
         _NewPlanMessage = NewPlanMessage()
         _Direction = Direction()
 
@@ -146,7 +146,7 @@ class Plan(Node):
             for i in range(10):
                 self.logger.info("Planning")
                 time.sleep(0.1)
-            trustworthiness_outputs(self, {ATOMICITY: 'end_p', MAPLE: 'p'})
+            trustworthiness_output2(self, 'end')
             self.publish_event("new_plan")
             # self.knowledge.write("directions", json.dumps({'commands': directions, 'period': 8}))
             knowledge_rv.write(self, "directions", json.dumps({'commands': directions, 'period': 8}))

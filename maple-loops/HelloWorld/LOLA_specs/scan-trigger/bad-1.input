@@ -1,0 +1,6 @@
+0: scanTrigger = "m" // should fail here, must start with s
+1: scanTrigger = "s"
+2: scanTrigger = "m"
+3: scanTrigger = "s"
+4: scanTrigger = "m"
+5: scanTrigger = "s"
