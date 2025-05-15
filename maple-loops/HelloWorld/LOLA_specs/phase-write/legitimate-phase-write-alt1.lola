@@ -9,12 +9,12 @@ out errorGlobal
 s = LegitimatePhaseWrite
 writtenLegit =   if s == "write_isLegit" 
             then true
-            else if s == "end"
+            else if (s == "end" || s == "start")
             then false
             else default(writtenLegit[-1], false)
 otherWrite = if !(s == "write_isLegit" || s == "start" || s == "end")
             then true
-            else if (s == "end")
+            else if (s == "end" || s == "start")
             then false
             else default(otherWrite[-1], false)
 started =   s == "start" || (default(started[-1], false) && !(s == "end"))

@@ -9,12 +9,12 @@ out errorGlobal
 s = ExecutePhaseWrite
 writtenHandling =   if s == "write_handling_anomaly" 
             then true
-            else if s == "end"
+            else if (s == "end" || s == "start")
             then false
             else default(writtenHandling[-1], false)
 otherWrite = if !(s == "write_handling_anomaly"  || s == "start" || s == "end")
             then true
-            else if (s == "end")
+            else if (s == "end" || s == "start")
             then false
             else default(otherWrite[-1], false)
 started =   s == "start" || (default(started[-1], false) && !(s == "end"))
