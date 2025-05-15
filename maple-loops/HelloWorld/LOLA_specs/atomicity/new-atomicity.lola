@@ -10,11 +10,10 @@ out l : Bool
 out e : Bool
 out endPLE : Bool
 out endMA : Bool
-out default : Bool
 out atomic : Bool
-out zGloballyAtomic : Bool
 out potentialAnomError: Bool
 out PLEAnomError : Bool
+out GloballyAtomic : Bool
 s = atomicstage
 latestMA = if (s == "start_m" || s == "start_a" || s == "end_m" || s == "end_aok" || s == "end_anom") 
            then (s) 

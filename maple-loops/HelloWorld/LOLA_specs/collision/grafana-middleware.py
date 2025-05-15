@@ -24,7 +24,7 @@ class RobotPosition:
     Collisions: dict[str, bool]
     Obstacle: list[XYCoord]
 
-    def test_dict(self):
+    def grafana_dict(self):
         colors = {
             'center': 0,
             'corner_no_collision': 1,
@@ -129,7 +129,7 @@ def on_message(client, userdata, message):
 
     if last_tx + update_period < current_time:
         client.publish('telemetry/collision', json.dumps(latest_telemetry, default=encode_value))
-        for k,v in latest_telemetry.test_dict().items():
+        for k,v in latest_telemetry.grafana_dict().items():
             client.publish(f'telemetry/collision2/{k}', json.dumps(v, default=encode_value))
         last_tx = current_time
 

@@ -1,5 +1,7 @@
 in kPlannedLidarMask: Str
 out missed: Bool
 out globalMissed: Bool
-missed = (kLaserScan == "write" && default(kLaserScan[-1], "")  == "write")
+out kPlannedLidarMaskEcho
+kPlannedLidarMaskEcho = kPlannedLidarMask
+missed = (kPlannedLidarMask == "write" && default(kPlannedLidarMask[-1], "")  == "write")
 globalMissed = default(globalMissed[-1], false) || default(missed[-1], false)

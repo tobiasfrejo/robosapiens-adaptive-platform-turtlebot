@@ -1,0 +1,8 @@
+in SOLClock: Str
+out acc: Int
+out timeout: Bool
+out clockEcho: Str
+acc = if SOLClock == "timer" then default(acc[-1], 0) + 1
+      else 0
+timeout = acc > 10
+clockEcho = SOLClock

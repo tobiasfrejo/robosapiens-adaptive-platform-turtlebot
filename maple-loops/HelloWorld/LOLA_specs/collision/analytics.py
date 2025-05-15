@@ -1,10 +1,23 @@
 import paho.mqtt.client as mqtt
-import time
 
-TIMEOUT = 0.05
-N = 30
-stop = False
-i = 0
+topics = [
+    "telemetry/ghost/pos",
+    "lola/ghost.lola/GhostCollision",
+    "telemetry/collision2/obstacles"
+]
+
+message_counts = {
+    t: 0 for t in topics
+}
+
+def on_connect(client, userdata, flags, reason_code, properties):
+    if reason_code.is_failure:
+        print(f"Failed to connect: {reason_code}. loop_forever() will retry connection")
+    else:
+        # we should always subscribe from on_connect callback to be sure
+        # our subscribed is persisted across reconnections.
+        for topic in topics:
+            client.subscribe(topic)
 
 def on_subscribe(client, userdata, mid, reason_code_list, properties):
     # Since we subscribed only for a single channel, reason_code_list contains
@@ -24,16 +37,14 @@ def on_unsubscribe(client, userdata, mid, reason_code_list, properties):
     client.disconnect()
 
 def on_message(client, userdata, message):
-    if message.topic == "/Scan":
-        client.publish('SOLClock', '{"Str": "scan"}')
+    topic = str(message.topic)
+    message_counts[topic] += 1
 
-def on_connect(client, userdata, flags, reason_code, properties):
-    if reason_code.is_failure:
-        print(f"Failed to connect: {reason_code}. loop_forever() will retry connection")
-    else:
-        # we should always subscribe from on_connect callback to be sure
-        # our subscribed is persisted across reconnections.
-        client.subscribe("/Scan")
+    ESC = '\x1b'
+
+    print(f"{ESC}[{len(topics)}A",end='')
+    for topic in topics:
+        print(f"{ESC}[2K\r{topic}: {message_counts[topic]}")
 
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -43,19 +54,9 @@ mqttc.on_subscribe = on_subscribe
 mqttc.on_unsubscribe = on_unsubscribe
 
 mqttc.connect("localhost")
-
 try:
-    mqttc.loop_start()
-    while True:
-        time.sleep(TIMEOUT)
-        i += 1
-        i = i % N
-        print('\r' + '#'*i + " "*(N-i),end='')
-        mqttc.publish('SOLClock', '{"Str": "timer"}')
     mqttc.loop_forever()
-    print(f"Received the following message: {mqttc.user_data_get()}")
 except KeyboardInterrupt:
-    stop = True
-    print('\r'+(''.join([' '*N]))+'\rStopping SOLClock')
+    pass
 finally:
     mqttc.loop_stop()
