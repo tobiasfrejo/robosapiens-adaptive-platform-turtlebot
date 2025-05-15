@@ -1,5 +1,7 @@
 in kLaserScan: Str
 out missed: Bool
 out globalMissed: Bool
+out kLaserScanEcho: Str
+kLaserScanEcho = kLaserScan
 missed = (kLaserScan == "write" && default(kLaserScan[-1], "")  == "write") 
 globalMissed = default(globalMissed[-1], false) || default(missed[-1], false)
