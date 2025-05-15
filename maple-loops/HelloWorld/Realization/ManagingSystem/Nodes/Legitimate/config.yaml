@@ -52,7 +52,7 @@ redis_host: "localhost"
 redis_port: 6379
 
 logging:
-  level: "WARNING"
+  level: "DEBUG"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   file: "MAPE_test.log"
 
