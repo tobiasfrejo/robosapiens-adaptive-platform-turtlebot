@@ -1,0 +1,10 @@
+0: AnalysePhaseWrite = "end_aok"
+1: AnalysePhaseWrite = "start"
+2: AnalysePhaseWrite = "start"
+3: AnalysePhaseWrite = "write_laser_scan"
+4: AnalysePhaseWrite = "write_handling_anomaly"
+5: AnalysePhaseWrite = "end_anom"
+6: AnalysePhaseWrite = "end_anom"
+7: AnalysePhaseWrite = "start"
+
+

@@ -1,0 +1,12 @@
+0: PlanPhaseWrite = "start"
+1: PlanPhaseWrite = "write_planned_lidar_mask"
+2: PlanPhaseWrite = "write_directions"
+3: PlanPhaseWrite = "end"
+4: PlanPhaseWrite = "start"
+5: PlanPhaseWrite = "write_planned_lidar_mask"
+6: PlanPhaseWrite = "start"
+7: PlanPhaseWrite = "write_directions"
+8: PlanPhaseWrite = "start"
+9: PlanPhaseWrite = "end"
+
+
