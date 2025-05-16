@@ -7,12 +7,12 @@ out error
 out errorGlobal
 // This will allow S-W-S-W-W-S-E
 s = MonitorPhaseWrite
-writtenData =   if s == "write_new_data" 
+writtenData =   if s == "write_laser_scan" 
             then true
             else if (s == "end" || s == "start")
             then false
             else default(writtenData[-1], false)
-otherWrite = if !(s == "write_new_data" || s == "start" || s == "end")
+otherWrite = if !(s == "write_laser_scan" || s == "start" || s == "end")
             then true
             else if (s == "end" || s == "start")
             then false
