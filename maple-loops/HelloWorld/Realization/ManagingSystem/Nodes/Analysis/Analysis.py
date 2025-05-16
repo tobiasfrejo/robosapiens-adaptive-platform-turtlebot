@@ -119,9 +119,6 @@ class Analysis(Node):
         self.logger.info(f" - Lidar mask: {lidar_mask}")
         serialized_lidar_mask = lidar_mask.to_json()
 
-        # self.knowledge.write("lidar_mask", serialized_lidar_mask)
-        knowledge_rv.write(self, 'lidar_mask', serialized_lidar_mask)
-
         handling_anomaly = knowledge_rv.read(self, "handling_anomaly")
 
         # We should not try and handle two anomalies at once!
@@ -145,6 +142,10 @@ class Analysis(Node):
         # occlusion outside of the ignored region
         self.logger.info(f"planned_lidar_mask = {planned_lidar_mask}")
         if lidar_mask.dist(planned_lidar_mask) > REPLANNING_SENSITIVITY:
+            # Add the lidar mask to the knowledge base when it is to be used in the future
+            # self.knowledge.write("lidar_mask", serialized_lidar_mask)
+            knowledge_rv.write(self, 'lidar_mask', serialized_lidar_mask)
+
             knowledge_rv.write(self, "handling_anomaly", 1)
             trustworthiness_output2(self, 'end', 'nom')
             self.publish_event(event_key='anomaly')
