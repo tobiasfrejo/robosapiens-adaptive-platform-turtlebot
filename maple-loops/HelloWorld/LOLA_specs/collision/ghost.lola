@@ -1,0 +1,26 @@
+in Odometry
+in GhostCollide3
+out a
+out x
+out y
+out C0X
+out C0Y
+out C1X
+out C1Y
+out C2X
+out C2Y
+out C3X
+out C3Y
+out GhostCollision
+C0X = (((0.1) * cos(a)) - ((0.153) * sin(a))) + x
+C0Y = (((0.1) * sin(a)) + ((0.153) * cos(a))) + y
+C1X = (((0.1) * cos(a)) - ((-0.153) * sin(a))) + x
+C1Y = (((0.1) * sin(a)) + ((-0.153) * cos(a))) + y
+C2X = (((-0.181) * cos(a)) - ((0.153) * sin(a))) + x
+C2Y = (((-0.181) * sin(a)) + ((0.153) * cos(a))) + y
+C3X = (((-0.181) * cos(a)) - ((-0.153) * sin(a))) + x
+C3Y = (((-0.181) * sin(a)) + ((-0.153) * cos(a))) + y
+x = List.get(Odometry, 0)
+y = List.get(Odometry, 1)
+a = List.get(Odometry, 2)
+GhostCollision = eval(GhostCollide3)

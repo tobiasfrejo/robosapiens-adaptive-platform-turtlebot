@@ -10,7 +10,7 @@ written =   if s == "write"
             then true
             else if s == "end"
             then false
-            else written[-1, false]
-started =   s == "start" || (started[-1, false] && !(s == "end"))
-x = s == "write" && !started || s == "end" && !written[-1, false]
-xGlobal = x || xGlobal[-1, false]
+            else default(written[-1], false)
+started =   s == "start" || (default(started[-1], false) && !(s == "end"))
+x = s == "write" && !started || s == "end" && !default(written[-1], false)
+xGlobal = x || default(xGlobal[-1], false)

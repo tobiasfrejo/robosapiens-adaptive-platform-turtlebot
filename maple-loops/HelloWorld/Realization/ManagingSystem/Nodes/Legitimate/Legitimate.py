@@ -45,7 +45,7 @@ class Legitimate(Node):
 
         # user code here for executer
 
-        knowledge_rv.write(self, 'isLegit', True)
+        knowledge_rv.write(self, 'isLegit', 1)
 
         #<!-- cc_code_executer END--!>
         for i in range(5):

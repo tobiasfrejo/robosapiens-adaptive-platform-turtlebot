@@ -1,5 +1,0 @@
-in SOLClock: Str
-out alive: Bool
-out globalalive: Bool
-alive = !(SOLClock == "timer" && SOLClock[-1, ""] == SOLClock)
-globalalive = alive && globalalive[-1, true]

@@ -73,7 +73,7 @@ class Analysis(Node):
         )
 
         # Ensure flag is reset on startup in case execution has stopped/crashed in the middle of anomaly handling 
-        knowledge_rv.write(self, 'handling_anomaly', 0)
+        self.knowledge.write('handling_anomaly', 0)
         #<!-- cc_init END--!>
 
     # -----------------------------AUTO-GEN SKELETON FOR analyse_scan_data-----------------------------
@@ -132,7 +132,7 @@ class Analysis(Node):
             trustworthiness_output2(self, 'end', 'ok')
             return
 
-        planned_lidar_mask_data = self.knowledge.redis_client.get('planned_lidar_mask')
+        planned_lidar_mask_data = knowledge_rv.read(self, 'planned_lidar_mask', read_func=self.knowledge.redis_client.get)
         if planned_lidar_mask_data is None:
             self.logger.info("No planned lidar mask in knowledge")
             planned_lidar_mask = BoolLidarMask([],

@@ -10,7 +10,7 @@ out s1: Str
 // out e: Bool
 // out s2: Str
 // out atomic : Bool
-// atomic = (m || a1 || a2 || p || l || e) && atomic[-1, true]
+// atomic = (m || a1 || a2 || p || l || e) && default(atomic[-1], true)
 stageout = atomicstage
 s1 = if (atomicstage == "start_m") 
      then ("m") 
@@ -18,12 +18,12 @@ s1 = if (atomicstage == "start_m")
      then ("a") 
      else (if (atomicstage == "end_m" || atomicstage == "end_aok" || atomicstage == "end_anom") 
      then "" 
-     else s1[-1, ""]))
-m = ((atomicstage == "start_m") && (s1[-1, ""] == "")) || ((atomicstage == "end_m") && (s1[-1, ""] == "m"))
-a1 = ((atomicstage == "start_a") && atyp == "end_aok" && (s1[-1, ""] == "")) || ((atomicstage == "end_anom" || atomicstage == "end_aok") && (s1[-1, ""] == "a")) 
+     else default(s1[-1], "")))
+m = ((atomicstage == "start_m") && (default(s1[-1], "") == "")) || ((atomicstage == "end_m") && (default(s1[-1], "") == "m"))
+a1 = ((atomicstage == "start_a") && atyp == "end_aok" && (default(s1[-1], "") == "")) || ((atomicstage == "end_anom" || atomicstage == "end_aok") && (default(s1[-1], "") == "a")) 
 atyp = if (atomicstage == "end_aok" || atomicstage == "end_anom") 
        then (atomicstage) 
-       else (atyp[1,"end_aok"]) 
+       else (default(atyp[1], "end_aok")) 
 // s2 = if (atomicstage == "start_a" && atyp == "end_anom") 
 //      then "anom" 
 //      else if (atomicstage == "start_p")  
@@ -34,8 +34,8 @@ atyp = if (atomicstage == "end_aok" || atomicstage == "end_anom")
 //      then "e" 
 //      else if (atomicstage == "end_anom" || atomicstage == "end_p" || atomicstage == "end_l" || atomicstage == "end_e") 
 //      then "" 
-//      else s2[-1, ""]
-// a2 = ((atomicstage == "start_a" && atyp == "end_anom") && (s2[-1, ""] == "")) || ((atomicstage == "end_anom" && (s2[-1, ""] == "anom")))
-// p = ((atomicstage == "start_p") && (s1[-1, ""] == "")) || ((atomicstage == "end_p") && (s1[-1, ""] == "p"))
-// l = ((atomicstage == "start_l") && (s1[-1, ""] == "")) || ((atomicstage == "end_l") && (s1[-1, ""] == "l"))
-// e = ((atomicstage == "start_e") && (s1[-1, ""] == "")) || ((atomicstage == "end_e") && (s1[-1, ""] == "e"))
+//      else default(s2[-1], "")
+// a2 = ((atomicstage == "start_a" && atyp == "end_anom") && (default(s2[-1], "") == "")) || ((atomicstage == "end_anom" && (default(s2[-1], "") == "anom")))
+// p = ((atomicstage == "start_p") && (default(s1[-1], "") == "")) || ((atomicstage == "end_p") && (default(s1[-1], "") == "p"))
+// l = ((atomicstage == "start_l") && (default(s1[-1], "") == "")) || ((atomicstage == "end_l") && (default(s1[-1], "") == "l"))
+// e = ((atomicstage == "start_e") && (default(s1[-1], "") == "")) || ((atomicstage == "end_e") && (default(s1[-1], "") == "e"))

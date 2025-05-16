@@ -4,5 +4,5 @@ out y
 out yGlobal
 // This should also have some atomic checking, e.g. start-start-end 
 s = PhaseWrite
-y = s == "start" && !(s[-1, "end"] == "end") || s == "write" && s[-1, ""] == "end" ||  s == "end" && !(s[-1, ""] == "write" )
-yGlobal = y || yGlobal[-1, false]
+y = s == "start" && !(default(s[-1], "end") == "end") || s == "write" && default(s[-1], "") == "end" ||  s == "end" && !(default(s[-1], "") == "write" )
+yGlobal = y || default(yGlobal[-1], false)

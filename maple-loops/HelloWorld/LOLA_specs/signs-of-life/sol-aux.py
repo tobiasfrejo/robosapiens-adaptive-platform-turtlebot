@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 import time
 
-TIMEOUT = 0.2
+TIMEOUT = 0.05
 N = 30
 stop = False
 i = 0
@@ -24,9 +24,7 @@ def on_unsubscribe(client, userdata, mid, reason_code_list, properties):
     client.disconnect()
 
 def on_message(client, userdata, message):
-    if message.topic == "/new_data":
-        client.publish('SOLClock', '{"Str": "monitor"}')
-    elif message.topic == "/Scan":
+    if message.topic == "/Scan":
         client.publish('SOLClock', '{"Str": "scan"}')
 
 def on_connect(client, userdata, flags, reason_code, properties):
@@ -35,7 +33,7 @@ def on_connect(client, userdata, flags, reason_code, properties):
     else:
         # we should always subscribe from on_connect callback to be sure
         # our subscribed is persisted across reconnections.
-        client.subscribe("/new_data")
+        client.subscribe("/Scan")
 
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -58,5 +56,6 @@ try:
     print(f"Received the following message: {mqttc.user_data_get()}")
 except KeyboardInterrupt:
     stop = True
+    print('\r'+(''.join([' '*N]))+'\rStopping SOLClock')
 finally:
     mqttc.loop_stop()

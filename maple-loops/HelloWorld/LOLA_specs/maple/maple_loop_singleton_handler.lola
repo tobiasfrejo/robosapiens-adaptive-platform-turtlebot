@@ -10,14 +10,14 @@ out alwaysmaple: Bool
 out stageout : Str
 out curstate : Str
 out mopen : Bool
-curstate = if (stage == "m" || stage == "aok") then (curstate[-1, "e"]) else (stage)
-mopen = (stage == "m") || (mopen[-1, false] && !((stage == "aok") || (stage == "anom")))
-m = (stage == "m") && !mopen[-1, false]
-aok = (stage == "aok") &&  mopen[-1, false]
-anom = (stage == "anom") &&  mopen[-1, false] && (curstate[-1, "e"] == "e")
-p = (stage == "p") &&  (curstate[-1, ""] == "anom")
-l = (stage == "l") &&  (curstate[-1, ""] == "p")
-e = (stage == "e") &&  (curstate[-1, ""] == "l")
+curstate = if (stage == "m" || stage == "aok") then (default(curstate[-1], "e")) else (stage)
+mopen = (stage == "m") || (default(mopen[-1], false) && !((stage == "aok") || (stage == "anom")))
+m = (stage == "m") && !default(mopen[-1], false)
+aok = (stage == "aok") &&  default(mopen[-1], false)
+anom = (stage == "anom") &&  default(mopen[-1], false) && (default(curstate[-1], "e") == "e")
+p = (stage == "p") &&  (default(curstate[-1], "") == "anom")
+l = (stage == "l") &&  (default(curstate[-1], "") == "p")
+e = (stage == "e") &&  (default(curstate[-1], "") == "l")
 maple = m || aok || anom || p || l || e
 stageout = stage
-alwaysmaple = alwaysmaple[-1, true] && maple
+alwaysmaple = default(alwaysmaple[-1], true) && maple

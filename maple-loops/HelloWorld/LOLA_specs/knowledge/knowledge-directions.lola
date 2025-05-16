@@ -1,3 +1,7 @@
 in kDirections: Str
 out missed: Bool
-missed = (kLaserScan == "write" && kLaserScan[-1, ""]  == "write") || missed[-1, false]
+out globalMissed: Bool
+out kDirectionsEcho: Str
+kDirectionsEcho = kDirections
+missed = (kDirections == "write" && default(kDirections[-1], "")  == "write")
+globalMissed = default(globalMissed[-1], false) || default(missed[-1], false)
