@@ -146,11 +146,11 @@ class Plan(Node):
             for i in range(10):
                 self.logger.info("Planning")
                 time.sleep(0.1)
-            trustworthiness_output2(self, 'end')
-            self.publish_event("new_plan")
             # self.knowledge.write("directions", json.dumps({'commands': directions, 'period': 8}))
             knowledge_rv.write(self, "directions", json.dumps({'commands': directions, 'period': 8}))
             self.logger.info(f"Stored planned action: {directions}")
+            trustworthiness_output2(self, 'end')
+            self.publish_event("new_plan")
         #<!-- cc_code_planner END--!>
 
         # _success = self.knowledge.write(cls=_NewPlanMessage)
