@@ -10,7 +10,7 @@ out alwaysmaple: Bool
 out stageout : Str
 out curstate : Str
 out mopen : Bool
-curstate = if (stage == "m" || stage == "aok") then default(curstate[-1], "e") else (stage)
+curstate = if (stage == "m" || stage == "aok") then (default(curstate[-1], "e")) else (stage)
 mopen = (stage == "m") || (default(mopen[-1], false) && !((stage == "aok") || (stage == "anom")))
 m = (stage == "m") && !default(mopen[-1], false)
 aok = (stage == "aok") &&  default(mopen[-1], false)

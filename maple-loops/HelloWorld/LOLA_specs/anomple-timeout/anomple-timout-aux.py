@@ -1,5 +1,6 @@
 import paho.mqtt.client as mqtt
 import time
+import json
 
 PERIOD = 0.1
 N = 30
@@ -25,11 +26,13 @@ def on_unsubscribe(client, userdata, mid, reason_code_list, properties):
         print(f"Broker replied with failure: {reason_code_list[0]}")
     client.disconnect()
 
-def on_message(client, userdata, message):
-    if message.topic == "end_anom":
-        client.publish(clock_topic, '{"Str": "anom"}')
-    elif message.topic == "end_e":
-        client.publish(clock_topic, '{"Str": "end_e"}')
+def on_message(client, userdata, message:mqtt.MQTTMessage):
+    if message.topic == "atomicstage":
+        stage = json.loads(message.payload).get('Str')
+        if stage == 'end_anom':
+            client.publish(clock_topic, '{"Str": "anom"}')
+        elif stage == "end_e":
+            client.publish(clock_topic, '{"Str": "end_e"}')
 
 def on_connect(client, userdata, flags, reason_code, properties):
     if reason_code.is_failure:
@@ -37,8 +40,7 @@ def on_connect(client, userdata, flags, reason_code, properties):
     else:
         # we should always subscribe from on_connect callback to be sure
         # our subscribed is persisted across reconnections.
-        client.subscribe("end_anom")
-        client.subscribe("end_e")
+        client.subscribe("atomicstage")
 
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)

@@ -1,4 +1,4 @@
-in AnalysePhaseWrite
+in AnalysisPhaseWrite
 out s
 out started
 out writtenMask
@@ -7,20 +7,20 @@ out otherWrite
 out error
 out errorGlobal
 // This will allow S-W-S-W-W-S-E
-s = AnalysePhaseWrite
+s = AnalysisPhaseWrite
 writtenMask =   if s == "write_lidar_mask" 
             then true
-            else if (s == "end_ok" || s == "end_nom")
+            else if (s == "end_ok" || s == "end_nom" || s == "start")
             then false
             else default(writtenMask[-1], false)
 writtenHandling = if s == "write_handling_anomaly" 
             then true
-            else if (s == "end_ok" || s == "end_nom")
+            else if (s == "end_ok" || s == "end_nom" || s == "start")
             then false
             else default(writtenHandling[-1], false)
 otherWrite = if !(s == "write_lidar_mask" || s == "write_handling_anomaly"  || s == "start" || s == "end_ok" || s == "end_nom")
             then true
-            else if (s == "end_ok" || s == "end_nom")
+            else if (s == "end_ok" || s == "end_nom" || s == "start")
             then false
             else default(otherWrite[-1], false)
 started =   s == "start" || (default(started[-1], false) && !(s == "end_ok" || s == "end_nom"))

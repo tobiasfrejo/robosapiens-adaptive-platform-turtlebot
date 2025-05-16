@@ -12,8 +12,7 @@ def twc_helper(twn:Node, source_node: str, event:str, extra:str=''):
 
     messages = {
         constants.ATOMICITY: f'{event}_{short_name}{extra}',
-        source_node + constants.WRITING_PHASE: f'{event}_{extra}' if extra else f'{event}'
-    }
+        node.__class__.__name__ + constants.WRITING_PHASE: f'{event}_{extra}' if extra else f'{event}'    }
 
     if event == 'start':
         pass
