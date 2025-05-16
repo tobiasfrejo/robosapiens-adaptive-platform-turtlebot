@@ -5,10 +5,21 @@ from rv_tools import constants
 
 import logging
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
+def trustworthiness_output(node:Node, stream_name:str, value:str):
+    key = ensure_publish_key_exist(node, stream_name)
+    msg = json.dumps({"Str": value})
+    node.publish_event(key, message=msg)
+    # print(f'Published to trustworthiness checker: {key}: {msg} -- for {node.__class__.__name__}')
 
-def twc_helper(twn:Node, source_node: str, event:str, extra:str=''):
-    short_name = source_node.lower()[0]
+def trustworthiness_outputs(node:Node, pairs:dict[str,str]):
+    for k,v in pairs.items():
+        trustworthiness_output(node, k, v)
+
+def trustworthiness_output2(node:Node, event:str, extra:str=''):
+    name = node.__class__.__name__
+    short_name = name.lower()[0]
 
     messages = {
         constants.ATOMICITY: f'{event}_{short_name}{extra}',
@@ -20,14 +31,10 @@ def twc_helper(twn:Node, source_node: str, event:str, extra:str=''):
         messages.update({
             constants.MAPLE: f'{short_name}{extra}'
         })
-        if source_node == 'Monitor':
+        if name == 'Monitor':
            messages.update({
             constants.SCANTRIGGER: f'{short_name}{extra}'
         }) 
     else:
         raise ValueError('event must be "start" or "end"')
-
-    for stream_name, value in messages.items():
-        key = ensure_publish_key_exist(twn, stream_name)
-        msg = json.dumps({"Str": value})
-        twn.publish_event(key, message=msg)
+    trustworthiness_outputs(node, messages)
