@@ -65,11 +65,11 @@ hexagons = [
 features = [(hexagon_points * inch_to_meter * scale) + np.array([x, y]) for x,y,scale in hexagons]
 inner_wall_m = np.array(inner_wall) * inch_to_meter * wall_scale
 
-# plt.scatter(*zip(*inner_wall_m))
-# for feature in features:
-#     plt.scatter(*zip(*feature))
+plt.scatter(*zip(*inner_wall_m))
+for feature in features:
+    plt.scatter(*zip(*feature))
     
-# plt.show()
+plt.savefig("/ws/map.pdf")
 
 world_poly = Polygon(sorted(inner_wall_m, key=order_poly))
 

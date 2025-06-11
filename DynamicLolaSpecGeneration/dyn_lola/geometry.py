@@ -1,19 +1,18 @@
 from typing import Iterable
-from .lola import LolaStream, lola_chain, lt, leq, Expression
+from .lola import LolaStream, lola_chain, lt, leq, Expression, Stream_or_value
 
-Stream_or_float = LolaStream | float
-Point = tuple[Stream_or_float, Stream_or_float]
-Circle = tuple[Point, Stream_or_float]
+Point = tuple[Stream_or_value, Stream_or_value]
+Circle = tuple[Point, Stream_or_value]
 
 def connect_polygon(corners):
     walls = []
     for i in range(len(corners)):
         j = (i - 1) % len(corners)
-        walls.append((corners[i], corners[j]))
+        walls.append((corners[j], corners[i]))
         # warn(f'({i}, {j}): {corners[i]}, {corners[j]}')
     return walls
 
-def rotate_polygon(polygon:Iterable[Point], center_of_rotation:Point, angle:Stream_or_float, stream_prefix:str=""):
+def rotate_polygon(polygon:Iterable[Point], center_of_rotation:Point, angle:Stream_or_value, stream_prefix:str=""):
     expressions: dict[LolaStream, Expression] = dict()
     corner_points = []
 

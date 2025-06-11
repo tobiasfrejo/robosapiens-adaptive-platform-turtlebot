@@ -172,17 +172,19 @@ def on_message(client, userdata, message):
             latest_telemetry.Collisions[x] = msg.get('Bool')
 
     if send_update:
-        print(f'Publishing after {msg=}')
-        try:
-            print(ghost_corners)
-            print(latest_telemetry)
-        except:
-            pass
-        client.publish('telemetry/debug', str(msg))
-        client.publish('telemetry/collision', json.dumps(latest_telemetry, default=encode_value))
-        for k,v in latest_telemetry.test_dict().items():
-            client.publish(f'telemetry/collision2/{k}', json.dumps(v, default=encode_value))
-        last_tx = current_time
+        for i in range(2):
+            print(f'Publishing after {msg=}')
+            try:
+                print(ghost_corners)
+                print(latest_telemetry)
+            except:
+                pass
+            client.publish('telemetry/debug', str(msg))
+            client.publish('telemetry/collision', json.dumps(latest_telemetry, default=encode_value))
+            for k,v in latest_telemetry.test_dict().items():
+                client.publish(f'telemetry/collision2/{k}', json.dumps(v, default=encode_value))
+            last_tx = current_time
+            time.sleep(0.01)
 
 
 def on_connect(client, userdata, flags, reason_code, properties):

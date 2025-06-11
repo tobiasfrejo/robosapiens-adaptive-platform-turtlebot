@@ -1,9 +1,12 @@
 from io import IOBase, StringIO
+from numbers import Number
 import re
-from typing import Union, Iterable
+from typing import Mapping, Sequence, Union, Iterable
 import networkx as nx
 
+Stream_or_value = Union["LolaStream", float, int]
 Expression_type = Union["Expression", str, "LolaStream"]
+
 class LolaStream:
     name: str
 
@@ -19,12 +22,12 @@ class LolaStream:
         # return self.__repr__()
 
 class Expression:
-    Expression_component_types = str | LolaStream
+    Expression_component_types = str | LolaStream | float | int
     # stream: LolaStream
     exp: list[Expression_component_types]
     active_dependencies : set[LolaStream]
     
-    def __init__(self, exp: str | Iterable[Expression_type]=None, stream_dic: dict[str, LolaStream]=None):
+    def __init__(self, exp: str | Iterable[Expression_type]|None=None, stream_dic: Mapping[str, Stream_or_value]|None=None):
         # input expample: 
         # exp = '(((‹x›) * cos(‹angle›)) - ((‹y›) * sin(‹angle›))) + ‹center_of_rotation[0]›' 
         # stream_dic = {'x': LolaStream('x'), etc} 
@@ -40,7 +43,7 @@ class Expression:
             for e in exp:
                 self.append(e)   
         
-    def __string_init_(self, exp: str, stream_dic: dict[str, LolaStream]=None):
+    def __string_init_(self, exp: str, stream_dic: Mapping[str, Stream_or_value]|None=None):
         substrings_exp_types = filter(lambda x: x is not None, re.split(r'(›[^‹]+‹)|(»[^«]+«)', exp))
         
         for substr in substrings_exp_types:
@@ -59,7 +62,7 @@ class Expression:
                 if substr:
                     self.exp.append(substr)
         
-    def append(self, to_append: Union["Expression", str, LolaStream]):
+    def append(self, to_append: Union["Expression", str, LolaStream, float, int]):
         if isinstance(to_append, Expression):
             self.exp.append("(")
             self.exp += to_append.exp
@@ -212,7 +215,7 @@ class LolaSpecification:
         self._print_list(self.dependency_graph.out_degree(), 'Out Degrees')
     
         
-def lola_chain(exprs : list[Expression_type], symbol: str): #TODO: dict expression fucked this up(?)
+def lola_chain(exprs : Sequence[Expression_type], symbol: str): #TODO: dict expression fucked this up(?)
     l = len(exprs)
     new_expression = Expression('')
     #stream_dict = dict()

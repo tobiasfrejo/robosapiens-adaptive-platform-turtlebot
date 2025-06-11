@@ -1,0 +1,41 @@
+in Odometry
+out x
+out y
+out a
+out P0X
+out P0Y
+out P1X
+out P1Y
+out P2X
+out P2Y
+out P3X
+out P3Y
+out ObstacleP0inSubPoly0
+out ObstacleP0inPoly
+out ObstacleP1inSubPoly0
+out ObstacleP1inPoly
+out ObstacleP2inSubPoly0
+out ObstacleP2inPoly
+out ObstacleP3inSubPoly0
+out ObstacleP3inPoly
+out ObstacleCollision
+x = List.get(Odometry, 0)
+y = List.get(Odometry, 1)
+a = List.get(Odometry, 2)
+P0X = (((0.0785) * cos(a)) - ((0.163) * sin(a))) + x
+P0Y = (((0.0785) * sin(a)) + ((0.163) * cos(a))) + y
+P1X = (((-0.20650000000000002) * cos(a)) - ((0.163) * sin(a))) + x
+P1Y = (((-0.20650000000000002) * sin(a)) + ((0.163) * cos(a))) + y
+P2X = (((-0.20650000000000002) * cos(a)) - ((-0.163) * sin(a))) + x
+P2Y = (((-0.20650000000000002) * sin(a)) + ((-0.163) * cos(a))) + y
+P3X = (((0.0785) * cos(a)) - ((-0.163) * sin(a))) + x
+P3Y = (((0.0785) * sin(a)) + ((-0.163) * cos(a))) + y
+ObstacleP0inSubPoly0 = (((0.0) > (((P0X)-(-1.0))*((-1.0)-(1.0)) + ((1.0)-(P0Y))*((-1.0)-(-1.0))))) && (((0.0) > (((P0X)-(1.0))*((1.0)-(-1.0)) + ((-1.0)-(P0Y))*((1.0)-(1.0)))))
+ObstacleP0inPoly = ObstacleP0inSubPoly0
+ObstacleP1inSubPoly0 = (((0.0) > (((P1X)-(-1.0))*((-1.0)-(1.0)) + ((1.0)-(P1Y))*((-1.0)-(-1.0))))) && (((0.0) > (((P1X)-(1.0))*((1.0)-(-1.0)) + ((-1.0)-(P1Y))*((1.0)-(1.0)))))
+ObstacleP1inPoly = ObstacleP1inSubPoly0
+ObstacleP2inSubPoly0 = (((0.0) > (((P2X)-(-1.0))*((-1.0)-(1.0)) + ((1.0)-(P2Y))*((-1.0)-(-1.0))))) && (((0.0) > (((P2X)-(1.0))*((1.0)-(-1.0)) + ((-1.0)-(P2Y))*((1.0)-(1.0)))))
+ObstacleP2inPoly = ObstacleP2inSubPoly0
+ObstacleP3inSubPoly0 = (((0.0) > (((P3X)-(-1.0))*((-1.0)-(1.0)) + ((1.0)-(P3Y))*((-1.0)-(-1.0))))) && (((0.0) > (((P3X)-(1.0))*((1.0)-(-1.0)) + ((-1.0)-(P3Y))*((1.0)-(1.0)))))
+ObstacleP3inPoly = ObstacleP3inSubPoly0
+ObstacleCollision = ObstacleP0inPoly || ObstacleP1inPoly || ObstacleP2inPoly || ObstacleP3inPoly
